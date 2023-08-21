@@ -1,39 +1,41 @@
 "use client";
 
+import { Page } from "@/types/Page";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 
-const Nav = () => {
+const Nav = ({ pages }: { pages: Page[] }) => {
   const router = usePathname();
   const isHome = router === "/" || router?.startsWith("/local");
 
   return (
-    <nav
-      className={`flex justify-end flex-row top-0 ${
-        isHome ? "absolute" : "fixed bg-white"
-      } z-10`}
-      style={{
-        width: "100%",
-        gap: "24px",
-      }}
+    <header
+      className={`${!isHome && "border-b border-gray-500"} ${
+        isHome ? "absolute" : "sticky"
+      } z-10 flex items-center justify-between px-10 left-0 right-0 py-10 bg-transparent`}
     >
-      <p
-        className={`${isHome ? "text-white" : "text-black"}`}
-        style={{ marginLeft: "0px" }}
+      <Link
+        href="/"
+        className={`${isHome ? "text-yellow" : "text-black"} text-lg`}
       >
-        <Link href="/">harry partridge</Link>
-      </p>
-      <p className={`${isHome ? "text-white" : "text-black"}`}>
-        <Link href="/projects">projects</Link>
-      </p>
-      <p className={`${isHome ? "text-white" : "text-black"}`}>
-        <Link href="/about">about</Link>
-      </p>
-      <p className={`${isHome ? "text-white" : "text-black"}`}>
-        <Link href="/contact">contact</Link>
-      </p>
-    </nav>
+        Harry Partridge
+      </Link>
+      <div className="flex items-center gap-5 text-sm">
+        {pages &&
+          pages.map((page) => (
+            <Link
+              key={page._id}
+              href={`/${page.slug}`}
+              className={`${
+                isHome ? "text-white" : "text-black"
+              } hover:text-yellow text-lg transition`}
+            >
+              {page.title}
+            </Link>
+          ))}
+      </div>
+    </header>
   );
 };
 

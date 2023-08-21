@@ -7,7 +7,20 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      width: {
+        "600": "600px",
+      },
+      maxHeight: {
+        "500": "500px",
+      },
+      colors: {
+        yellow: "#E2FA00",
+      },
+      fontFamily: {
+        inconsolata: ["Inconsolata", "monospace"],
+      },
+    },
   },
   plugins: [],
 };
