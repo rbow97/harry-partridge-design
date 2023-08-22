@@ -15,6 +15,12 @@ const project = {
       options: { source: "name" },
     },
     {
+      name: "description",
+      title: "Description",
+      type: "array",
+      of: [{ type: "block" }],
+    },
+    {
       name: "image",
       title: "Image",
       type: "image",
@@ -28,15 +34,19 @@ const project = {
       ],
     },
     {
-      name: "url",
-      title: "URL",
-      type: "url",
-    },
-    {
       name: "content",
       title: "Content",
       type: "array",
-      of: [{ type: "block" }],
+      of: [
+        {
+          type: "block",
+          lists: [
+            { title: "Bullet", value: "bullet" },
+            { title: "Numbered", value: "number" },
+          ],
+        },
+        { type: "image" },
+      ],
     },
   ],
 };

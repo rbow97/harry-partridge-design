@@ -7,37 +7,31 @@ type Props = {
   params: { project: string };
 };
 
-const ProjectDetail = async ({ params }: Props) => {
+async function ProjectDetail({ params }: Props) {
   const slug = params.project;
 
   const project = await getProject(slug);
 
   return (
-    <div className="max-w-5xl mx-auto py-20">
-      <header className="flex justify-between items-center">
-        <h1 className="text-5xl font-extrabold">{project.name}</h1>
-        <a
-          href={project.url}
-          title="View Project"
-          target="_blank"
-          rel="noopener norefferer"
-          className="bg-gray-100 rounded-lg text-gray-500 font-bold py-3 px-4 whitespace-nowrap hover:bg-pink-500 hover:text-pink-100 transition"
-        >
-          View Project
-        </a>
+    <div className="max-w-5xl mx-auto py-48 md:py-60 px-5 md:px-10">
+      <header className="flex flex-col justify-between items-start">
+        <h1 className="text-xl md:text-2xl font-extrabold">{project.name}</h1>
+        <div className="text-md md:text-lg text-black mt-5">
+          <PortableText value={project.description} />
+        </div>
       </header>
-      <div className="text-lg text-gray-700 mt-5">
-        <PortableText value={project.content} />
-      </div>
       <Image
         src={project.image}
         alt={project.name}
         width={1920}
         height={1080}
-        className="w-full max-h-500 mt-10 border-2 border-gray-700 object-cover "
+        className="w-full max-h-500 mt-12 md:mt-16 object-cover "
       />
+      <div className="text-md md:text-lg text-black mt-5">
+        <PortableText value={project.content} />
+      </div>
     </div>
   );
-};
+}
 
 export default ProjectDetail;
