@@ -21,9 +21,9 @@ async function Projects() {
                 className="w-full h-48 object-cover border-gray-500 w-500-px"
               />
             )}
-            <div className="mt-2 truncate whitespace-nowrap">
+            <p className="w-full text-center mt-2 truncate whitespace-nowrap">
               {project.name}
-            </div>
+            </p>
           </Link>
         ))}
       </div>
