@@ -14,6 +14,7 @@ type Props = {
 type ImageProps = {
   _type: string;
   _key: string;
+  alt?: string;
   asset: {
     _ref: string;
     _type: string;
