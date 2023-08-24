@@ -25,6 +25,11 @@ const myPortableTextComponents = {
   types: {
     image: ({ value }: { value: ImageProps }) => {
       const { width, height } = getImageDimensions(value);
+
+      if (!value?.asset?._ref) {
+        return null;
+      }
+
       return (
         <img
           className="mt-5 m-auto"

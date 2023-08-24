@@ -4,6 +4,7 @@ import { Page } from "@/types/Page";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import ThemeSwitchButton from "./ThemeSwitchButton";
 
 const Nav = ({ pages }: { pages: Page[] }) => {
   const router = usePathname();
@@ -12,14 +13,12 @@ const Nav = ({ pages }: { pages: Page[] }) => {
   return (
     <header
       className={`${!isHome && "border-b border-gray-300"} ${
-        isHome ? "absolute" : "fixed bg-white"
+        isHome ? "absolute bg-transparent" : "fixed "
       } z-10 flex items-center justify-between px-5 md:px-10 left-0 right-0 py-8 md:py-10 bg-transparent`}
     >
       <Link
         href="/"
-        className={`${
-          isHome ? "text-yellow" : "text-black"
-        } text-sm md:text-xl`}
+        className={`${isHome && "text-yellow"} text-sm md:text-xl`}
       >
         Harry Partridge
       </Link>
@@ -31,7 +30,7 @@ const Nav = ({ pages }: { pages: Page[] }) => {
               href={`/${page.slug}`}
               className={`${
                 router.includes(page.title.toLowerCase())
-                  ? "border-b-black text-black"
+                  ? "border-b-black "
                   : "border-b-white"
               } ${
                 isHome
@@ -42,6 +41,7 @@ const Nav = ({ pages }: { pages: Page[] }) => {
               {page.title}
             </Link>
           ))}
+        <ThemeSwitchButton />
       </div>
     </header>
   );
