@@ -32,5 +32,3 @@ async function Projects() {
 }
 
 export default Projects;
-
-export const revalidate = 60;

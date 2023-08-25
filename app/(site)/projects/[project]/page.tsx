@@ -6,43 +6,10 @@ import React from "react";
 import { getImageDimensions } from "@sanity/asset-utils";
 import clientConfig from "@/sanity/config/client-config";
 import { createClient } from "next-sanity";
+import PortableTextComponent from "@/components/PortableTextComponent";
 
 type Props = {
   params: { project: string };
-};
-
-type ImageProps = {
-  _type: string;
-  _key: string;
-  alt?: string;
-  asset: {
-    _ref: string;
-    _type: string;
-  };
-};
-
-const myPortableTextComponents = {
-  types: {
-    image: ({ value }: { value: ImageProps }) => {
-      const { width, height } = getImageDimensions(value);
-      return (
-        <img
-          className="mt-5 m-auto"
-          src={urlBuilder(createClient(clientConfig))
-            .image(value)
-            .fit("max")
-            .auto("format")
-            .url()}
-          alt={value.alt || " "}
-          loading="lazy"
-          style={{
-            aspectRatio: width / height,
-            maxHeight: "700px",
-          }}
-        />
-      );
-    },
-  },
 };
 
 async function ProjectDetail({ params }: Props) {
@@ -68,7 +35,7 @@ async function ProjectDetail({ params }: Props) {
       <div className="text-md md:text-lg text-black mt-5 [&>p]:mt-5">
         <PortableText
           value={project.content}
-          components={myPortableTextComponents}
+          components={PortableTextComponent}
         />
       </div>
     </div>
