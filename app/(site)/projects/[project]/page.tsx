@@ -59,7 +59,7 @@ async function ProjectDetail({ params }: Props) {
     <div className="max-w-5xl mx-auto py-48 md:py-60 px-5 md:px-10">
       <header className="flex flex-col justify-between items-start">
         <h1 className="text-xl md:text-2xl font-extrabold">{project.name}</h1>
-        <div className="text-md md:text-lg text-black mt-5 [&>p]:mt-5">
+        <div className="text-md md:text-lg text-black dark:text-white mt-5 [&>p]:mt-5">
           <PortableText value={project.description} />
         </div>
       </header>
@@ -70,7 +70,7 @@ async function ProjectDetail({ params }: Props) {
         height={1080}
         className="w-full max-h-500 mt-12 md:mt-16 object-cover "
       />
-      <div className="text-md md:text-lg text-black mt-5 [&>p]:mt-5">
+      <div className="text-md md:text-lg text-black dark:text-white mt-5 [&>p]:mt-5">
         <PortableText
           value={project.content}
           components={myPortableTextComponents}

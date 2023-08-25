@@ -21,7 +21,7 @@ export default async function RootLayout({
   const pages = await getPages();
 
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className="font-inconsolata relative">
         <DarkModeThemeProvider>
           <Nav pages={pages} />

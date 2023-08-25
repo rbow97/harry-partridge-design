@@ -13,8 +13,10 @@ const Nav = ({ pages }: { pages: Page[] }) => {
   return (
     <header
       className={`${!isHome && "border-b border-gray-300"} ${
-        isHome ? "absolute bg-transparent" : "fixed "
-      } z-10 flex items-center justify-between px-5 md:px-10 left-0 right-0 py-8 md:py-10 bg-transparent`}
+        isHome
+          ? "absolute bg-transparent"
+          : "fixed dark:bg-black light:bg-white"
+      } z-10 flex items-center justify-between px-5 md:px-10 left-0 right-0 py-5 md:py-8 bg-transparent`}
     >
       <Link
         href="/"
@@ -22,20 +24,19 @@ const Nav = ({ pages }: { pages: Page[] }) => {
       >
         Harry Partridge
       </Link>
-      <div className="flex items-center gap-3 md:gap-5">
+      <div className="flex items-center gap-3 md:gap-5 ">
         {pages &&
           pages.map((page) => (
             <Link
               key={page._id}
               href={`/${page.slug}`}
               className={`${
-                router.includes(page.title.toLowerCase())
-                  ? "border-b-black "
-                  : "border-b-white"
+                router.includes(page.title.toLowerCase()) &&
+                "dark:border-b-white border-b-black"
               } ${
                 isHome
                   ? "text-white  hover:text-yellow"
-                  : "  hover:border-b-black pb-x border-b"
+                  : "  hover:border-b-black dark:hover:border-b-white pb-x border-b border-b-white dark:border-b-black"
               }   text-xs md:text-lg transition`}
             >
               {page.title}

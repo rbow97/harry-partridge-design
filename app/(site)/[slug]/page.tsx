@@ -11,7 +11,7 @@ async function Page({ params }: Props) {
 
   return (
     <div className="max-w-5xl mx-auto py-48 md:py-60 px-5 md:px-10">
-      <div className="text-md md:text-lg text-black ">
+      <div className="text-md md:text-lg text-black dark:text-white">
         <PortableText value={page.content} />
       </div>
     </div>

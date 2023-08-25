@@ -7,5 +7,9 @@ export default function DarkModeThemeProvider({
 }: {
   children: React.ReactNode;
 }) {
-  return <ThemeProvider enableSystem={false}>{children}</ThemeProvider>;
+  return (
+    <ThemeProvider attribute="class" enableSystem={false}>
+      {children}
+    </ThemeProvider>
+  );
 }
