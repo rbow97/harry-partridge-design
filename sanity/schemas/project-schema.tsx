@@ -40,10 +40,6 @@ const project = {
       of: [
         {
           type: "block",
-          lists: [
-            { title: "Bullet", value: "bullet" },
-            { title: "Numbered", value: "number" },
-          ],
         },
         { type: "image" },
       ],

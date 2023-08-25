@@ -22,7 +22,10 @@ async function ProjectDetail({ params }: Props) {
       <header className="flex flex-col justify-between items-start">
         <h1 className="text-xl md:text-2xl font-extrabold">{project.name}</h1>
         <div className="text-md md:text-lg text-black dark:text-white mt-5 [&>p]:mt-5">
-          <PortableText value={project.description} />
+          <PortableText
+            value={project.description}
+            components={PortableTextComponent}
+          />
         </div>
       </header>
       <Image

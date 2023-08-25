@@ -13,9 +13,7 @@ const Nav = ({ pages }: { pages: Page[] }) => {
   return (
     <header
       className={`${!isHome && "border-b border-gray-300"} ${
-        isHome
-          ? "absolute bg-transparent"
-          : "fixed dark:bg-black light:bg-white"
+        isHome ? "absolute bg-transparent" : "fixed dark:bg-black bg-white"
       } z-10 flex items-center justify-between px-5 md:px-10 left-0 right-0 py-5 md:py-8 bg-transparent`}
     >
       <Link
@@ -31,12 +29,13 @@ const Nav = ({ pages }: { pages: Page[] }) => {
               key={page._id}
               href={`/${page.slug}`}
               className={`${
-                router.includes(page.title.toLowerCase()) &&
-                "border-b-black dark:border-b-white"
+                router.includes(page.title.toLowerCase())
+                  ? "border-b-black dark:border-b-white"
+                  : "border-b-white"
               } ${
                 isHome
                   ? "text-white  hover:text-yellow"
-                  : "  hover:border-b-black dark:hover:border-b-white pb-x border-b border-b-white dark:border-b-black"
+                  : "  hover:border-b-black dark:hover:border-b-white pb-x border-b dark:border-b-black"
               }   text-xs md:text-lg transition`}
             >
               {page.title}

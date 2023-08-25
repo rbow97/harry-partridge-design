@@ -15,6 +15,11 @@ type ImageProps = {
 };
 
 const PortableTextComponent = {
+  block: {
+    blockquote: ({ children }: any) => (
+      <blockquote className="text-black">{children}</blockquote>
+    ),
+  },
   types: {
     image: ({ value }: { value: ImageProps }) => {
       const { width, height } = getImageDimensions(value);
