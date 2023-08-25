@@ -1,7 +1,11 @@
 import Nav from "@/components/Nav";
 import "../globals.css";
-import Link from "next/link";
 import { getPages } from "@/sanity/sanity-utils";
+import dynamic from "next/dynamic";
+
+const DarkModeThemeProvider = dynamic(() => import("./theme-provider"), {
+  ssr: false,
+});
 
 export const metadata = {
   title: "Harry Partridge Design",
@@ -17,10 +21,12 @@ export default async function RootLayout({
   const pages = await getPages();
 
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className="font-inconsolata relative">
-        <Nav pages={pages} />
-        <main className="h-screen">{children}</main>
+        <DarkModeThemeProvider>
+          <Nav pages={pages} />
+          <main className="h-screen">{children}</main>
+        </DarkModeThemeProvider>
       </body>
     </html>
   );

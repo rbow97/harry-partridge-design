@@ -6,6 +6,7 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  darkMode: "class",
   theme: {
     extend: {
       width: {
@@ -16,12 +17,12 @@ const config: Config = {
       },
       colors: {
         yellow: "#E2FA00",
+        black: "#121212",
       },
       fontFamily: {
         inconsolata: ["Inconsolata", "monospace"],
       },
     },
   },
-  plugins: [],
 };
 export default config;
