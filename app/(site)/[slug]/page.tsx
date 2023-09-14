@@ -13,7 +13,12 @@ async function Page({ params }: Props) {
   return (
     <div className="max-w-5xl mx-auto py-48 md:py-60 px-5 md:px-10">
       <div className="text-md md:text-lg text-black dark:text-white break-word [&>p]:mt-5">
-        <PortableText value={page.content} components={PortableTextComponent} />
+        {page?.content && (
+          <PortableText
+            value={page.content}
+            components={PortableTextComponent}
+          />
+        )}
       </div>
     </div>
   );
