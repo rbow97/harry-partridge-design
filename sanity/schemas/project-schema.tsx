@@ -34,6 +34,11 @@ const project = {
       ],
     },
     {
+      name: "priority",
+      title: "Priority",
+      type: "number",
+    },
+    {
       name: "content",
       title: "Content",
       type: "array",

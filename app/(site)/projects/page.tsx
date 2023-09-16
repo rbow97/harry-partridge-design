@@ -5,6 +5,13 @@ import Link from "next/link";
 async function Projects() {
   const projects = await getProjects();
 
+  projects.sort((a, b) => {
+    if (a.priority == null) return 1;
+    if (b.priority == null) return -1;
+    if (a.priority > b.priority) return 1;
+    else return -1;
+  });
+
   return (
     <div className="max-w-5xl mx-auto py-48 md:py-60 px-5 md:px-10">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
