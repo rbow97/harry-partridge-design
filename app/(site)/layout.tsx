@@ -25,7 +25,7 @@ export default async function RootLayout({
       <body className="font-inconsolata relative">
         <DarkModeThemeProvider>
           <Nav pages={pages} />
-          <main className="h-screen">{children}</main>
+          <main className="h-full">{children}</main>
         </DarkModeThemeProvider>
       </body>
     </html>

@@ -16,7 +16,7 @@ export default function Home() {
         muted={!unMute}
       />
       <button
-        className="text-white absolute p-2 rounded-full z-10 text-xs md:text-lg top-12 md:top-16 left-5 md:left-10 hover:bg-slate-200/[0.3] transition-all"
+        className="text-white absolute p-2 rounded-full z-10 text-xs md:text-lg bottom-4 md:bottom-10 right-5 md:right-10 hover:bg-slate-200/[0.3] transition-all"
         onClick={() => setunMute(!unMute)}
       >
         {unMute ? (
