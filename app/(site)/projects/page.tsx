@@ -14,7 +14,7 @@ async function Projects() {
 
   return (
     <div className="max-w-5xl mx-auto py-48 md:py-60 px-5 md:px-10">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-8">
         {projects.map((project) => (
           <Link
             href={`/projects/${project.slug}`}

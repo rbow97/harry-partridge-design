@@ -5,7 +5,11 @@
 @tailwind utilities;
 
 @layer base {
+  html,
   body {
+  }
+
+  video {
     height: 100dvh;
   }
 

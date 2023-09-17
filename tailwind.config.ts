@@ -18,6 +18,7 @@ const config: Config = {
       colors: {
         yellow: "#E2FA00",
         black: "#121212",
+        white: "#FEFCFB",
       },
       fontFamily: {
         inconsolata: ["Inconsolata", "monospace"],

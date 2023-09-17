@@ -22,10 +22,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className="dark">
-      <body className="font-inconsolata relative">
+      <body className="font-inconsolata relative bg-white dark:bg-black">
         <DarkModeThemeProvider>
           <Nav pages={pages} />
-          <main className="h-full">{children}</main>
+          <main>{children}</main>
         </DarkModeThemeProvider>
       </body>
     </html>

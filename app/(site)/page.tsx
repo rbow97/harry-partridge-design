@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <>
       <video
-        className="object-cover h-full w-full"
+        className="object-cover w-full video"
         autoPlay
         src="/assets/harry-grad-movie.mp4"
         loop

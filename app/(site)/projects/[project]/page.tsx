@@ -1,11 +1,7 @@
 import { getProject } from "@/sanity/sanity-utils";
-import urlBuilder from "@sanity/image-url";
 import { PortableText } from "@portabletext/react";
 import Image from "next/image";
 import React from "react";
-import { getImageDimensions } from "@sanity/asset-utils";
-import clientConfig from "@/sanity/config/client-config";
-import { createClient } from "next-sanity";
 import PortableTextComponent from "@/components/PortableTextComponent";
 
 type Props = {
