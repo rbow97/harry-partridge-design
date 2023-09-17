@@ -11,7 +11,7 @@ async function Page({ params }: Props) {
   const page = await getPage(params.slug);
 
   return (
-    <div className="max-w-5xl mx-auto py-48 md:py-60 px-5 md:px-10">
+    <div className="max-w-5xl mx-auto pt-48 md:pt-60 pb-16 px-5 md:px-10">
       <div className="text-md md:text-lg text-black dark:text-white break-word [&>p]:mt-5">
         {page?.content && (
           <PortableText

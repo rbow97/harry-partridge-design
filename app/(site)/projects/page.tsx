@@ -13,7 +13,7 @@ async function Projects() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto py-48 md:py-60 px-5 md:px-10">
+    <div className="max-w-5xl mx-auto pt-48 pb-16 md:pt-60 px-5 md:px-10">
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-8">
         {projects.map((project) => (
           <Link
