@@ -3,7 +3,10 @@ import "../globals.css";
 import { getPages } from "@/sanity/sanity-utils";
 import SoundProvider from "@/components/sound/SoundProvider";
 import dynamic from "next/dynamic";
-import { Instrument_Sans, Martian_Mono } from "next/font/google";
+import { Caveat, Instrument_Sans, Martian_Mono } from "next/font/google";
+
+// handwriting for the herbarium specimen labels
+const hand = Caveat({ subsets: ["latin"], weight: "500", variable: "--font-hand", display: "swap" });
 
 const sans = Instrument_Sans({
   subsets: ["latin"],
@@ -37,7 +40,7 @@ export default async function RootLayout({
   const pages = await getPages();
 
   return (
-    <html lang="en" className={`dark ${sans.variable} ${mono.variable}`}>
+    <html lang="en" className={`dark ${sans.variable} ${mono.variable} ${hand.variable}`}>
       <body className="font-inconsolata relative bg-white dark:bg-black">
         <DarkModeThemeProvider>
           <SoundProvider>
