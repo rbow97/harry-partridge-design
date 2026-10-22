@@ -9,4 +9,15 @@ export type Project = {
   priority: number | null;
   content: PortableTextBlock[];
   description: PortableTextBlock[];
+  partOf?: string; // _id of the main project
+  themes?: string[];
+  disciplines?: string[];
+  summary?: string;
+  year?: number;
+  materials?: string;
+  process?: string;
+  location?: string;
+  collaborators?: string;
+  press?: { title?: string; url?: string }[];
+  audio?: string;
 };

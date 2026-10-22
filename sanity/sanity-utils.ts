@@ -14,6 +14,11 @@ export async function getProjects(): Promise<Project[]> {
       url,
       priority,
       content,
+      "partOf": partOf._ref,
+      themes,
+      disciplines,
+      // fall back to Harry's existing description until a summary is written
+      "summary": coalesce(summary, pt::text(description)),
     }`,
     { cache: "no-store" }
   );
@@ -29,7 +34,19 @@ export async function getProject(slug: string): Promise<Project> {
       "slug": slug.current,
       "image": image.asset->url,
       url,
+      priority,
       content,
+      year,
+      materials,
+      process,
+      location,
+      collaborators,
+      press,
+      "audio": audio.asset->url,
+      "partOf": partOf._ref,
+      themes,
+      disciplines,
+      summary,
     }`,
     {
       slug,

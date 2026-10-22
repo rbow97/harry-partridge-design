@@ -9,9 +9,6 @@
   body {
   }
 
-  video {
-    height: 100dvh;
-  }
 
   h1 {
     @apply text-3xl;
