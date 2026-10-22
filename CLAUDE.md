@@ -5,8 +5,8 @@ Next 13 (app router) + Sanity (Studio at /admin, project `aewk7apr`) + Tailwind.
 Node 22. `./node_modules/.bin/tsc --noEmit` and `next lint` must stay clean.
 
 ## State
-- Branch `redesign`. Commit `929d439` has the first pass; everything since is **staged but uncommitted**
-  (modes, ecosystem, cross-stitch, nav, inflate, etc.). Nothing pushed. `main` = old live site (Vercel).
+- Branch `redesign`. `929d439` first pass, `693b947` modes and living-systems variants. The flock, the variant
+  cleanup, the nav colour fix and the touch fix are uncommitted on top. Nothing pushed. `main` = old live site (Vercel).
 - Live content is Harry's real Sanity data; new fields are already filled in by Rose in Studio.
 
 ## Design
@@ -24,18 +24,24 @@ Hovering **materials / sound / living systems** in the statement changes the who
 - materials: felt texture, woolly SVG filters (strength tweened in JS), cross-stitched statement
   (`components/CrossStitch.tsx`, canvas over the real text, drawn instantly).
 - sound: dark oscilloscope, rippling letters, scanlines, scrolling rulers.
-- living systems: variants selected by `?living=` (default **inflate**); remove the switcher once chosen:
-  - `inflate` — "living systems" becomes glossy balloon letters via SVG filter `#hp-puff` (no WebGL).
-    Breath generator in ProjectColumns (varied breaths, overshoot, sigh); per-letter ripple via `--lb`
-    + variable font weight on a `.hp-balloon` copy that cross-fades over the printed letters; its underline breathes (`--ub`).
-  - `breathe` (per-project breathing), `split` (cell division), `herbarium` (pressed specimens), `eco`
-    (Rose's drawn tree `public/images/tree.png` + line-drawn habitats in `components/Ecosystem.tsx`, vine in `components/Vine.tsx`).
+- living systems: **flock** (`components/Flock.tsx`, chosen 2026-10-22). The tray images dissolve into ~5k boids
+  on a fixed canvas that wheel around the cursor and fly home to re-form the images on leave. Images are sampled
+  from a 600px Sanity copy (`crossOrigin`), one particle per 10px, drawn as colour-bucketed rects. `<html data-flock>`
+  is set while particles are off their pixels; it hides the real `.hp-img`s. Tuning constants are at the top of the
+  file; still to tune by eye: speed, spread, whether the flock should avoid the statement text.
+  Rejected on the way (all deleted): balloon/inflate, breathe, split, herbarium, eco, a culture spreading along the
+  rules (didn't read), a lab-record day counter (too quiet). The `?living=` switch is gone.
+- Touch: a tap fires emulated hover then click, so the word buttons ignore hover/focus for touch pointers and taps
+  toggle; a tap outside the statement ends the mode.
 - Rules: letter effects must never change letter widths (reflow moves words under the cursor and flips the mode);
-  keep ≥50fps; respect prefers-reduced-motion; no grow-in animations in the eco scene (just fade).
+  keep ≥50fps; respect prefers-reduced-motion. Only `.hp-surface` transitions `color` - a child with its own colour
+  transition chases the inherited value and lags the page (this was the nav lag).
 
 ## Other pieces
-- Sound: `components/sound/SoundProvider.tsx` (Web Audio analyser), `EntryGate.tsx` (enter with/without sound),
-  `VoiceType.tsx` (headlines react to loudness), `SpoolPlayer.tsx` ("Play a spool" on project pages).
+- Sound: `components/sound/SoundProvider.tsx` (Web Audio analyser), `components/EntryGate.tsx` (enter with/without
+  sound), `components/VoiceType.tsx` (headlines react to loudness), `components/SpoolPlayer.tsx` ("Play a spool" on
+  project pages). The homepage sound *hover* does not use the analyser: it is fixed CSS (bobbing letters, scanlines,
+  scrolling rulers).
 - Project page (`app/(site)/projects/[project]/page.tsx`): record layout with metadata column.
 - Sanity schema (`sanity/schemas/project-schema.tsx`): disciplines (multi-select), summary, themes, partOf
   (reference → groups dev records under a main project, see `lib/group-projects.ts`), year/materials/press/audio.
@@ -43,7 +49,7 @@ Hovering **materials / sound / living systems** in the statement changes the who
 - Nav (`components/Nav.tsx`): slim ruled bar for home + project pages; legacy nav elsewhere.
 
 ## Open / next
-- Pick the living-systems variant, delete the others and the `?living=` switch.
+- Tune the flock by eye on a real machine and a real phone (frame rate on a phone is unmeasured).
+- Review the materials and sound hovers against the flock, which is now the most ambitious of the three.
 - Bio page and `/projects` grid still use the old design. Credentials were removed from home; could live on Bio.
-- Herbarium Latin names and inflate colour are placeholders — check with Harry.
 - Commit, push `redesign`, get a Vercel preview for Harry.

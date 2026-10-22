@@ -17,7 +17,8 @@ const Nav = ({ pages }: { pages: Page[] }) => {
       <header className="hp-surface hp-rule fixed inset-x-0 top-0 z-50 h-14 flex items-stretch border-b border-ink bg-paper text-ink">
         <Link
           href="/"
-          className="flex items-center px-5 md:px-10 font-sans text-base md:text-lg tracking-tight hover:text-rust transition-colors"
+          // colour transitions only while hovered, so the links follow a page mode change in step with the header
+          className="flex items-center px-5 md:px-10 font-sans text-base md:text-lg tracking-tight hover:text-rust hover:transition-colors"
         >
           Harry Partridge
         </Link>
@@ -29,7 +30,7 @@ const Nav = ({ pages }: { pages: Page[] }) => {
                 key={page._id}
                 href={`/${page.slug}`}
                 aria-current={active ? "page" : undefined}
-                className="hp-rule flex items-center gap-2 border-l border-ink px-4 md:px-6 font-mono text-[11px] uppercase tracking-wider hover:text-rust transition-colors"
+                className="hp-rule flex items-center gap-2 border-l border-ink px-4 md:px-6 font-mono text-[11px] uppercase tracking-wider hover:text-rust hover:transition-colors"
               >
                 <span
                   aria-hidden="true"

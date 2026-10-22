@@ -63,11 +63,15 @@ html[data-mode] {
   --hp-amp: 1;
 }
 
-.hp-surface,
 .hp-rule,
 .hp-mark,
 .hp-img,
 .hp-ruler {
+  transition: background-color 0.5s, border-color 0.5s, border-radius 0.5s, filter 0.6s, transform 0.8s, opacity 0.3s;
+}
+/* only the surface transitions colour. A child with its own colour transition chases
+   the inherited value frame by frame and ends up a whole transition behind the page */
+.hp-surface {
   transition: background-color 0.5s, color 0.5s, border-color 0.5s, filter 0.6s, transform 0.8s;
 }
 
@@ -209,24 +213,6 @@ html[data-mode="living"] .hp-rule {
 .hp-frame {
   transition: border-radius 0.8s ease, filter 0.6s;
 }
-html[data-living="eco"][data-mode="living"] .hp-img {
-  filter: saturate(1.3) hue-rotate(-12deg);
-  transform: scale(1.08);
-}
-html[data-living="eco"][data-anim~="living"] .hp-letter {
-  transform-origin: 50% 100%;
-  animation: hp-sway 3.2s ease-in-out infinite; /* rooted at the baseline, swaying */
-  animation-delay: calc(var(--i) * -90ms);
-}
-@keyframes hp-sway {
-  0%,
-  100% {
-    transform: rotate(calc(-4deg * var(--hp-amp)));
-  }
-  50% {
-    transform: rotate(calc(4deg * var(--hp-amp)));
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
   html[data-anim] .hp-letter,
@@ -236,356 +222,25 @@ html[data-living="eco"][data-anim~="living"] .hp-letter {
     transition: none !important;
   }
 }
-
-/* ------------------------------------------------------------------
-   Ecosystem (living systems mode) — see components/Ecosystem.tsx
-   ------------------------------------------------------------------ */
-.eco {
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-html[data-living="eco"][data-mode="living"] .eco {
-  opacity: 1;
-}
-/* everything in the scene is already drawn; the whole layer just fades in (.eco opacity) */
-
-
-/* the tree sways once it has grown */
-.eco-sway {
-  transform-origin: 66% 100%;
-  will-change: transform;
-}
-html[data-anim~="living"] .eco-sway {
-  animation: eco-sway 6s ease-in-out 2.8s infinite;
-}
-@keyframes eco-sway {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(calc(0.8deg * var(--hp-amp)));
-  }
-}
-
-/* creatures (SVG user units, so px = viewBox units) */
-html[data-anim~="living"] .eco-crawl {
-  animation: eco-crawl var(--crawl, 24s) linear infinite;
-}
-@keyframes eco-crawl {
-  from {
-    transform: translateX(-40px);
-  }
-  to {
-    transform: translateX(220px);
-  }
-}
-html[data-anim~="living"] .eco-fly {
-  animation: eco-fly var(--fly, 14s) linear infinite;
-}
-@keyframes eco-fly {
-  from {
-    transform: translate(-30px, 30px);
-  }
-  50% {
-    transform: translate(200px, 0);
-  }
-  to {
-    transform: translate(440px, 20px);
-  }
-}
-.eco-flap,
-.eco-wing {
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-}
-html[data-anim~="living"] .eco-flap {
-  animation: eco-flap 0.35s ease-in-out infinite alternate;
-}
-@keyframes eco-flap {
-  to {
-    transform: scaleY(0.3);
-  }
-}
-html[data-anim~="living"] .eco-wing {
-  animation: eco-wing 0.22s ease-in-out infinite alternate;
-}
-@keyframes eco-wing {
-  to {
-    transform: scaleX(0.25);
-  }
-}
-html[data-anim~="living"] .eco-drift {
-  animation: eco-drift 9s ease-in-out infinite;
-}
-@keyframes eco-drift {
-  0%,
-  100% {
-    transform: translate(-90px, 10px);
-  }
-  25% {
-    transform: translate(-20px, -14px);
-  }
-  50% {
-    transform: translate(60px, 4px);
-  }
-  75% {
-    transform: translate(10px, -10px);
-  }
-}
-html[data-anim~="living"] .eco-hop {
-  animation: eco-hop 2.6s ease-in-out infinite;
-}
-@keyframes eco-hop {
-  0%,
-  40%,
-  100% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(14px, -8px);
-  }
-  60% {
-    transform: translate(28px, 0);
-  }
-  80% {
-    transform: translate(28px, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html[data-anim~="living"] .eco-sway,
-  html[data-anim~="living"] .eco-crawl,
-  html[data-anim~="living"] .eco-fly,
-  html[data-anim~="living"] .eco-flap,
-  html[data-anim~="living"] .eco-wing,
-  html[data-anim~="living"] .eco-drift,
-  html[data-anim~="living"] .eco-hop {
-    animation: none;
-  }
-}
-
-/* ------------------------------------------------------------------
-   Vine along "living systems" (living mode) — see components/Vine.tsx
-   ------------------------------------------------------------------ */
-.hp-vine {
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-html[data-living="eco"][data-mode="living"] .hp-vine {
-  opacity: 1;
-}
-/* the vine replaces the plain underline */
-.hp-vine-host .hp-kw {
-  transition: border-color 0.4s;
-}
-html[data-living="eco"][data-mode="living"] .hp-vine-host .hp-kw {
-  border-color: transparent;
-}
-.hp-vine-draw {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-}
-html[data-anim~="living"] .hp-vine-draw {
-  animation: hp-vine-draw var(--dur, 1s) ease-out var(--d, 0s) forwards;
-}
-@keyframes hp-vine-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-.hp-vine-leaf {
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-  scale: 0;
-}
-html[data-anim~="living"] .hp-vine-leaf {
-  animation: hp-vine-leaf 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.4) var(--d, 0s) forwards;
-}
-@keyframes hp-vine-leaf {
-  to {
-    scale: 1;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  html[data-anim~="living"] .hp-vine-draw {
-    animation: none;
-    stroke-dashoffset: 0;
-  }
-  html[data-anim~="living"] .hp-vine-leaf {
-    animation: none;
-    scale: 1;
-  }
-}
-
-/* ==================================================================
-   Living systems — alternative hovers (?living=breathe|split|herbarium)
-   ================================================================== */
-
-/* 4 · BREATHE — each project inflates and deflates like a lung, a beat apart.
-   --b (0 → 1) is the breath, driven from ProjectColumns; see the curve there. */
-html[data-living="breathe"] .hp-breath .hp-statement {
-  transform-origin: 0 60%;
-  transform: scale(calc(1 + 0.02 * var(--b, 0)));
-}
-/* the photo fills with air inside its frame */
-html[data-living="breathe"] .hp-breath .hp-img {
-  transform: scale(calc(1 + 0.14 * var(--b, 0)));
-}
-/* the frame itself rises slightly, like a chest */
-html[data-living="breathe"] .hp-breath .hp-frame {
-  transform: translateY(calc(-6px * var(--b, 0))) scale(calc(1 + 0.04 * var(--b, 0)));
-  box-shadow: 0 calc(14px * var(--b, 0)) calc(24px * var(--b, 0)) calc(-12px * var(--b, 0)) rgba(47, 58, 34, 0.45);
-}
-
-/* 5 · SPLIT — every letter divides like a cell, and rejoins on exit */
-.hp-statement .hp-letter::before,
-.hp-statement .hp-letter::after {
-  content: attr(data-ch);
-  position: absolute;
+/* LIVING SYSTEMS — flock
+   The tray images dissolve into boids that flock around the cursor and fly home
+   when you leave. Simulation and drawing live in components/Flock.tsx; data-flock
+   is set on <html> while the particles are off their pixels. */
+.hp-flock {
+  position: fixed;
   inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  transition: transform 0.9s cubic-bezier(0.3, 0.7, 0.2, 1) calc(var(--i) * 6ms), opacity 0.4s;
-}
-html[data-living="split"][data-mode="living"] .hp-statement .hp-letter {
-  color: transparent;
-}
-html[data-living="split"][data-mode="living"] .hp-statement .hp-letter::before,
-html[data-living="split"][data-mode="living"] .hp-statement .hp-letter::after {
-  opacity: 0.75;
-  color: #2f3a22;
-  mix-blend-mode: multiply;
-}
-html[data-living="split"][data-mode="living"] .hp-statement .hp-letter::before {
-  transform: translate(calc(var(--s) * -1 * var(--sd)), calc(var(--s) * -0.5));
-}
-html[data-living="split"][data-mode="living"] .hp-statement .hp-letter::after {
-  color: #6b8a2e;
-  transform: translate(calc(var(--s) * var(--sd)), calc(var(--s) * 0.5));
-}
-
-/* 6 · HERBARIUM — each photo becomes a pressed specimen on a mounting sheet */
-.hp-tape,
-.hp-specimen {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s, transform 0.5s;
-}
-.hp-tape {
-  top: 4%;
-  left: -3%;
-  width: 26%;
-  height: 9%;
-  background: rgba(233, 216, 170, 0.85);
-  transform: rotate(-24deg) translateY(-6px);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-}
-.hp-specimen {
-  right: 6%;
-  bottom: 3.5%;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  font-family: var(--font-hand), cursive;
-  color: #3b3020;
-  line-height: 1.05;
-  transform: translateY(4px);
-}
-.hp-specimen em {
-  font-size: clamp(14px, 1.35vw, 20px);
-  font-style: normal;
-}
-.hp-specimen span {
-  font-size: clamp(11px, 0.9vw, 14px);
-  opacity: 0.75;
-}
-.hp-frame .hp-img {
-  transition: inset 0.55s cubic-bezier(0.3, 0.7, 0.2, 1), width 0.55s cubic-bezier(0.3, 0.7, 0.2, 1),
-    height 0.55s cubic-bezier(0.3, 0.7, 0.2, 1), filter 0.6s, opacity 0.5s;
-}
-html[data-living="herbarium"] .hp-frame {
-  transition: background-color 0.45s, box-shadow 0.45s, transform 0.55s;
-}
-html[data-living="herbarium"][data-mode="living"] .hp-frame {
-  background-color: #fbf8ef;
-  box-shadow: 0 6px 18px -10px rgba(47, 58, 34, 0.55);
-}
-html[data-living="herbarium"][data-mode="living"] li:nth-child(odd) .hp-frame { transform: rotate(-1.2deg); }
-html[data-living="herbarium"][data-mode="living"] li:nth-child(even) .hp-frame { transform: rotate(1deg); }
-html[data-living="herbarium"][data-mode="living"] .hp-img {
-  /* replaced elements don't stretch between insets, so size explicitly */
-  inset: 8% auto auto 12%;
-  width: 76%;
-  height: 66%;
-  filter: sepia(0.45) saturate(0.85) contrast(1.05);
-}
-html[data-living="herbarium"][data-mode="living"] .hp-tape,
-html[data-living="herbarium"][data-mode="living"] .hp-specimen {
-  opacity: 1;
-  transform: rotate(-24deg);
-}
-html[data-living="herbarium"][data-mode="living"] .hp-specimen {
-  transform: none;
-}
-
-
-/* ==================================================================
-   Living systems — INFLATE (?living=inflate, default)
-   The words "living systems" fill with air like balloons and breathe.
-   Shape and shading come from the #hp-puff filter, driven per frame.
-   ================================================================== */
-/* the balloon copy sits exactly over the printed words and cross-fades in */
-.hp-balloon {
-  position: absolute;
-  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 55; /* over the trays, under the nav */
   pointer-events: none;
   opacity: 0;
-  visibility: hidden;
-  filter: url(#hp-puff);
-  transition: opacity 0.6s ease, visibility 0s linear 0.6s;
+  transition: opacity 0.4s ease;
 }
-html[data-living="inflate"][data-anim~="living"] .hp-balloon {
-  visibility: visible;
-  transition: opacity 0.6s ease, visibility 0s;
-}
-html[data-living="inflate"][data-mode="living"] .hp-balloon {
+html[data-flock] .hp-flock {
   opacity: 1;
 }
-/* the balloon underline swells into a tube on each breath (--ub = its word's mean breath) */
-.hp-balloon .hp-bkw {
-  padding-bottom: 0.16em; /* clear the descenders so the tube doesn't fuse with g and y */
-  border-bottom-width: calc(1px + 2.5px * var(--ub, 0));
-  margin-bottom: calc(-0.16em - 2.5px * var(--ub, 0));
-}
-/* …while the printed letters and their underline fade away underneath */
-html[data-living="inflate"] .hp-inflate .hp-kw .hp-letter {
-  transition: color 0.45s ease 0.05s, transform 0.5s ease calc(var(--i) * 3ms);
-}
-html[data-living="inflate"][data-mode="living"] .hp-inflate .hp-kw .hp-letter {
-  color: transparent;
-}
-html[data-living="inflate"] .hp-inflate .hp-kw {
-  transition: border-color 0.7s ease;
-}
-html[data-living="inflate"][data-mode="living"] .hp-inflate .hp-kw {
-  border-color: transparent;
-}
-/* letters drift apart as they swell, so the balloons don't fuse (transform only: no reflow) */
-/* each letter swells, lifts and spreads on its own beat (--lb), so the breath
-   visibly travels along the word */
-html[data-living="inflate"] .hp-inflate .hp-letter {
-  transform-origin: 50% 75%;
-  transform: translateX(calc((var(--i) - var(--i0) - var(--n) / 2) * 3.2px * var(--lb, 0)))
-    translateY(calc(-4px * var(--lb, 0))) scale(calc(1 + 0.1 * var(--lb, 0)));
-}
-/* the full stop after "systems" steps aside as the balloons swell */
-html[data-living="inflate"] .hp-inflate + span .hp-letter {
-  transform: translateX(calc(30px * var(--air, 0)));
-}
-/* a little lift and swell with each breath */
-html[data-living="inflate"] .hp-inflate {
-  transform-origin: 50% 70%;
-  transform: translateY(calc(-1px * var(--air, 0)));
+/* the real pixels hide while their particles are away, whatever the tray hover says */
+html[data-flock] .hp-frame .hp-img {
+  opacity: 0 !important;
+  transition: opacity 0.25s ease;
 }
