@@ -37,7 +37,7 @@ Astro 7 (static output, Vercel adapter) + React islands + Tailwind v4 + Sanity (
 - Live content is Harry's real Sanity data; new fields are already filled in by Rose in Studio.
 
 ## Design
-- Concept: "precise, tactile, curious, but not cold". Projects are *records* (HP–001…).
+- Concept: "precise, tactile, curious, but not cold". Projects are *records*.
 - Palette: paper #F4F1EA, ink #1A1A17, muted #6B675E, verdigris #2B6B5F (the accent, chosen 2026-10-23 over the old rust), plus the mode surfaces
   felt #E9DCC6, verdigris-light #7CC4B3 (the accent on the sound mode), moss #EFE4C2 (see `src/styles/tokens.css`). Fonts: Instrument Sans (variable wght/wdth), Martian Mono.
 - Phones (2026-10-23, after liyakedar.com's phone layout): one specimen per row, the 4:3 photo running wall to

@@ -22,7 +22,7 @@ export async function getStaticPaths() {
 }
 
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
-const { no: recordNo, current, projects } = Astro.props as Props;
+const { current, projects } = Astro.props as Props;
 // the projects either side in the drawer, looping round at the ends. With two projects both sides are the same one, so only next shows
 const next = projects.length > 1 ? projects[(current + 1) % projects.length] : null;
 const previous = projects.length > 2 ? projects[(current - 1 + projects.length) % projects.length] : null;
@@ -55,9 +55,7 @@ const meta = [
         {/* mt-auto, not justify-end, so the top stays reachable when the column has to scroll */}
         <div class="mt-auto flex flex-col gap-3">
           <p class="hp-label text-muted flex flex-wrap gap-x-3">
-            <span class="text-ink whitespace-nowrap">{recordNo}</span>
-            <span aria-hidden="true">·</span>
-            <span>{project.parent ? recordLabel(project) : "Project record"}</span>
+            <span class="text-ink">{project.parent ? recordLabel(project) : "Project record"}</span>
             {project.year && (
               <>
                 <span aria-hidden="true">·</span>
@@ -184,9 +182,7 @@ const meta = [
                 label === "Next" ? "border-l border-ink md:justify-end" : "border-l md:border-l-0 border-ink",
               ]}
             >
-              <span>{label}</span>{" "}
-              {/* the mono face is wide, so the number only fits beside the label from sm up */}
-              <span class="hidden sm:inline text-accent whitespace-nowrap shrink-0">{p.no}</span>
+              <span>{label}</span>
               <span class="sr-only">: {p.name}</span>
               <span aria-hidden="true" class="absolute inset-x-0 -top-px h-0.5 bg-accent origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"></span>
             </a>
