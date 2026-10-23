@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- the record stamp: paper, the tray's crop marks, HP in rust. Drawn as paths so no font is needed -->
+  <rect width="64" height="64" fill="#F4F1EA"/>
+  <g fill="none" stroke="#1A1A17" stroke-width="2" stroke-opacity=".55">
+    <path d="M8 18V8h10M46 8h10v10M56 46v10H46M18 56H8V46"/>
+  </g>
+  <g fill="none" stroke="#A4471F" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="miter">
+    <!-- H -->
+    <path d="M17 22v20M17 32h11M28 22v20"/>
+    <!-- P -->
+    <path d="M36 42V22h7a5.5 5.5 0 0 1 0 11h-7"/>
+  </g>
+</svg>

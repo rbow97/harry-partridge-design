@@ -99,12 +99,12 @@ async function ProjectDetail({ params }: Props) {
     <article className="min-h-screen bg-paper text-ink">
       {/* from lg the grid starts right under the bar, so the sticky words column is already
           at its resting place on load and never slides */}
-      <div className="px-6 md:px-7 pt-24 lg:pt-14 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-x-12 gap-y-10">
+      <div className="px-6 md:px-7 pt-24 md:pt-14 pb-24 grid grid-cols-1 md:grid-cols-12 gap-x-8 lg:gap-x-12 gap-y-10">
         {/* the words: a screen-tall column stuck under the bar with its content at the bottom,
             so it sits still at the foot of the screen from the first pixel while the work
             scrolls past. Nothing scrolls inside it; the type is sized so the longest record
             fits a laptop window */}
-        <div className="lg:col-span-5 xl:col-span-4 self-start flex flex-col justify-end lg:sticky lg:top-14 lg:min-h-[calc(100svh-3.5rem)] lg:pb-7 lg:pr-4">
+        <div className="md:col-span-5 xl:col-span-4 self-start flex flex-col justify-end md:sticky md:top-14 md:min-h-[calc(100svh-3.5rem)] md:pb-7 md:pr-4">
           <div className="flex flex-col gap-3">
           <p className="font-mono text-[11px] uppercase tracking-wider text-muted flex flex-wrap gap-x-3">
             <span className="text-ink">{recordNo}</span>
@@ -153,7 +153,7 @@ async function ProjectDetail({ params }: Props) {
         </div>
 
         {/* the work: the lead image, then everything in the record, one stack no wider than a sheet */}
-        <div className="lg:col-span-7 xl:col-span-8 lg:pt-14 flex flex-col gap-6 md:gap-8 w-full max-w-[760px]">
+        <div className="md:col-span-7 xl:col-span-8 md:pt-14 flex flex-col gap-6 md:gap-8 w-full max-w-[760px]">
           {project.image && (
             <figure>
               <Image src={project.image} alt={project.name} width={1920} height={1440} priority className="hp-img w-full h-auto" />

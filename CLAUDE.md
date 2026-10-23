@@ -70,6 +70,9 @@ Hovering **materials / sound / living systems** in the statement changes the who
   rules (didn't read), a lab-record day counter (too quiet). The `?living=` switch is gone.
 - Touch: a tap fires emulated hover then click, so the word buttons ignore hover/focus for touch pointers and taps
   toggle; a tap outside the statement ends the mode.
+- Client components still render on the server: nothing may touch `window`, `innerWidth` or `document` outside an
+  effect. A ref initialised from `innerWidth` in Flock threw on the server and silently turned the whole homepage
+  client-only until 2026-10-23. Check with `curl localhost:3000 | grep hp-statement` after touching mode code.
 - Rules: letter effects must never change letter widths (reflow moves words under the cursor and flips the mode);
   keep ≥50fps; respect prefers-reduced-motion. Only `.hp-surface` transitions `color` - a child with its own colour
   transition chases the inherited value and lags the page (this was the nav lag).
@@ -90,6 +93,9 @@ Hovering **materials / sound / living systems** in the statement changes the who
 - Sanity schema (`sanity/schemas/project-schema.tsx`): disciplines (multi-select), summary, themes, partOf
   (reference → groups dev records under a main project, see `lib/group-projects.ts`), year/materials/press/audio.
   `scripts/seed-homepage-fields.mjs` is a one-off seeder (needs SANITY_API_WRITE_TOKEN; values are guesses).
+- Favicon: `app/icon.svg` (the record stamp: HP in rust between the tray's crop marks, drawn as paths, chosen from nine
+  variants; a cross-stitch leaned on one subject) and `app/apple-icon.png` rendered from it at
+  180px; Next's file convention writes the link tags.
 - Nav (`components/Nav.tsx`): the slim ruled bar on every page. On phones the pages sit behind a menu button (three rules that fold into a cross, after liyakedar.com) that drops a panel
   of ruled mono rows from the bar, the page showing beneath; Escape, the button, a tap beneath, or a link closes
   it, focus moves in and back. The panel's display is a class toggle, not the `hidden` attribute, because

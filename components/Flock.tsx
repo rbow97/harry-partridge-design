@@ -136,7 +136,8 @@ export default function Flock({ active }: { active: boolean }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const sim = useRef<Sim | null>(null);
   const phase = useRef<"idle" | "flock" | "home">("idle");
-  const cursor = useRef<[number, number]>([innerWidth / 2, innerHeight / 3]);
+  // no window on the server: start at the origin and take the word's position when the mode opens
+  const cursor = useRef<[number, number]>([0, 0]);
   const raf = useRef(0);
   const run = useRef(0); // bumps on every change, so a stale sample is thrown away
 
