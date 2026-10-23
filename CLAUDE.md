@@ -5,7 +5,7 @@ Astro 7 (static output, Vercel adapter) + React islands + Tailwind v4 + Sanity (
 @sanity/astro, project `aewk7apr`). Run: `npm run dev` → localhost:3000. `npm run check` (astro check) and
 `npm run build` must stay clean. Node 22+.
 
-## Stack (moved from Next 13 on 2026-10-23, branch `astro`)
+## Stack (moved from Next 13 on 2026-10-23, branch `feat/astro`)
 - `src/pages/*.astro` render at build from Sanity (`src/lib/sanity.ts`, `sanity:client`). Content changes need a
   rebuild: point a Sanity webhook at Vercel's deploy hook. `getStaticPaths` lists pages and projects; the Sanity
   "Projects" page is skipped because `/projects` redirects home (astro.config.mjs).
@@ -31,7 +31,9 @@ Astro 7 (static output, Vercel adapter) + React islands + Tailwind v4 + Sanity (
   so open the pane with the URL once the server is up.
 
 ## State
-- Branch `astro` (from `redesign` at `fd6561b`). Nothing pushed. `main` = old live site (Vercel, still Next).
+- Branch `feat/astro` (from `redesign` at `fd6561b`), pushed 2026-10-23. `main` = old live site (still Next).
+- The Vercel project's framework preset is still Next.js for `main`, so `vercel.json` sets `"framework": "astro"`
+  for this branch. Without it the build stops at `NEXT_NO_VERSION`. Switch the project preset to Astro once this merges.
 - Live content is Harry's real Sanity data; new fields are already filled in by Rose in Studio.
 
 ## Design
@@ -150,4 +152,4 @@ Hovering **materials / sound / living systems** in the statement changes the who
 - `/projects` redirects to `/` (astro.config.mjs, a 301 in the Vercel output) and the old grid page is deleted (2026-10-23): the homepage is the
   index. The nav drops any Sanity page with slug `projects` (`Nav.tsx`), so Harry's Studio document can stay.
   Record pages at `/projects/[project]` are unchanged.
-- Commit, push `redesign`, get a Vercel preview for Harry.
+- Share the `feat/astro` Vercel preview with Harry.
