@@ -1,0 +1,102 @@
+---
+import Site from "@/layouts/Site.astro";
+import { getProject, getProjects } from "@/lib/sanity";
+import { RecordWords, RecordWork } from "@/components/RichText";
+import VoiceType from "@/components/VoiceType";
+import SpoolPlayer from "@/components/SpoolPlayer";
+
+/* A project record: the words in a screen-tall column on the left with its content at the
+   bottom, stuck under the bar so it sits still while the work scrolls past; the work as a
+   stack of images on the right at their own proportions (after laylabaghai.com/probio).
+   Phones: words first, then the stack. */
+
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  return projects.map((p) => ({ params: { project: p.slug } }));
+}
+
+const project = await getProject(Astro.params.project!);
+if (!project) return Astro.redirect("/404");
+
+const recordNo = `HP–${String(project.priority ?? 0).padStart(3, "0")}`;
+const hasMeta = !!(project.year || project.materials || project.process || project.location || project.collaborators || project.press?.length);
+const meta = [
+  ["Materials", project.materials],
+  ["Process", project.process],
+  ["Location", project.location],
+  ["With", project.collaborators],
+].filter(([, v]) => v) as [string, string][];
+---
+
+<Site title={project.name}>
+  <article class="min-h-screen bg-paper text-ink">
+    <div class="px-edge pt-24 md:pt-bar pb-24 grid grid-cols-1 md:grid-cols-12 gap-x-8 lg:gap-x-12 gap-y-10">
+      {/* the words: a screen-tall column stuck under the bar with its content at the bottom.
+          Nothing scrolls inside it; the type is sized so the longest record fits a laptop window */}
+      <div class="md:col-span-5 xl:col-span-4 self-start flex flex-col justify-end md:sticky md:top-bar md:min-h-[calc(100svh-var(--size-bar))] md:pb-7 md:pr-4">
+        <div class="flex flex-col gap-3">
+          <p class="hp-label text-muted flex flex-wrap gap-x-3">
+            <span class="text-ink">{recordNo}</span>
+            <span aria-hidden="true">·</span>
+            <span>Project record</span>
+            {project.year && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>{project.year}</span>
+              </>
+            )}
+          </p>
+          <h1 class="text-2xl md:text-3xl leading-tight tracking-tight">
+            {/* the title speaks: its letters follow the loudness of whatever is playing */}
+            <VoiceType client:visible text={project.name} />
+          </h1>
+          {project.description && (
+            <div class="flex flex-col gap-3 max-w-[48ch]">
+              <RecordWords value={project.description} />
+            </div>
+          )}
+          {!!project.disciplines?.length && (
+            <div>
+              <p class="hp-label text-muted">Work</p>
+              <p class="mt-1 text-sm">{project.disciplines.join(", ")}</p>
+            </div>
+          )}
+          {/* the spool only appears when this record has a recording of its own */}
+          {project.audio && <SpoolPlayer client:visible src={project.audio} />}
+          {hasMeta && (
+            <dl class="border-b border-rule">
+              {meta.map(([label, value]) => (
+                <div class="grid grid-cols-[6rem_1fr] gap-4 py-3 border-t border-rule">
+                  <dt class="hp-label text-muted pt-1">{label}</dt>
+                  <dd class="text-base">{value}</dd>
+                </div>
+              ))}
+              {!!project.press?.length && (
+                <div class="grid grid-cols-[6rem_1fr] gap-4 py-3 border-t border-rule">
+                  <dt class="hp-label text-muted pt-1">Press</dt>
+                  <dd class="text-base">
+                    {project.press.map((p) => (
+                      <a href={p.url} target="_blank" rel="noopener" class="block text-rust underline decoration-1 underline-offset-4">
+                        {p.title}
+                      </a>
+                    ))}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          )}
+        </div>
+      </div>
+
+      {/* the work: the lead image, then everything in the record, one stack that grows with the screen */}
+      <div class="md:col-span-7 xl:col-span-8 md:pt-bar flex flex-col gap-6 md:gap-8 w-full max-w-[min(100%,60vw)]">
+        {project.image && (
+          <figure>
+            <img src={project.image} alt={project.imageAlt ?? ""} class="hp-img w-full h-auto" />
+          </figure>
+        )}
+        {project.content && <RecordWork value={project.content} />}
+      </div>
+    </div>
+  </article>
+</Site>

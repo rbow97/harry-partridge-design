@@ -1,0 +1,44 @@
+---
+import Site from "@/layouts/Site.astro";
+import { getPage, getPages } from "@/lib/sanity";
+import { SheetText, SheetTray, isImage, type ImageBlock } from "@/components/RichText";
+
+/* A Sanity page (Bio, Contact) laid out as a record sheet, like the homepage hero:
+   the text runs down the left, any images sit in specimen trays on the right. */
+
+export async function getStaticPaths() {
+  const pages = await getPages();
+  // the homepage is the projects index, and /projects redirects there
+  return pages.filter((p) => p.slug !== "projects").map((p) => ({ params: { slug: p.slug } }));
+}
+
+const page = await getPage(Astro.params.slug!);
+if (!page) return Astro.redirect("/404");
+const content = page.content ?? [];
+// the content array is typed as blocks; image blocks are objects beside them
+const images = (content as unknown[]).filter(isImage);
+---
+
+<Site title={page.title}>
+  <article class="min-h-screen bg-paper text-ink">
+    <div class="px-edge pt-28 md:pt-32 pb-24">
+      {/* the record line is the page's heading: small mono, but a real h1 */}
+      <h1 class="hp-label font-normal text-muted flex flex-wrap gap-x-3 m-0">
+        <span class="text-ink">Harry Partridge</span>
+        <span aria-hidden="true">·</span>
+        <span>{page.title}</span>
+      </h1>
+
+      <div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div class:list={["flex flex-col gap-6", images.length ? "lg:col-span-7" : "lg:col-span-9"]}>
+          <SheetText value={content} />
+        </div>
+        {images.length > 0 && (
+          <aside class="lg:col-span-5 lg:sticky lg:top-24 self-start flex flex-col gap-8">
+            {images.map((img, i) => <SheetTray image={img} index={i} />)}
+          </aside>
+        )}
+      </div>
+    </div>
+  </article>
+</Site>

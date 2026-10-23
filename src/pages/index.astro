@@ -1,0 +1,13 @@
+---
+import Site from "@/layouts/Site.astro";
+import ProjectColumns from "@/components/ProjectColumns";
+import { getProjects } from "@/lib/sanity";
+import { groupProjects } from "@/lib/group-projects";
+
+const groups = groupProjects(await getProjects());
+---
+
+<Site>
+  {/* the whole homepage is one island: the statement's modes, the drawer and the canvases share state */}
+  <ProjectColumns client:load groups={groups} />
+</Site>

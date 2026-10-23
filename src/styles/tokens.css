@@ -1,0 +1,81 @@
+/* ==================================================================
+   Design tokens. Three tiers:
+   1. primitives: the palette, named for what they are
+   2. semantic: roles the components use (surface, text, rule, accent)
+   3. modes: <html data-mode="…"> reassigns the roles, so no component
+      ever names a mode to get its colours
+   Tailwind's utilities are mapped onto the roles in global.css, and the
+   canvas components read the roles at runtime with lib/tokens.ts.
+   ================================================================== */
+
+:root {
+  /* primitives */
+  --paper: #f4f1ea;
+  --ink: #1a1a17;
+  --muted: #6b675e;
+  --rust: #a4471f;
+  --felt: #e9dcc6; /* materials surface */
+  --felt-rule: #9a6b45;
+  --felt-muted: #5a4f41; /* muted, darkened to clear 4.5:1 on felt */
+  --ember: #e8875e; /* the accent on the dark sound surface */
+  --moss: #efe4c2; /* living surface */
+  --moss-ink: #2f3a22;
+  --moss-rule: #5c6b2e;
+  --moss-muted: #5c594d; /* muted, darkened to clear 4.5:1 on moss */
+
+  /* semantic, at rest */
+  --surface: var(--paper);
+  --text: var(--ink);
+  --text-muted: var(--muted);
+  --accent: var(--rust);
+  --rule: color-mix(in srgb, var(--ink) 15%, transparent); /* the quiet rule on record pages */
+  --rule-strong: var(--ink); /* the ruled grid */
+  --mark: color-mix(in srgb, var(--ink) 50%, transparent); /* crop marks */
+
+  /* layout */
+  --space-edge: 28px; /* the shared left and right edge: brand, statement, photos */
+  --size-bar: 56px; /* the nav bar */
+  --ratio-frame: 4 / 3; /* every specimen photo */
+
+  /* stacking, by role */
+  --z-menu: 40;
+  --z-nav: 50;
+  --z-overlay: 55; /* the mode canvases, inside the page's own stacking context */
+
+  /* motion */
+  --dur-fast: 0.3s;
+  --dur-mode: 0.5s; /* the page changing colour */
+  --dur-filter: 0.6s;
+  --dur-slow: 0.8s;
+  --ease-mode: ease;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --space-edge: 24px;
+  }
+}
+
+html[data-mode="materials"] {
+  --surface: var(--felt);
+  --text-muted: var(--felt-muted);
+  --rule-strong: var(--felt-rule);
+  --mark: var(--felt-rule);
+}
+
+html[data-mode="sound"] {
+  --surface: var(--ink);
+  --text: var(--paper);
+  --text-muted: color-mix(in srgb, var(--paper) 60%, transparent);
+  --accent: var(--ember);
+  --rule: color-mix(in srgb, var(--paper) 30%, transparent);
+  --rule-strong: color-mix(in srgb, var(--paper) 25%, transparent);
+  --mark: color-mix(in srgb, var(--paper) 50%, transparent);
+}
+
+html[data-mode="living"] {
+  --surface: var(--moss);
+  --text: var(--moss-ink);
+  --text-muted: var(--moss-muted);
+  --rule-strong: var(--moss-rule);
+}

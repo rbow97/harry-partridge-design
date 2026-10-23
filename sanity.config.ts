@@ -1,14 +1,13 @@
 import { defineConfig } from "sanity";
-import { deskTool } from "sanity/desk";
+import { structureTool } from "sanity/structure";
 import schemas from "./sanity/schemas";
 
+// The Studio, embedded at /admin by @sanity/astro (which owns the base path)
 const config = defineConfig({
   projectId: "aewk7apr",
   dataset: "production",
   title: "Harry Partridge Design",
-  apiVersion: "2023-21-08",
-  basePath: "/admin",
-  plugins: [deskTool()],
+  plugins: [structureTool()],
   schema: { types: schemas },
 });
 

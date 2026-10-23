@@ -1,0 +1,353 @@
+@import "tailwindcss";
+@import "./tokens.css";
+@import "@fontsource-variable/instrument-sans/wdth.css";
+@import "@fontsource-variable/instrument-sans/wdth-italic.css";
+@import "@fontsource-variable/martian-mono/standard.css";
+
+/* Tailwind's names point at the semantic roles, so `text-ink` means "the text colour"
+   and follows the mode. `inline` keeps the var() in the utility, so opacity modifiers
+   like bg-ink/25 still work through color-mix. */
+@theme inline {
+  --color-paper: var(--surface);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-rust: var(--accent);
+  --color-rule: var(--rule);
+  --font-sans: "Instrument Sans Variable", system-ui, sans-serif;
+  --font-mono: "Martian Mono Variable", ui-monospace, monospace;
+  --spacing-edge: var(--space-edge);
+  --spacing-bar: var(--size-bar);
+}
+
+/* the mono label used for record numbers, nav items, disciplines and the like */
+@utility hp-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ------------------------------------------------------------------
+   Page modes — hovering a word in the homepage statement turns the
+   whole page into that subject. Set on <html data-mode="…">, which
+   reassigns the semantic tokens (tokens.css). What follows is the
+   art direction each mode adds on top of the recolour.
+   ------------------------------------------------------------------ */
+/* the root carries the page colour too, so overscroll past the top or bottom shows paper
+   (or the mode's colour), never the browser's white */
+html {
+  background-color: var(--surface);
+  transition: background-color var(--dur-mode);
+}
+/* elements with their own colour role ease with the page. Only elements that set a colour
+   get this: a child that merely inherits must not transition, or it chases the parent and
+   ends up a whole transition behind (see .hp-surface) */
+.text-ink,
+.text-muted,
+.text-rust,
+.text-paper,
+.bg-ink,
+.bg-rust,
+.bg-paper,
+.bg-rule {
+  transition: color var(--dur-mode), background-color var(--dur-mode);
+}
+
+.hp-rule {
+  border-color: var(--rule-strong);
+}
+.hp-mark {
+  border-color: var(--mark);
+}
+.hp-rule,
+.hp-mark,
+.hp-ruler {
+  transition: background-color var(--dur-mode), border-color var(--dur-mode), border-radius var(--dur-mode),
+    filter var(--dur-filter), transform var(--dur-slow), opacity var(--dur-fast);
+}
+/* the phone menu button: three rules, which fold into a cross while the menu is open */
+.hp-burger {
+  display: block;
+  width: 18px;
+  height: 12px;
+  position: relative;
+}
+.hp-burger span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transition: transform var(--dur-fast) ease, opacity 0.2s;
+}
+.hp-burger span:nth-child(1) {
+  top: 0;
+}
+.hp-burger span:nth-child(2) {
+  top: 50%;
+}
+.hp-burger span:nth-child(3) {
+  top: 100%;
+}
+.hp-burger-open span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.hp-burger-open span:nth-child(2) {
+  opacity: 0;
+}
+.hp-burger-open span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* the nav's sound switch: four bars that move while sound is on and lie flat when it's off */
+.hp-meter {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 12px;
+}
+.hp-meter span {
+  width: 3px;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.35;
+  transform-origin: bottom;
+  transition: opacity var(--dur-fast), height var(--dur-fast), background-color var(--dur-mode);
+}
+.hp-meter-on span {
+  opacity: 1;
+  background: var(--accent);
+  animation: hp-meter-bar 0.9s ease-in-out infinite alternate;
+}
+.hp-meter-on span:nth-child(1) {
+  height: 6px;
+  animation-delay: -0.1s;
+}
+.hp-meter-on span:nth-child(2) {
+  height: 12px;
+  animation-delay: -0.4s;
+}
+.hp-meter-on span:nth-child(3) {
+  height: 9px;
+  animation-delay: -0.7s;
+}
+.hp-meter-on span:nth-child(4) {
+  height: 5px;
+  animation-delay: -0.25s;
+}
+@keyframes hp-meter-bar {
+  to {
+    transform: scaleY(0.35);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-meter-on span {
+    animation: none;
+  }
+}
+
+/* a tray's width on the 12-column drawer (--span from lib/tray-layout.ts); phones are one column */
+@media (min-width: 768px) {
+  .hp-tray {
+    grid-column: span var(--span, 3);
+  }
+}
+/* every mode writes the same filter list, in the same order, with neutral values for the
+   functions it doesn't use: CSS only interpolates filters whose lists match, otherwise the
+   change snaps. The reel angle (--reel) is written per frame by Tape.tsx, so no transform transition */
+.hp-img {
+  filter: grayscale(0) sepia(0) saturate(1) contrast(1) brightness(1);
+  transform: rotate(var(--reel, 0deg));
+  transition: filter var(--dur-filter), opacity var(--dur-mode);
+}
+/* only the surface transitions inherited colour. A child with its own colour transition chases
+   the inherited value frame by frame and ends up a whole transition behind the page */
+.hp-surface {
+  background-color: var(--surface);
+  color: var(--text);
+  transition: background-color var(--dur-mode), color var(--dur-mode), border-color var(--dur-mode),
+    filter var(--dur-filter), transform var(--dur-slow);
+  /* texture layer: fades in/out instead of the background-image snapping */
+  isolation: isolate;
+}
+.hp-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-mode);
+}
+/* ruler drawn as repeating tiles so it can scroll without changing size */
+.hp-ruler > span {
+  background-size: 40px 100%, 8px 45% !important;
+  background-repeat: repeat-x !important;
+}
+/* Letter effects use transform/colour only — changing letter widths would reflow the
+   sentence, slide a different word under the cursor and flip the mode back and forth. */
+.hp-letter {
+  transition: transform var(--dur-mode) ease calc(var(--i) * 3ms), color var(--dur-fast);
+}
+
+/* ------------------------------------------------------------------
+   The specimen frame: always 4:3, and a circle clip at rest so the
+   sound mode's reel can iris in from it rather than snap
+   ------------------------------------------------------------------ */
+/* phones: the well sits in flow with no height of its own, so only its width is a
+   container; cqh then falls back to the viewport and the frame takes the full width */
+.hp-well {
+  container-type: inline-size;
+}
+@media (min-width: 768px) {
+  .hp-well {
+    container-type: size;
+  }
+}
+/* as wide as the well allows, or as wide as the well's height allows, whichever is less */
+.hp-frame {
+  width: min(100cqw, calc(100cqh * var(--ratio-frame)));
+  clip-path: circle(72% at 50% 50%); /* 72% clears the corners (the half-diagonal) */
+  transition: clip-path var(--dur-slow) ease, filter var(--dur-filter);
+}
+/* scanline layer for the sound mode */
+.hp-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-mode);
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0 1px, transparent 1px 3px);
+}
+/* the reel hub */
+.hp-frame::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(30cqh, 22.5cqw); /* 30% of the reel's diameter */
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 2px solid color-mix(in srgb, var(--paper) 55%, transparent);
+  opacity: 0;
+  transition: opacity var(--dur-mode);
+}
+
+/* a pinned word: its mode stays on while the cursor roams, so say so */
+.hp-statement button[aria-pressed="true"] {
+  outline: 1px dashed currentColor;
+  outline-offset: 6px;
+}
+
+/* the mode canvases: fixed over the page, inside the surface's stacking context so the
+   nav (z-nav, outside it) stays on top */
+.hp-stitch,
+.hp-tape,
+.hp-flock {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-overlay);
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------------
+   MATERIALS — felt, fuzz and cross-stitch (see components/CrossStitch.tsx)
+   ------------------------------------------------------------------ */
+html[data-anim~="materials"] .hp-surface::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.3 0 0 0 0 0.18 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+html[data-mode="materials"] .hp-surface::before {
+  opacity: 1;
+}
+/* the fuzz stays applied while the mode eases out; its strength is tweened in JS. Only the
+   photos get it: a displacement filter on every ruled element blurred all the text */
+html[data-anim~="materials"] .hp-frame {
+  filter: url(#hp-fuzz);
+}
+html[data-mode="materials"] .hp-img {
+  filter: grayscale(0) sepia(0.3) saturate(1.15) contrast(1.05) brightness(1);
+}
+/* the canvas re-sews the statement; hide the printed letters (still in the DOM) */
+html[data-mode="materials"] .hp-statement .hp-letter {
+  color: transparent;
+}
+html[data-mode="materials"] .hp-statement .hp-kw {
+  border-color: transparent;
+}
+/* the cloth and the needle's stitches (components/Stitch.tsx): drawn as you go, fading with the mode */
+.hp-stitch {
+  transition: opacity var(--dur-filter) ease;
+}
+html[data-mode="materials"] .hp-stitch {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------
+   SOUND — a tape machine (see components/Tape.tsx)
+   ------------------------------------------------------------------ */
+html[data-mode="sound"] .hp-img {
+  filter: grayscale(1) sepia(0) saturate(1) contrast(1.4) brightness(0.9);
+}
+html[data-mode="sound"] .hp-frame::after,
+html[data-mode="sound"] .hp-frame::before {
+  opacity: 1;
+}
+/* the trays' images become reels: a circle of half the frame's shorter side (the frame
+   is the well's width, and its height the lesser of the well's height and 3/4 of that),
+   which stays inside the photo however far it has turned */
+html[data-mode="sound"] .hp-frame {
+  clip-path: circle(min(50cqh, 37.5cqw) at 50% 50%);
+}
+/* the ruler gives way to the tape drawn over it */
+html[data-mode="sound"] .hp-ruler {
+  opacity: 0;
+}
+.hp-tape {
+  transition: opacity var(--dur-mode) ease;
+}
+html[data-mode="sound"] .hp-tape {
+  opacity: 1;
+}
+/* the tape counter, in the corner of the statement */
+.hp-tc {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+html[data-mode="sound"] .hp-tc {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------
+   LIVING SYSTEMS — a flock (see components/Flock.tsx)
+   The tray images dissolve into boids that flock around the cursor and
+   fly home when you leave. data-flock is set on <html> while the
+   particles are off their pixels.
+   ------------------------------------------------------------------ */
+.hp-flock {
+  transition: opacity 0.4s ease;
+}
+html[data-flock] .hp-flock {
+  opacity: 1;
+}
+/* the real pixels hide while their particles are away, whatever the tray hover says */
+html[data-flock] .hp-frame .hp-img {
+  opacity: 0 !important;
+  transition: opacity 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-anim] .hp-letter,
+  .hp-frame,
+  .hp-img,
+  .hp-ruler > span {
+    animation: none !important;
+    transition: none !important;
+  }
+}
