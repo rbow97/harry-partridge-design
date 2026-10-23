@@ -280,7 +280,7 @@ html[data-anim~="materials"] .hp-frame {
   filter: url(#hp-fuzz);
 }
 html[data-mode="materials"] .hp-img {
-  filter: grayscale(0) sepia(0.3) saturate(1.15) contrast(1.05) brightness(1);
+  filter: grayscale(0) sepia(0.12) saturate(1.05) contrast(1.05) brightness(1);
 }
 /* the canvas re-sews the statement; hide the printed letters (still in the DOM) */
 html[data-mode="materials"] .hp-statement .hp-letter {
@@ -410,7 +410,10 @@ html[data-mode="sound"] {
   display: inline-block;
   margin-left: 0.25em;
   font-family: var(--font-mono);
-  font-size: 0.7em;
+  font-size: 0.8em;
+  /* centred on the words rather than sat on their baseline, where the small arrow read as a subscript */
+  line-height: 1;
+  vertical-align: middle;
   transition: transform 0.3s ease-out;
 }
 .hp-link[target="_blank"]::after {
@@ -464,29 +467,49 @@ html[data-mode="sound"] {
   }
 }
 
-/* the scrollbar, in the bars' language: a paper track ruled off with a hairline, an ink thumb that
-   turns the accent when held. It follows the mode, since both colours are roles.
-   Chrome and Firefox take the standard properties. Safari only reads the -webkit- ones */
-html {
-  scrollbar-width: thin;
-  scrollbar-color: var(--text) var(--surface);
+/* the scrollbar, in the bars' language: a paper track ruled off with a hairline, and a square ink
+   thumb that turns the accent when held. It follows the mode, since both colours are roles.
+   Chrome and Safari draw it from the -webkit- rules, the only ones that let the thumb be square
+   (Chrome ignores them once the standard properties are set, so those go to Firefox alone,
+   which keeps its own thumb shape) */
+@supports (-moz-appearance: none) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--text) var(--surface);
+  }
 }
-@supports not (scrollbar-color: auto) {
-  ::-webkit-scrollbar {
-    width: 11px;
-    height: 11px;
-  }
-  ::-webkit-scrollbar-track {
-    background: var(--surface);
-    border-left: 1px solid var(--text);
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--text);
-    border: 3px solid var(--surface);
-    border-left-width: 4px;
-  }
-  ::-webkit-scrollbar-thumb:active {
-    background: var(--accent);
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+  border-left: 1px solid var(--text);
+}
+/* the thumb's border is clear and its colour stops at the padding, so it sits inside the track
+   with the hairline running on unbroken behind it, rather than painting paper over the line */
+::-webkit-scrollbar-thumb {
+  background: var(--text);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-left-width: 4px;
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:active {
+  background: var(--accent);
+}
+::-webkit-scrollbar-corner {
+  background: var(--surface);
+}
+
+/* anything that can be clicked shows the pointer. Tailwind's base gives buttons the plain arrow */
+@layer base {
+  button:not(:disabled),
+  [role="button"],
+  summary,
+  select,
+  label[for] {
+    cursor: pointer;
   }
 }
 

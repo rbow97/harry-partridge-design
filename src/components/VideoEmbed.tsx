@@ -24,7 +24,8 @@ export default function VideoEmbed({ video }: { video: Video }) {
 
   return (
     <figure id={videoAnchor(video.key)} className="scroll-mt-[calc(var(--size-bar)+2rem)]">
-      <div className={`relative overflow-hidden bg-ink ${video.vertical ? "aspect-[9/16] max-w-sm" : "aspect-video"}`}>
+      {/* a vertical video (a YouTube Short) is narrower than the column, so it sits in the middle of it */}
+      <div className={`relative overflow-hidden bg-ink ${video.vertical ? "aspect-[9/16] max-w-sm mx-auto" : "aspect-video"}`}>
         {playing ? (
           <iframe
             ref={frame}
@@ -49,7 +50,7 @@ export default function VideoEmbed({ video }: { video: Video }) {
           </button>
         )}
       </div>
-      <figcaption className="mt-3 hp-label text-muted flex flex-wrap gap-x-3">
+      <figcaption className={`mt-3 hp-label text-muted flex flex-wrap gap-x-3 ${video.vertical ? "justify-center" : ""}`}>
         <span className="text-ink">{video.title}</span>
         <span aria-hidden="true">·</span>
         <span>{source}</span>
