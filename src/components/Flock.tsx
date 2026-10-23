@@ -55,6 +55,15 @@ function load(src: string) {
   });
 }
 
+// Where a tray's photo sits while the flock is out. On a pointer device it's the whole tray (the
+// living mode keeps the photos at full size), measured from the tray itself rather than the frame,
+// which may still be easing back out from a hover. Touch keeps the framed photo, so measure that
+function frameRect(f: HTMLElement): DOMRect {
+  const tray = f.closest(".hp-tray")?.firstElementChild;
+  if (getComputedStyle(f).position !== "absolute" || !tray) return f.getBoundingClientRect();
+  return tray.getBoundingClientRect();
+}
+
 // sample every visible tray image, cover-fitted like the real one, into particles
 async function sample(): Promise<Sim | null> {
   const frames = Array.from(document.querySelectorAll<HTMLElement>(".hp-frame"));
@@ -62,7 +71,7 @@ async function sample(): Promise<Sim | null> {
   const buckets = new Map<number, string>();
   for (const f of frames) {
     const img = f.querySelector<HTMLImageElement>('img[data-img="lead"]');
-    const rect = f.getBoundingClientRect();
+    const rect = frameRect(f);
     if (!img || rect.bottom < 0 || rect.top > innerHeight) continue;
     const pic = await load(img.src);
     const w = Math.round(rect.width);
@@ -138,6 +147,9 @@ export default function Flock({ active }: { active: boolean }) {
   const cursor = useRef<[number, number]>([0, 0]);
   const raf = useRef(0);
   const run = useRef(0); // bumps on every change, so a stale sample is thrown away
+  // each particle's way home. A ref, because the loop that reads it may be one started by an
+  // earlier run of the effect below, still going when the mode closes
+  const homing = useRef({ t: 0, delay: new Float32Array(0), stiff: new Float32Array(0), damp: new Float32Array(0) });
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -241,15 +253,53 @@ export default function Flock({ active }: { active: boolean }) {
       }
     };
 
-    // fly home: a damped pull to the home pixel, settled when everyone is within a pixel
+    // fly home, each in its own time: a staggered start, a spring of its own, and the speed it had
+    // in the flock carried in, so they stream back in curves and settle one by one, the way birds
+    // come in to roost, rather than all sliding home together. Settled when everyone is within a
+    // pixel and still, and never longer than HOME_MAX, when any stragglers are set down
+    const HOME_MAX = 3;
+    const setOff = () => {
+      const n = sim.current!.n;
+      const way = { t: 0, delay: new Float32Array(n), stiff: new Float32Array(n), damp: new Float32Array(n) };
+      for (let i = 0; i < n; i++) {
+        way.delay[i] = Math.random() ** 2 * 0.7; // most leave at once, a few hang back
+        way.stiff[i] = 14 + Math.random() * 34;
+        // a little under critical damping for some, so they overshoot and settle
+        way.damp[i] = 2 * Math.sqrt(way.stiff[i]) * (0.65 + Math.random() * 0.4);
+      }
+      homing.current = way;
+    };
     const home = (dt: number) => {
       const s = sim.current!;
-      const k = 1 - Math.exp(-5 * dt);
+      const way = homing.current;
+      way.t += dt;
+      if (way.t > HOME_MAX) {
+        s.px.set(s.hx);
+        s.py.set(s.hy);
+        return true;
+      }
       let far = 0;
+      const drift = Math.exp(-2 * dt);
+      const tail = Math.min(1, Math.max(0, (way.t - (HOME_MAX - 0.5)) / 0.5)) ** 2;
       for (let i = 0; i < s.n; i++) {
-        s.px[i] += (s.hx[i] - s.px[i]) * k;
-        s.py[i] += (s.hy[i] - s.py[i]) * k;
-        far = Math.max(far, Math.abs(s.hx[i] - s.px[i]), Math.abs(s.hy[i] - s.py[i]));
+        if (way.t < way.delay[i]) {
+          // still wheeling: coast on, slowing
+          s.vx[i] *= drift;
+          s.vy[i] *= drift;
+        } else {
+          s.vx[i] += ((s.hx[i] - s.px[i]) * way.stiff[i] - s.vx[i] * way.damp[i]) * dt;
+          s.vy[i] += ((s.hy[i] - s.py[i]) * way.stiff[i] - s.vy[i] * way.damp[i]) * dt;
+        }
+        s.px[i] += s.vx[i] * dt;
+        s.py[i] += s.vy[i] * dt;
+        // the last stragglers are eased in over the final half second, so the cut-off never shows
+        if (tail > 0) {
+          s.px[i] += (s.hx[i] - s.px[i]) * tail;
+          s.py[i] += (s.hy[i] - s.py[i]) * tail;
+          s.vx[i] *= 1 - tail;
+          s.vy[i] *= 1 - tail;
+        }
+        far = Math.max(far, Math.abs(s.hx[i] - s.px[i]), Math.abs(s.hy[i] - s.py[i]), Math.abs(s.vx[i]) * 0.05, Math.abs(s.vy[i]) * 0.05);
       }
       return far < 0.6;
     };
@@ -293,6 +343,7 @@ export default function Flock({ active }: { active: boolean }) {
     }
     if (phase.current === "flock") {
       phase.current = "home";
+      setOff();
       start();
     }
   }, [active]);

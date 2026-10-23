@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { projectNo, type ProjectGroup } from "@/lib/group-projects";
+import type { ProjectGroup } from "@/lib/group-projects";
 import { recordLabel } from "@/types/Project";
 import CropMarks from "./CropMarks";
 import { COLUMNS, trayHeight, trayLayout } from "@/lib/tray-layout";
@@ -65,6 +65,17 @@ function Ruler() {
 
 export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
   const [mode, setMode] = useState<Mode | null>(null);
+  // moving from one word to the next crosses the gap between them. Leaving waits a moment, so
+  // the next word takes over directly instead of the page easing back to paper in between
+  const leaving = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const enter = (m: Mode) => {
+    clearTimeout(leaving.current);
+    setMode(m);
+  };
+  const leave = () => {
+    clearTimeout(leaving.current);
+    leaving.current = setTimeout(() => setMode(null), 160);
+  };
   const statement = useRef<HTMLHeadingElement>(null);
   // whether the last pointer on a statement word was a finger (see the word buttons)
   const touch = useRef(false);
@@ -227,11 +238,12 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                 // would toggle the mode straight back off, so touch only listens to taps
                 onPointerDown={(e) => (touch.current = e.pointerType === "touch")}
                 // hover is the word alone; to keep a mode on while the cursor roams, click (pin)
-                onMouseEnter={() => !touch.current && !pinned && setMode(m)}
-                onMouseLeave={() => !touch.current && !pinned && setMode(null)}
-                onFocus={() => !touch.current && !pinned && setMode(m)}
-                onBlur={() => !touch.current && !pinned && setMode(null)}
+                onMouseEnter={() => !touch.current && !pinned && enter(m)}
+                onMouseLeave={() => !touch.current && !pinned && leave()}
+                onFocus={() => !touch.current && !pinned && enter(m)}
+                onBlur={() => !touch.current && !pinned && leave()}
                 onClick={() => {
+                  clearTimeout(leaving.current);
                   const release = pinned === m;
                   setPinned(release ? null : m);
                   setMode(release ? null : m);
@@ -270,13 +282,13 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
       <ol ref={drawer} className="list-none md:flex-1 grid grid-cols-1 md:grid-cols-12 border-t border-ink">
         {groups.map((g, i) => {
           const lead = g.records[0];
-          const process = g.records[1]?.image;
           const { span, rowEnd } = trays[i];
           // a full-width tray is laid out as a record sheet: photo on the left, label beside it
           const sheet = span === COLUMNS;
           return (
             <li
               key={g.title}
+              data-sheet={sheet || undefined}
               style={{ "--span": span, "--tray": trayHeight(span) } as React.CSSProperties}
               className={`hp-tray hp-rule group relative flex flex-col border-b md:border-r border-ink [&:has(a:focus-visible)]:outline [&:has(a:focus-visible)]:outline-2 [&:has(a:focus-visible)]:-outline-offset-2 [&:has(a:focus-visible)]:outline-rust ${
                 rowEnd ? "md:border-r-0" : ""
@@ -285,12 +297,9 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
               {/* the tray */}
               <div className={`relative pt-12 pb-12 md:p-0 md:min-h-[var(--tray)] ${sheet ? "md:w-2/3" : "md:flex-1"}`}>
                 <CropMarks />
-                <span className="absolute top-5 left-7 font-mono text-[10px] uppercase tracking-wider">
-                  <span className="text-rust whitespace-nowrap">{projectNo(i)}</span>
-                </span>
                 {/* the development records live at the end of the project's page, so the tray only says they're there */}
                 {g.records.length > 1 && (
-                  <span className="absolute top-5 right-7 font-mono text-[10px] uppercase tracking-wider text-muted">
+                  <span className="hp-tag absolute top-5 right-7 font-mono text-[10px] uppercase tracking-wider text-muted">
                     + {g.records.length === 2 ? recordLabel(g.records[1]) : `${g.records.length - 1} records`}
                   </span>
                 )}
@@ -307,17 +316,7 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                       src={lead.image}
                       alt=""
                       data-img="lead"
-                      className={`hp-img absolute inset-0 w-full h-full object-cover transition-opacity duration-500 motion-reduce:transition-none ${
-                        process ? "group-hover:opacity-0" : ""
-                      }`}
-                    />
-                  )}
-                  {process && (
-                    <img
-                      src={process}
-                      alt=""
-                      data-img="process"
-                      className="hp-img absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100 motion-reduce:transition-none"
+                      className="hp-img absolute inset-0 w-full h-full object-cover"
                     />
                   )}
                   </div>

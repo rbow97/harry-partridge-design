@@ -441,3 +441,44 @@ html {
     background: var(--accent);
   }
 }
+
+/* ------------------------------------------------------------------
+   The tray at rest and on hover. At rest each photo fills its whole
+   tray. On hover it pulls in to the site's 28px edge in one short move,
+   uncovering a paper mount with the crop marks
+   already printed on it. The modes keep the photos at full size too:
+   the reel is a circle cut from the middle of the photo, the felt and
+   the flock work on it whole. So moving between the words never
+   resizes a photo, which is what made it flicker. Only with a mouse
+   or trackpad from md up: touch has no hover to reveal the mount, so
+   it keeps the framed tray.
+   ------------------------------------------------------------------ */
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .hp-frame {
+    position: absolute;
+    width: auto;
+    max-height: none;
+    aspect-ratio: auto;
+    /* at rest: out to the tray's own edges, past the well's insets (inset-x-7, top-11, bottom-12) */
+    inset: -2.75rem -1.75rem -3rem -1.75rem;
+    transition:
+      inset 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
+      clip-path var(--dur-slow) ease,
+      filter var(--dur-filter);
+  }
+  /* hover: 1.75rem in from every tray edge, the same edge the page keeps. Not during a mode,
+     whose reel, felt and flock are all sized to the full photo */
+  html:not([data-mode]):not([data-flock]) .hp-tray:hover .hp-frame,
+  html:not([data-mode]):not([data-flock]) .hp-tray:focus-within .hp-frame {
+    inset: -1rem 0 -1.25rem 0;
+  }
+  /* the development chip sits in the mount, level with the crop marks */
+  .hp-tray .hp-tag {
+    top: 10px;
+  }
+  /* the ruler belonged to the framed tray. The photo now covers its place, and the sound mode
+     draws its tape there instead, so it stays hidden (Tape.tsx still measures where it sits) */
+  .hp-tray .hp-ruler {
+    opacity: 0;
+  }
+}
