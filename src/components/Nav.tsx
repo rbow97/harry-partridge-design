@@ -37,7 +37,7 @@ const Nav = ({ pages, pathname }: { pages: Page[]; pathname: string }) => {
   }, [open]);
 
   return (
-    <header className="hp-surface hp-rule fixed inset-x-0 top-0 z-50 h-14 flex items-stretch border-b border-ink bg-paper text-ink">
+    <header className="hp-bar hp-surface hp-rule fixed inset-x-0 top-0 z-50 h-14 flex items-stretch border-b border-ink bg-paper text-ink">
       <a
         href="/"
         // the same inset as the photos in their trays, so the name, the statement and the images share an edge
@@ -59,7 +59,7 @@ const Nav = ({ pages, pathname }: { pages: Page[]; pathname: string }) => {
             >
               <span
                 aria-hidden="true"
-                className={`w-1.5 h-1.5 rounded-full transition-transform duration-300 group-hover:scale-150 motion-reduce:transition-none ${active ? "bg-rust" : "bg-current opacity-25"}`}
+                className={`w-1.5 h-1.5 rounded-full transition-transform duration-300 group-hover:scale-150 motion-reduce:transition-none ${active ? "bg-rust scale-150" : "bg-current opacity-25"}`}
               />
               {page.title}
               {/* the thread winds along the foot of the cell, as it does under a tray, and stays wound on the page you're on */}

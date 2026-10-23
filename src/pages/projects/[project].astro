@@ -168,7 +168,7 @@ const meta = [
     >
       <a href="/" class="group relative flex-1 min-w-0 flex items-center pl-edge md:pl-0 pr-4 md:col-span-5 xl:col-span-4 whitespace-nowrap hover:text-rust transition-colors">
         All projects
-        <span aria-hidden="true" class="absolute inset-x-0 top-0 h-0.5 bg-rust origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"></span>
+        <span aria-hidden="true" class="absolute inset-x-0 -top-px h-0.5 bg-rust origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"></span>
       </a>
       {/* phones: the two cells sit straight in the bar. md up: they split the pictures' columns in half, ruled off at the left */}
       <div class="contents md:grid md:grid-cols-2 md:col-span-7 xl:col-span-8 md:-mr-edge hp-rule md:border-l border-ink">
@@ -188,7 +188,7 @@ const meta = [
               {/* the mono face is wide, so the number only fits beside the label from sm up */}
               <span class="hidden sm:inline text-rust whitespace-nowrap shrink-0">{p.no}</span>
               <span class="sr-only">: {p.name}</span>
-              <span aria-hidden="true" class="absolute inset-x-0 top-0 h-0.5 bg-rust origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"></span>
+              <span aria-hidden="true" class="absolute inset-x-0 -top-px h-0.5 bg-rust origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"></span>
             </a>
           ) : null
         )}

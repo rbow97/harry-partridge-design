@@ -513,3 +513,29 @@ html[data-anim~="sound"]:not([data-mode="sound"]) .hp-img {
     filter 1.4s ease,
     opacity var(--dur-mode);
 }
+
+/* Page changes: the browser holds the nav bar in place across the load and crossfades its old
+   state into the new, so the current page's dot and thread move over rather than snapping.
+   Browsers without cross-document view transitions just load the page as before */
+@view-transition {
+  navigation: auto;
+}
+.hp-bar {
+  view-transition-name: hp-bar;
+}
+::view-transition-group(hp-bar),
+::view-transition-old(hp-bar),
+::view-transition-new(hp-bar) {
+  animation-duration: 0.28s;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.22s;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
