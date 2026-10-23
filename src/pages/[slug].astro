@@ -138,7 +138,7 @@ const external = (href?: string) => !!href && /^https?:/.test(href);
               <div class:list={["md:row-span-2 md:grid md:grid-rows-subgrid flex flex-col gap-2", spans[row.kind]]}>
                 <dt class="hp-label text-muted">{row.label}</dt>
                 <dd>
-                  <ul class:list={["list-none leading-snug", "text-lg md:text-xl", row.kind === "list" && "columns-2 gap-x-8 lg:gap-x-12"]}>
+                  <ul class:list={["list-none leading-snug", "text-base md:text-lg", row.kind === "list" && "columns-2 gap-x-8 lg:gap-x-12"]}>
                     {row.items.map((item) => (
                       <li class="py-0.5 break-inside-avoid">
                         {item.href ? (

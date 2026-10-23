@@ -4,7 +4,7 @@ import { isImage, type ImageBlock } from "@/components/RichText";
 /**
  * Bio and Contact are free text in Studio. These read that text into the parts the pages lay
  * out, so Harry keeps writing the way he does now:
- * - a heading ("h1") block is the lede
+ * - a heading block, whichever level he picks in Studio, is the lede
  * - a line like "Publications: <link>", or "Clients:" followed by a bulleted list, becomes a
  *   labelled row on the record sheet
  * - anything else is a plain note, so nothing he writes is ever dropped
@@ -57,7 +57,7 @@ export function readBio(content: unknown[]) {
     const b = content[i];
     if (isImage(b)) images.push(b);
     if (!isBlock(b) || !textOf(b)) continue;
-    if (b.style === "h1") {
+    if (b.style && /^h[1-6]$/.test(b.style)) {
       lede.push(b);
       continue;
     }

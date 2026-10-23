@@ -95,7 +95,10 @@ const words = (embedded: string[]): PortableTextComponents => ({
 
 const work = (embedded: string[]): PortableTextComponents => ({
   block: {
-    normal: ({ children }) => (hasText(children) ? <p className="text-sm md:text-base leading-relaxed max-w-[60ch]">{children}</p> : null),
+    // text in the work column is a caption for the image above it: small, quiet and drawn up close
+    // to it, so the words column stays the one place to read and the two don't compete
+    normal: ({ children }) =>
+      hasText(children) ? <p className="-mt-3 md:-mt-5 text-sm leading-snug text-muted max-w-[52ch]">{children}</p> : null,
   },
   marks: recordLink(embedded),
   types: {
@@ -112,11 +115,11 @@ const work = (embedded: string[]): PortableTextComponents => ({
 });
 
 // the Bio's lede: Harry's heading blocks, large, the statement the page opens on
+const ledeLine = ({ children }: { children?: React.ReactNode }) =>
+  hasText(children) ? <p className="text-2xl md:text-[clamp(1.5rem,1.9vw,2.25rem)] leading-[1.18] tracking-tight">{linkify(children)}</p> : null;
+// every heading level sets the same: Harry picks whichever in Studio, and it's all the one statement
 const lede: PortableTextComponents = {
-  block: {
-    h1: ({ children }) =>
-      hasText(children) ? <p className="text-2xl md:text-[clamp(1.5rem,1.9vw,2.25rem)] leading-[1.18] tracking-tight">{linkify(children)}</p> : null,
-  },
+  block: { h1: ledeLine, h2: ledeLine, h3: ledeLine, h4: ledeLine, h5: ledeLine, h6: ledeLine, normal: ledeLine },
   marks: link,
 };
 
