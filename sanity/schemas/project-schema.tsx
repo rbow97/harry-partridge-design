@@ -45,7 +45,7 @@ const project = {
       name: "partOf",
       title: "Part of",
       description:
-        "For process/development records: pick the main project. It's grouped under that project on the homepage.",
+        "For process/development records: pick the main project. It's grouped under that project on the homepage and listed at the end of its page.",
       type: "reference",
       to: [{ type: "project" }],
       options: {
@@ -58,6 +58,14 @@ const project = {
           },
         }),
       },
+    },
+    {
+      name: "recordLabel",
+      title: "Link label",
+      description:
+        "What the link to this record says on the main project, like 'Wire recorder tests'. Leave it blank to show 'Development'.",
+      type: "string",
+      hidden: ({ document }: any) => !document?.partOf,
     },
     {
       name: "disciplines",

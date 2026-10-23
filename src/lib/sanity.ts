@@ -19,6 +19,7 @@ const projectCore = /* groq */ `
   priority,
   "audio": audio.asset->url,
   "partOf": partOf._ref,
+  recordLabel,
   themes,
   disciplines,
   // fall back to Harry's existing description until a summary is written
@@ -38,7 +39,18 @@ export const getProject = (slug: string) =>
       process,
       location,
       collaborators,
-      press
+      press,
+      // a development record links back to its main project
+      "parent": partOf->{ name, "slug": slug.current },
+      // a main project shows its development records at the end of the page
+      "development": *[_type == "project" && partOf._ref == ^._id] | order(coalesce(priority, 999) asc){
+        _id,
+        name,
+        "slug": slug.current,
+        "image": image.asset->url,
+        recordLabel,
+        "summary": coalesce(summary, pt::text(description))
+      }
     }`,
     { slug }
   );
