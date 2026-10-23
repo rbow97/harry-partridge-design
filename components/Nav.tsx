@@ -3,15 +3,42 @@
 import { Page } from "@/types/Page";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
-import { useSound } from "./sound/SoundProvider";
+import React, { useEffect, useRef, useState } from "react";
+import SoundSwitch from "./SoundSwitch";
 
-/** The slim ruled bar on every page: name, the Sanity pages, and the sound switch */
+/**
+ * The slim ruled bar on every page: name, the Sanity pages, and the sound switch at the
+ * right end (components/SoundSwitch.tsx). On phones the pages live behind a menu button
+ * (three rules) that drops a panel of ruled rows from the bar; Escape, the button, a tap
+ * beneath, or a link closes it.
+ */
 const Nav = ({ pages }: { pages: Page[] }) => {
   const router = usePathname();
-  const { soundOn, toggle } = useSound();
   // the homepage is the projects index, so the Projects page gets no nav item (and /projects redirects home)
   const links = pages?.filter((page) => page.slug !== "projects");
+
+  const [open, setOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const firstLink = useRef<HTMLAnchorElement>(null);
+  // a new page closes the menu
+  useEffect(() => setOpen(false), [router]);
+  useEffect(() => {
+    if (!open) return;
+    const button = menuButton.current; // held for the cleanup, when focus goes back to it
+    firstLink.current?.focus();
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    // a tap on the page beneath the panel closes it
+    const away = (e: PointerEvent) => {
+      if (!(e.target as Element).closest?.("header")) setOpen(false);
+    };
+    document.addEventListener("keydown", esc);
+    document.addEventListener("pointerdown", away);
+    return () => {
+      document.removeEventListener("keydown", esc);
+      document.removeEventListener("pointerdown", away);
+      button?.focus();
+    };
+  }, [open]);
 
   return (
     <header className="hp-surface hp-rule fixed inset-x-0 top-0 z-50 h-14 flex items-stretch border-b border-ink bg-paper text-ink">
@@ -22,7 +49,9 @@ const Nav = ({ pages }: { pages: Page[] }) => {
       >
         Harry Partridge
       </Link>
-      <nav aria-label="Main" className="ml-auto flex items-stretch">
+
+      {/* desktop: the pages in the bar */}
+      <nav aria-label="Main" className="ml-auto hidden md:flex items-stretch">
         {links?.map((page) => {
           const active = router?.startsWith(`/${page.slug}`);
           return (
@@ -30,35 +59,62 @@ const Nav = ({ pages }: { pages: Page[] }) => {
               key={page._id}
               href={`/${page.slug}`}
               aria-current={active ? "page" : undefined}
-              // tight on phones so the name, two pages and the switch fit one 56px bar
-              className="hp-rule flex items-center gap-2 border-l border-ink px-3 md:px-7 font-mono text-[11px] uppercase tracking-wider hover:text-rust hover:transition-colors"
+              className="hp-rule flex items-center gap-2 border-l border-ink px-7 font-mono text-[11px] uppercase tracking-wider hover:text-rust hover:transition-colors"
             >
-              <span
-                aria-hidden="true"
-                className={`hidden md:inline w-1.5 h-1.5 rounded-full ${active ? "bg-rust" : "bg-current opacity-25"}`}
-              />
+              <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${active ? "bg-rust" : "bg-current opacity-25"}`} />
               {page.title}
             </Link>
           );
         })}
-        {/* the only sound control: the sound hover and the spools follow it.
-            A switch whose label names the setting and whose meter shows the state: bars moving
-            means sound is on, flat means off. "Sound on"/"Sound off" read as commands as much as states */}
-        <button
-          type="button"
-          role="switch"
-          aria-checked={soundOn}
-          onClick={toggle}
-          className="hp-rule flex items-center gap-2.5 border-l border-ink px-3 md:px-7 font-mono text-[11px] uppercase tracking-wider hover:text-rust hover:transition-colors"
-        >
-          Sound
-          <span aria-hidden="true" className={`hp-meter ${soundOn ? "hp-meter-on" : ""}`}>
-            <span />
-            <span />
-            <span />
-            <span />
-          </span>
-        </button>
+      </nav>
+
+      {/* the sound switch sits at the right end on every size, after the pages or beside the menu button */}
+      <div className="ml-auto md:ml-0 flex items-stretch">
+        <SoundSwitch />
+      </div>
+
+      {/* phones: a menu button, three rules that become a cross */}
+      <button
+        ref={menuButton}
+        type="button"
+        aria-label="Menu"
+        aria-expanded={open}
+        aria-controls="hp-menu"
+        onClick={() => setOpen((o) => !o)}
+        className="hp-rule md:hidden flex items-center justify-center w-14 border-l border-ink hover:text-rust"
+      >
+        <span aria-hidden="true" className={`hp-burger ${open ? "hp-burger-open" : ""}`}>
+          <span />
+          <span />
+          <span />
+        </span>
+      </button>
+      {/* the menu drops from the bar as a panel of ruled rows, the page showing beneath it */}
+      <nav
+        id="hp-menu"
+        aria-label="Main"
+        aria-hidden={!open}
+        // display is set by class, not the hidden attribute: Tailwind's `flex` outranks `[hidden]`
+        className={`hp-surface md:hidden fixed inset-x-0 top-14 z-40 bg-paper text-ink flex-col shadow-[0_24px_40px_-24px_rgba(26,26,23,0.35)] ${
+          open ? "flex" : "hidden"
+        }`}
+      >
+        {links?.map((page, i) => {
+          const active = router?.startsWith(`/${page.slug}`);
+          return (
+            <Link
+              key={page._id}
+              ref={i === 0 ? firstLink : undefined}
+              href={`/${page.slug}`}
+              aria-current={active ? "page" : undefined}
+              className={`hp-rule flex items-center px-6 py-4 border-b border-ink font-mono text-sm uppercase tracking-wider hover:text-rust ${
+                active ? "text-rust" : ""
+              }`}
+            >
+              {page.title}
+            </Link>
+          );
+        })}
       </nav>
     </header>
   );

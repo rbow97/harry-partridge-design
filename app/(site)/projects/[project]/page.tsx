@@ -1,8 +1,11 @@
 import { getProject } from "@/sanity/sanity-utils";
-import { PortableText } from "@portabletext/react";
+import { PortableText, PortableTextComponents } from "@portabletext/react";
+import { getImageDimensions } from "@sanity/asset-utils";
+import urlBuilder from "@sanity/image-url";
+import { createClient } from "next-sanity";
 import Image from "next/image";
 import React from "react";
-import PortableTextComponent from "@/components/PortableTextComponent";
+import clientConfig from "@/sanity/config/client-config";
 import SpoolPlayer from "@/components/SpoolPlayer";
 import VoiceType from "@/components/VoiceType";
 
@@ -10,33 +13,77 @@ type Props = {
   params: { project: string };
 };
 
-// While prototyping, borrow the homepage film's soundtrack so the
-// spool can be heard before Harry uploads per-project clips in Sanity.
-const PROTOTYPE_AUDIO =
-  process.env.NODE_ENV === "development" ? "/assets/harry-grad-movie.mp4" : undefined;
+/**
+ * A project record: the words in a column on the left that stays put while the work
+ * scrolls, the work as a stack of images on the right (after laylabaghai.com/probio).
+ * If the words run taller than the window the column scrolls within itself, so a long
+ * description is never cut off. On a phone the words come first, then the stack.
+ */
 
-const recordText = {
-  ...PortableTextComponent,
-  marks: {
-    link: ({ value, children }: any) => (
-      <a
-        href={value?.href}
-        {...(value?.blank ? { target: "_blank", rel: "noopener" } : {})}
-        className="text-rust underline decoration-1 underline-offset-4 hover:decoration-2"
-      >
-        {children}
-      </a>
-    ),
+const link = ({ value, children }: any) => (
+  <a
+    href={value?.href?.trim()}
+    {...(value?.blank || /^https?:/.test(value?.href ?? "") ? { target: "_blank", rel: "noopener" } : {})}
+    className="text-rust underline decoration-1 underline-offset-4 hover:decoration-2 break-words"
+  >
+    {children}
+  </a>
+);
+
+const hasText = (children: React.ReactNode) =>
+  React.Children.toArray(children).some((c) => (typeof c === "string" ? c.trim().length > 0 : true));
+
+// the description, in the words column
+const words: PortableTextComponents = {
+  block: {
+    normal: ({ children }) => (hasText(children) ? <p className="font-sans text-sm leading-snug">{children}</p> : null),
+    h1: ({ children }) => (hasText(children) ? <p className="font-sans text-base md:text-lg leading-snug">{children}</p> : null),
+    h2: ({ children }) => (hasText(children) ? <p className="font-sans text-base md:text-lg leading-snug">{children}</p> : null),
+  },
+  marks: { link },
+  types: { image: () => null },
+};
+
+type ImageBlock = { _type: "image"; _key: string; alt?: string; asset: { _ref: string } };
+
+const imageUrl = (image: ImageBlock, width: number) =>
+  urlBuilder(createClient(clientConfig)).image(image).width(width).auto("format").url();
+
+// the work: every image at its own proportions, full width of the stack; any text between
+// them reads as a caption
+const work: PortableTextComponents = {
+  block: {
+    normal: ({ children }) =>
+      hasText(children) ? <p className="font-sans text-sm md:text-base leading-relaxed max-w-[60ch]">{children}</p> : null,
+  },
+  marks: { link },
+  types: {
+    image: ({ value }: { value: ImageBlock }) => {
+      if (!value?.asset?._ref) return null;
+      const { width, height } = getImageDimensions(value);
+      return (
+        <figure>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl(value, 1800)}
+            alt={value.alt ?? ""}
+            className="hp-img w-full h-auto"
+            style={{ aspectRatio: `${width} / ${height}` }}
+            loading="lazy"
+          />
+        </figure>
+      );
+    },
   },
 };
 
+// a metadata row, only when there is something to say: no "to add" placeholders on a live record
 function MetaRow({ label, children }: { label: string; children?: React.ReactNode }) {
+  if (children == null || children === "" || (Array.isArray(children) && children.length === 0)) return null;
   return (
-    <div className="grid grid-cols-[7rem_1fr] gap-4 py-3 border-t border-rule">
+    <div className="grid grid-cols-[6rem_1fr] gap-4 py-3 border-t border-rule">
       <dt className="font-mono text-[11px] uppercase tracking-wider text-muted pt-1">{label}</dt>
-      <dd className="font-sans text-base">
-        {children ?? <span className="text-muted italic">To add</span>}
-      </dd>
+      <dd className="font-sans text-base">{children}</dd>
     </div>
   );
 }
@@ -44,54 +91,49 @@ function MetaRow({ label, children }: { label: string; children?: React.ReactNod
 async function ProjectDetail({ params }: Props) {
   const project = await getProject(params.project);
   const recordNo = `HP–${String(project.priority ?? 0).padStart(3, "0")}`;
-  const audio = project.audio ?? PROTOTYPE_AUDIO;
+  // the spool only appears when this record has a recording of its own
+  const audio = project.audio;
+  const hasMeta = !!(project.year || project.materials || project.process || project.location || project.collaborators || project.press?.length);
 
   return (
-    <article className="min-h-screen bg-paper text-ink font-sans">
-      {/* the same 28px inset as the homepage, so every page shares the edge */}
-      <div className="px-6 md:px-7 pt-28 md:pt-32 pb-24">
-        {/* Record line */}
-        <p className="font-mono text-[11px] uppercase tracking-wider text-muted flex flex-wrap gap-x-3">
-          <span className="text-ink">{recordNo}</span>
-          <span aria-hidden="true">·</span>
-          <span>Project record</span>
-          {project.year && (
-            <>
-              <span aria-hidden="true">·</span>
-              <span>{project.year}</span>
-            </>
+    <article className="min-h-screen bg-paper text-ink">
+      {/* from lg the grid starts right under the bar, so the sticky words column is already
+          at its resting place on load and never slides */}
+      <div className="px-6 md:px-7 pt-24 lg:pt-14 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-x-12 gap-y-10">
+        {/* the words: a screen-tall column stuck under the bar with its content at the bottom,
+            so it sits still at the foot of the screen from the first pixel while the work
+            scrolls past. Nothing scrolls inside it; the type is sized so the longest record
+            fits a laptop window */}
+        <div className="lg:col-span-5 xl:col-span-4 self-start flex flex-col justify-end lg:sticky lg:top-14 lg:min-h-[calc(100svh-3.5rem)] lg:pb-7 lg:pr-4">
+          <div className="flex flex-col gap-3">
+          <p className="font-mono text-[11px] uppercase tracking-wider text-muted flex flex-wrap gap-x-3">
+            <span className="text-ink">{recordNo}</span>
+            <span aria-hidden="true">·</span>
+            <span>Project record</span>
+            {project.year && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>{project.year}</span>
+              </>
+            )}
+          </p>
+          <h1 className="font-sans text-2xl md:text-3xl leading-tight tracking-tight">
+            <VoiceType text={project.name} />
+          </h1>
+          {project.description && (
+            <div className="flex flex-col gap-3 max-w-[48ch]">
+              <PortableText value={project.description} components={words} />
+            </div>
           )}
-        </p>
-
-        <h1 className="mt-4 max-w-5xl text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight">
-          <VoiceType text={project.name} />
-        </h1>
-
-        {/* Object first */}
-        {project.image && (
-          <figure className="mt-10 md:mt-14">
-            <Image
-              src={project.image}
-              alt={project.name}
-              width={1920}
-              height={1080}
-              priority
-              className="w-full aspect-[16/9] object-cover"
-            />
-          </figure>
-        )}
-
-        {audio && (
-          <div className="mt-5">
-            <SpoolPlayer src={audio} />
-          </div>
-        )}
-
-        {/* Record body */}
-        <div className="mt-14 md:mt-20 grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <aside className="lg:col-span-4 lg:sticky lg:top-32 self-start">
+          {!!project.disciplines?.length && (
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-wider text-muted">Work</p>
+              <p className="mt-1 font-sans text-sm">{project.disciplines.join(", ")}</p>
+            </div>
+          )}
+          {audio && <SpoolPlayer src={audio} />}
+          {hasMeta && (
             <dl className="border-b border-rule">
-              <MetaRow label="Year">{project.year}</MetaRow>
               <MetaRow label="Materials">{project.materials}</MetaRow>
               <MetaRow label="Process">{project.process}</MetaRow>
               <MetaRow label="Location">{project.location}</MetaRow>
@@ -99,31 +141,25 @@ async function ProjectDetail({ params }: Props) {
               <MetaRow label="Press">
                 {project.press?.length
                   ? project.press.map((p, i) => (
-                      <a
-                        key={i}
-                        href={p.url}
-                        target="_blank"
-                        rel="noopener"
-                        className="block text-rust underline decoration-1 underline-offset-4"
-                      >
+                      <a key={i} href={p.url} target="_blank" rel="noopener" className="block text-rust underline decoration-1 underline-offset-4">
                         {p.title}
                       </a>
                     ))
                   : undefined}
               </MetaRow>
             </dl>
-          </aside>
-
-          <div className="lg:col-span-8">
-            <div
-              className="text-2xl md:text-3xl leading-snug max-w-[34ch] [&>p+p]:mt-4"
-            >
-              <PortableText value={project.description} components={recordText} />
-            </div>
-            <div className="mt-10 text-lg md:text-xl leading-relaxed max-w-[65ch] [&>p]:mt-6 [&_img]:my-10">
-              <PortableText value={project.content} components={recordText} />
-            </div>
+          )}
           </div>
+        </div>
+
+        {/* the work: the lead image, then everything in the record, one stack no wider than a sheet */}
+        <div className="lg:col-span-7 xl:col-span-8 lg:pt-14 flex flex-col gap-6 md:gap-8 w-full max-w-[760px]">
+          {project.image && (
+            <figure>
+              <Image src={project.image} alt={project.name} width={1920} height={1440} priority className="hp-img w-full h-auto" />
+            </figure>
+          )}
+          {project.content && <PortableText value={project.content} components={work} />}
         </div>
       </div>
     </article>

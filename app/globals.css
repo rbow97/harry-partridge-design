@@ -80,6 +80,40 @@ html[data-mode="living"] {
 .hp-ruler {
   transition: background-color 0.5s, border-color 0.5s, border-radius 0.5s, filter 0.6s, transform 0.8s, opacity 0.3s;
 }
+/* the phone menu button: three rules, which fold into a cross while the menu is open */
+.hp-burger {
+  display: block;
+  width: 18px;
+  height: 12px;
+  position: relative;
+}
+.hp-burger span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transition: transform 0.3s ease, opacity 0.2s;
+}
+.hp-burger span:nth-child(1) {
+  top: 0;
+}
+.hp-burger span:nth-child(2) {
+  top: 50%;
+}
+.hp-burger span:nth-child(3) {
+  top: 100%;
+}
+.hp-burger-open span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.hp-burger-open span:nth-child(2) {
+  opacity: 0;
+}
+.hp-burger-open span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
 /* the nav's sound switch: four bars that move while sound is on and lie flat when it's off */
 .hp-meter {
   display: inline-flex;
@@ -339,8 +373,15 @@ html[data-mode="living"] .hp-rule {
 /* at rest the clip is a circle big enough to clear the frame's corners (the radius
    reference is the diagonal over root 2, so 71% is the half-diagonal), which lets the
    reel's circle interpolate from it as an iris rather than a snap */
+/* phones: the well sits in flow with no height of its own, so only its width is a
+   container; cqh then falls back to the viewport and the frame takes the full width */
 .hp-well {
-  container-type: size;
+  container-type: inline-size;
+}
+@media (min-width: 768px) {
+  .hp-well {
+    container-type: size;
+  }
 }
 /* the frame is always 4:3: as wide as the well allows, or as wide as the well's height
    allows, whichever is less (w-full with max-h-full alone lets a short tray stretch it wide) */

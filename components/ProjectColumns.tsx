@@ -228,7 +228,8 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
         <p
           ref={statement}
           aria-label="I am a designer trained in art and engineering, building working objects from materials, sound and living systems."
-          className="hp-statement relative font-sans text-[8vw] md:text-[3vw] leading-[1.05] tracking-tight max-w-[34ch]">
+          // phones: centred, like the reference; from md it sits on the shared left edge
+          className="hp-statement relative font-sans text-[8vw] md:text-[3vw] leading-[1.05] tracking-tight max-w-[34ch] text-center md:text-left mx-auto md:mx-0">
           {sentence.map((part, k) => {
             if (typeof part === "string") {
               const el = <Letters key={k} text={part} start={count} />;
@@ -277,7 +278,8 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
 
       {/* Specimen drawer: four trays across on a 12-column grid, and every row is full
           because the trays that don't divide by four come first and wider (lib/tray-layout.ts) */}
-      <ol ref={drawer} className="list-none md:flex-1 grid grid-cols-2 md:grid-cols-12 border-t border-ink">
+      {/* phones: one specimen per row, its photo running edge to edge between the rules */}
+      <ol ref={drawer} className="list-none md:flex-1 grid grid-cols-1 md:grid-cols-12 border-t border-ink">
         {groups.map((g, i) => {
           const lead = g.records[0];
           const process = g.records[1]?.image;
@@ -288,12 +290,12 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
             <li
               key={g.title}
               style={{ "--span": span, "--tray": trayHeight(span) } as React.CSSProperties}
-              className={`hp-tray hp-rule group relative flex flex-col border-b border-r border-ink max-md:even:border-r-0 ${
+              className={`hp-tray hp-rule group relative flex flex-col border-b md:border-r border-ink ${
                 rowEnd ? "md:border-r-0" : ""
               } ${sheet ? "md:flex-row" : ""}`}
             >
               {/* the tray */}
-              <div className={`relative aspect-[4/5] md:aspect-auto md:min-h-[var(--tray)] ${sheet ? "md:w-2/3" : "md:flex-1"}`}>
+              <div className={`relative pt-12 pb-12 md:p-0 md:min-h-[var(--tray)] ${sheet ? "md:w-2/3" : "md:flex-1"}`}>
                 <CropMarks />
                 <span className="absolute top-5 left-7 font-mono text-[10px] uppercase tracking-wider">
                   <span className="text-rust">{projectNo(i)}</span>
@@ -305,7 +307,8 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                 )}
                 {/* hp-well: a size container, so the reel clip can be sized from the frame's real dimensions */}
                 <div
-                  className={`hp-well absolute inset-x-6 top-10 bottom-11 md:inset-x-7 md:top-11 md:bottom-12 flex items-center ${
+                  // on phones the well is in flow and full width, so the 4:3 frame fills the tray wall to wall
+                  className={`hp-well relative md:absolute md:inset-x-7 md:top-11 md:bottom-12 flex items-center ${
                     sheet ? "justify-start" : "justify-center"
                   }`}
                 >

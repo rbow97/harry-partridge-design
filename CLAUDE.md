@@ -13,6 +13,9 @@ Node 22. `./node_modules/.bin/tsc --noEmit` and `next lint` must stay clean.
 - Concept: "precise, tactile, curious, but not cold". Projects are *records* (HP–001…).
 - Tokens (tailwind.config.ts): paper #F4F1EA, ink #1A1A17, muted #6B675E, rust #A4471F, rule.
   Fonts: Instrument Sans (`--font-sans`, variable wght/wdth), Martian Mono (`--font-mono`), Caveat (`--font-hand`).
+- Phones (2026-10-23, after liyakedar.com's phone layout): one specimen per row, the 4:3 photo running wall to
+  wall between the rules, number and crop marks above, ruler below, label under. The well is `inline-size`
+  contained on phones (in flow) and `size` contained from md (absolute in the tray).
 - Homepage (`components/ProjectColumns.tsx`): ruled grid, statement with three hover words, one "specimen tray"
   column per project (crop marks, ruler, 4:3 image, hover swaps in the process record). The drawer is a 12-column
   grid, four trays across, and every row is full: the trays that don't divide by four come first and wider
@@ -55,8 +58,9 @@ Hovering **materials / sound / living systems** in the statement changes the who
   recording's signal passing a head (canvas), and a timecode replaces the project count. The statement letters stay
   still (Rose's call, 2026-10-23). The signal comes from decoding the file into a 100Hz envelope, so the tape runs
   silently for quiet visitors; with sound on it plays the spool and pauses the ambient voice. The recording is the
-  first project with `audio`, else the ambient clip. The nav has the only sound control after the entry gate, a
-  switch labelled "Sound" with a bar meter for state.
+  first project with `audio`, else the ambient clip. The only sound control is `components/SoundSwitch.tsx`, at the right
+  end of the bar in muted type (a control, not a page), meter-only beside the menu button on phones. A fixed corner
+  was tried on 2026-10-23 and sat on content on every page.
 - living systems: **flock** (`components/Flock.tsx`, chosen 2026-10-22). The tray images dissolve into ~5k boids
   on a fixed canvas that wheel around the cursor and fly home to re-form the images on leave. Images are sampled
   from a 600px Sanity copy (`crossOrigin`), one particle per 10px, drawn as colour-bucketed rects. `<html data-flock>`
@@ -71,16 +75,25 @@ Hovering **materials / sound / living systems** in the statement changes the who
   transition chases the inherited value and lags the page (this was the nav lag).
 
 ## Other pieces
-- Sound: `components/sound/SoundProvider.tsx` (Web Audio analyser, ambient voice behind the nav's Sound switch),
+- Sound: `components/sound/SoundProvider.tsx` (Web Audio analyser, ambient voice behind the bar's Sound switch),
   `components/VoiceType.tsx` (headlines react to loudness, used on project pages), `components/SpoolPlayer.tsx`
   ("Play a spool" on project pages). The entry gate ("Enter with sound / quietly") was removed on 2026-10-23, so
   sound is off until the nav switch is clicked, which is the gesture that unlocks audio. The spool and the ambient
   voice are the same placeholder file until Harry supplies recordings.
-- Project page (`app/(site)/projects/[project]/page.tsx`): record layout with metadata column.
+- Project page (`app/(site)/projects/[project]/page.tsx`, after laylabaghai.com/probio, 2026-10-23): the words in
+  a screen-tall sticky column on the left with its content at the bottom (record line, title, description at
+  text-sm, "Work" disciplines, the spool only if the record has a recording, metadata rows only where filled),
+  nothing scrolling inside it, the work as a 760px stack of images on the right at their own proportions.
+  Sticky by `bottom` was tried and doesn't hold while scrolling down; sticky by `top` with a min-height does. Phones: words first, then
+  the stack. No "to add" placeholders. As of 2026-10-23 no record
+  in Sanity has a recording or any metadata, so the spool and the rows are hidden everywhere until Harry fills them.
 - Sanity schema (`sanity/schemas/project-schema.tsx`): disciplines (multi-select), summary, themes, partOf
   (reference → groups dev records under a main project, see `lib/group-projects.ts`), year/materials/press/audio.
   `scripts/seed-homepage-fields.mjs` is a one-off seeder (needs SANITY_API_WRITE_TOKEN; values are guesses).
-- Nav (`components/Nav.tsx`): the slim ruled bar on every page, with the Sound switch.
+- Nav (`components/Nav.tsx`): the slim ruled bar on every page. On phones the pages sit behind a menu button (three rules that fold into a cross, after liyakedar.com) that drops a panel
+  of ruled mono rows from the bar, the page showing beneath; Escape, the button, a tap beneath, or a link closes
+  it, focus moves in and back. The panel's display is a class toggle, not the `hidden` attribute, because
+  Tailwind's `flex` outranks `[hidden]` and the first version never closed.
 
 ## Open / next
 - Tune the flock by eye on a real machine and a real phone (frame rate on a phone is unmeasured).
