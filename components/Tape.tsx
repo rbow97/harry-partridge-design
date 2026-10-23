@@ -5,19 +5,17 @@ import { useSound } from "./sound/SoundProvider";
 
 /**
  * Tape (sound mode): the page becomes a tape machine. A recording runs while you
- * hover: the tray rulers become tape passing a head, with the signal printed on
- * it, the tray images spin as reels (CSS), a timecode counts, and the statement
- * is spoken, letter by letter, from the recording's loudness.
+ * hover: the tray rulers become tape passing a head with the signal printed on it,
+ * the tray images turn as reels, and a timecode counts.
  *
- * The loudness comes from the file itself, decoded once into an envelope, so the
- * letters speak even for visitors who entered quietly. Visitors who entered with
- * sound hear the recording too. Canvas 2D; hidden unless <html data-anim~="sound">.
+ * The signal comes from the file itself, decoded once into a loudness envelope, so
+ * the tape shows it even for visitors who entered quietly. Visitors with sound on
+ * hear the recording too. Canvas 2D; hidden unless <html data-mode="sound">.
  */
 
 const SPEED = 70; // px of tape per second
 const BLOCK = 0.01; // s per envelope sample
 const BAND = 14; // px, tape height
-const AHEAD = 0.12; // s the second letter group lags the first, so adjacent letters stutter
 
 function format(t: number) {
   const m = Math.floor(t / 60);
@@ -74,6 +72,10 @@ export default function Tape({ active, src }: { active: boolean; src: string }) 
   const raf = useRef(0);
   const clock = useRef({ start: 0, offset: 0 }); // the silent clock: where the tape is when no audio plays
   const heard = useRef(false); // whether this hover is audible, decided when it starts
+  // the reels' angles, kept between hovers so a reel never jumps; written to --reel on each tray
+  const reels = useRef<number[]>([]);
+  const trays = () => Array.from(document.querySelectorAll<HTMLElement>("ol > li"));
+  const turn = (angles: number[]) => trays().forEach((li, i) => li.style.setProperty("--reel", `${(angles[i] ?? 0).toFixed(2)}deg`));
 
   useEffect(() => {
     const el = canvas.current;
@@ -87,6 +89,23 @@ export default function Tape({ active, src }: { active: boolean; src: string }) 
       // the ambient voice comes back if the spool had taken its place
       if (heard.current && !soundRef.current.soundOn) soundRef.current.toggle();
       heard.current = false;
+      // the reels slow to upright over the mode's exit, the short way round
+      const from = reels.current.slice();
+      const to = from.map((a) => Math.round(a / 360) * 360);
+      const t0 = performance.now();
+      const settle = (now: number) => {
+        const u = Math.min(1, (now - t0) / 800);
+        const e = 1 - Math.pow(1 - u, 3);
+        reels.current = from.map((a, i) => a + (to[i] - a) * e);
+        turn(reels.current);
+        if (u < 1) raf.current = requestAnimationFrame(settle);
+        else {
+          reels.current = reels.current.map(() => 0);
+          turn(reels.current);
+          raf.current = 0;
+        }
+      };
+      if (from.some((a) => a !== 0)) raf.current = requestAnimationFrame(settle);
       return;
     }
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -97,7 +116,6 @@ export default function Tape({ active, src }: { active: boolean; src: string }) 
       if (!s) return standIn(t);
       return s.env[Math.floor(((t % s.duration) + s.duration) % s.duration / BLOCK)] ?? 0;
     };
-    const statement = document.querySelector<HTMLElement>(".hp-statement");
     const tc = document.querySelector<HTMLElement>(".hp-tc");
     let rulers = Array.from(document.querySelectorAll<HTMLElement>(".hp-ruler")).map((r) => r.getBoundingClientRect());
     const remeasure = () => (rulers = Array.from(document.querySelectorAll<HTMLElement>(".hp-ruler")).map((r) => r.getBoundingClientRect()));
@@ -117,13 +135,18 @@ export default function Tape({ active, src }: { active: boolean; src: string }) 
       });
     };
 
+    let lastFrame = performance.now();
     const draw = (now: number) => {
       const a = audio.current;
       const playing = !!a && !a.paused && !a.ended;
       const t = playing ? a.currentTime : clock.current.offset + (now - clock.current.start) / 1000;
-      const lvl = level(t);
-      statement?.style.setProperty("--lvl", lvl.toFixed(3));
-      statement?.style.setProperty("--lvl2", level(t - AHEAD).toFixed(3));
+      // each reel at its own speed, neighbours the other way
+      const dt = Math.min(0.05, (now - lastFrame) / 1000);
+      lastFrame = now;
+      const n = trays().length;
+      if (reels.current.length !== n) reels.current = Array.from({ length: n }, (_, i) => reels.current[i] ?? 0);
+      reels.current = reels.current.map((ang, i) => ang + ((i % 2 ? -1 : 1) * 360 * dt) / (6.5 + i * 1.4));
+      turn(reels.current);
       if (tc) tc.textContent = format(t);
 
       const dpr = devicePixelRatio;
@@ -156,7 +179,9 @@ export default function Tape({ active, src }: { active: boolean; src: string }) 
     };
 
     const start = () => {
+      cancelAnimationFrame(raf.current); // a settle still running from the last exit
       clock.current.start = performance.now();
+      lastFrame = clock.current.start;
       play();
       raf.current = requestAnimationFrame(draw);
     };

@@ -65,9 +65,72 @@ html[data-mode] {
 
 .hp-rule,
 .hp-mark,
-.hp-img,
 .hp-ruler {
   transition: background-color 0.5s, border-color 0.5s, border-radius 0.5s, filter 0.6s, transform 0.8s, opacity 0.3s;
+}
+/* the nav's sound switch: four bars that move while sound is on and lie flat when it's off */
+.hp-meter {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 12px;
+}
+.hp-meter span {
+  width: 3px;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.35;
+  transform-origin: bottom;
+  transition: opacity 0.3s, height 0.3s;
+}
+.hp-meter-on span {
+  opacity: 1;
+  background: #a4471f;
+  animation: hp-meter-bar 0.9s ease-in-out infinite alternate;
+}
+.hp-meter-on span:nth-child(1) {
+  height: 6px;
+  animation-delay: -0.1s;
+}
+.hp-meter-on span:nth-child(2) {
+  height: 12px;
+  animation-delay: -0.4s;
+}
+.hp-meter-on span:nth-child(3) {
+  height: 9px;
+  animation-delay: -0.7s;
+}
+.hp-meter-on span:nth-child(4) {
+  height: 5px;
+  animation-delay: -0.25s;
+}
+@keyframes hp-meter-bar {
+  to {
+    transform: scaleY(0.35);
+  }
+}
+html[data-mode="sound"] .hp-meter-on span {
+  background: #e8875e;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-meter-on span {
+    animation: none;
+  }
+}
+
+/* a tray's width on the 12-column drawer (--span from lib/tray-layout.ts); phones use two plain columns */
+@media (min-width: 768px) {
+  .hp-tray {
+    grid-column: span var(--span, 3);
+  }
+}
+/* every mode writes the same filter list, in the same order, with neutral values for the
+   functions it doesn't use: CSS only interpolates filters whose lists match, otherwise the
+   change snaps. The reel angle (--reel) is written per frame by Tape.tsx, so no transform transition */
+.hp-img {
+  filter: grayscale(0) sepia(0) saturate(1) contrast(1) brightness(1);
+  transform: rotate(var(--reel, 0deg));
+  transition: filter 0.6s, opacity 0.5s;
 }
 /* only the surface transitions colour. A child with its own colour transition chases
    the inherited value frame by frame and ends up a whole transition behind the page */
@@ -133,7 +196,7 @@ html[data-anim~="materials"] .hp-frame {
   filter: url(#hp-fuzz); /* photos become felted patches */
 }
 html[data-mode="materials"] .hp-img {
-  filter: sepia(0.3) saturate(1.15) contrast(1.05);
+  filter: grayscale(0) sepia(0.3) saturate(1.15) contrast(1.05) brightness(1);
 }
 /* the canvas re-sews the statement; hide the printed letters (still in the DOM) */
 html[data-mode="materials"] .hp-statement .hp-letter {
@@ -168,22 +231,31 @@ html[data-mode="sound"] .text-rust {
   color: #e8875e;
 }
 html[data-mode="sound"] .hp-img {
-  filter: grayscale(1) contrast(1.4) brightness(0.9);
+  filter: grayscale(1) sepia(0) saturate(1) contrast(1.4) brightness(0.9);
 }
 html[data-mode="sound"] .hp-frame::after {
   opacity: 1;
 }
 
-/* the tape machine (see components/Tape.tsx for the tape, counter and the statement's levels) */
-/* the trays' images become reels: round, with a hub, turning while the tape runs */
+/* the tape machine (see components/Tape.tsx for the tape, the counter and the reels' turning) */
+/* the trays' images become reels: the 4:3 frame is clipped to a circle (an inset that
+   trims the sides and rounds, so it morphs from the rectangle rather than snapping),
+   with a hub; Tape.tsx turns the image, and the circle sits inside it at any angle */
 html[data-mode="sound"] .hp-frame {
-  border-radius: 50%;
-  aspect-ratio: 1;
+  /* half the frame's shorter side, measured from the well it sits in: the frame is the
+     well's width, and its height is the lesser of the well's height and 3/4 of that
+     width (it isn't always 4:3, a short tray makes it wider). A circle that size
+     stays inside the photo however far it has turned */
+  clip-path: circle(min(50cqh, 37.5cqw) at 50% 50%);
 }
 .hp-frame::before {
   content: "";
   position: absolute;
-  inset: 40%;
+  left: 50%;
+  top: 50%;
+  width: min(30cqh, 22.5cqw); /* 30% of the reel's diameter */
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
   z-index: 2;
   border-radius: 50%;
   background: #1a1a17;
@@ -193,17 +265,6 @@ html[data-mode="sound"] .hp-frame {
 }
 html[data-mode="sound"] .hp-frame::before {
   opacity: 1;
-}
-html[data-anim~="sound"] .hp-img {
-  animation: hp-reel var(--reel, 7s) linear infinite;
-}
-html[data-anim~="sound"] li:nth-child(even) .hp-img {
-  animation-direction: reverse;
-}
-@keyframes hp-reel {
-  to {
-    transform: rotate(360deg);
-  }
 }
 /* the ruler gives way to the tape drawn over it */
 html[data-mode="sound"] .hp-ruler {
@@ -222,27 +283,13 @@ html[data-mode="sound"] .hp-ruler {
 html[data-mode="sound"] .hp-tape {
   opacity: 1;
 }
-/* the tape counter takes the project count's place */
+/* the tape counter, in the corner of the statement */
 .hp-tc {
   opacity: 0;
   transition: opacity 0.4s;
 }
 html[data-mode="sound"] .hp-tc {
   opacity: 1;
-}
-html[data-mode="sound"] .hp-count {
-  opacity: 0;
-}
-/* the statement speaks: letters lift with the recording's loudness. Odd letters follow
-   the live level and even ones a level from a moment before, so neighbours stutter
-   against each other the way speech does. Transform only, so nothing reflows */
-html[data-anim~="sound"] .hp-statement .hp-letter {
-  transform: translateY(
-      calc(-0.22em * var(--hp-amp) * (var(--lvl, 0) * (1 + var(--sd, 1)) / 2 + var(--lvl2, 0) * (1 - var(--sd, 1)) / 2))
-    )
-    scaleY(calc(1 + 0.08 * var(--hp-amp) * var(--lvl, 0)));
-  transform-origin: 50% 100%;
-  transition: none;
 }
 
 /* LIVING SYSTEMS — a petri dish */
@@ -257,8 +304,18 @@ html[data-mode="living"] .hp-surface .text-ink {
 html[data-mode="living"] .hp-rule {
   border-color: #5c6b2e;
 }
+/* at rest the clip is a circle big enough to clear the frame's corners (the radius
+   reference is the diagonal over root 2, so 71% is the half-diagonal), which lets the
+   reel's circle interpolate from it as an iris rather than a snap */
+.hp-well {
+  container-type: size;
+}
+/* the frame is always 4:3: as wide as the well allows, or as wide as the well's height
+   allows, whichever is less (w-full with max-h-full alone lets a short tray stretch it wide) */
 .hp-frame {
-  transition: border-radius 0.8s ease, filter 0.6s;
+  width: min(100cqw, calc(100cqh * 4 / 3));
+  clip-path: circle(72% at 50% 50%);
+  transition: clip-path 0.8s ease, filter 0.6s;
 }
 
 @media (prefers-reduced-motion: reduce) {

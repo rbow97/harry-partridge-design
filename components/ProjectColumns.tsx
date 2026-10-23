@@ -3,15 +3,13 @@
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import type { ProjectGroup } from "@/lib/group-projects";
+import { COLUMNS, trayHeight, trayLayout } from "@/lib/tray-layout";
 import CrossStitch from "./CrossStitch";
 import Flock from "./Flock";
 import Tape from "./Tape";
 
 // the recording the sound hover runs: the first record with a spool, else the ambient voice
 const AMBIENT = "/assets/harry-grad-movie.mp4";
-
-const THEMES = ["materials", "sound", "living systems"] as const;
-type Theme = (typeof THEMES)[number];
 
 type Mode = "materials" | "sound" | "living";
 
@@ -88,7 +86,6 @@ function Ruler() {
 }
 
 export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
-  const [active, setActive] = useState<Theme | null>(null);
   const [mode, setMode] = useState<Mode | null>(null);
   const statement = useRef<HTMLParagraphElement>(null);
   // whether the last pointer on a statement word was a finger (see the word buttons)
@@ -178,9 +175,19 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
     ".",
   ] as const;
   let count = 0;
-  const themesOf = (g: ProjectGroup) => new Set(g.records.flatMap((r) => r.themes ?? []));
-  const hasThemes = groups.some((g) => themesOf(g).size > 0);
-  const shown = active ? groups.filter((g) => themesOf(g).has(active)).length : groups.length;
+  const trays = trayLayout(groups.length);
+
+  // where the drawer starts on the page, for the hero tray's height (see lib/tray-layout.ts)
+  const drawer = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    const ol = drawer.current;
+    if (!ol) return;
+    const measure = () => ol.style.setProperty("--drawer-top", `${Math.round(ol.getBoundingClientRect().top + window.scrollY)}px`);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(document.body);
+    return () => ro.disconnect();
+  }, []);
 
   return (
     <div className="hp-surface relative bg-paper text-ink pt-14 md:min-h-[100svh] flex flex-col">
@@ -238,68 +245,34 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
           })}
           <CrossStitch targetRef={statement} active={mode === "materials"} />
         </p>
+        {/* sound: the tape's timecode, a readout in the corner of the statement (written per frame in Tape.tsx) */}
+        <span
+          aria-hidden="true"
+          className="hp-tc absolute right-5 md:right-10 bottom-3 font-mono text-[11px] uppercase tracking-wider tabular-nums"
+        >
+          00:00.0
+        </span>
       </section>
 
-      {/* Instrument panel */}
-      {hasThemes && (
-        <div
-          role="group"
-          aria-label="Filter projects by theme"
-          className="hp-rule relative border-y border-ink px-5 md:px-10 py-3 flex flex-wrap items-center gap-x-2 gap-y-2 font-mono text-[11px] uppercase tracking-wider"
-        >
-          <span className="text-muted mr-2">Filter</span>
-          {THEMES.map((t) => {
-            const on = active === t;
-            return (
-              <button
-                key={t}
-                type="button"
-                aria-pressed={on}
-                onClick={() => setActive(on ? null : t)}
-                className={`flex items-center gap-2 border px-3 py-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rust ${
-                  on ? "border-ink bg-ink text-paper" : "border-rule hover:border-ink"
-                }`}
-              >
-                <span
-                  aria-hidden="true"
-                  className={`w-1.5 h-1.5 rounded-full ${on ? "bg-rust shadow-[0_0_6px_#A4471F]" : "bg-ink/25"}`}
-                />
-                {t}
-              </button>
-            );
-          })}
-          <span className="hp-count ml-auto text-muted" aria-live="polite">
-            {active ? `${shown} of ${groups.length} projects` : `All ${groups.length} projects`}
-          </span>
-          {/* sound: the tape counter takes the count's place (written per frame in Tape.tsx) */}
-          <span aria-hidden="true" className="hp-tc absolute right-5 md:right-10 tabular-nums">
-            00:00.0
-          </span>
-        </div>
-      )}
-
-      {/* Specimen drawer */}
-      <ol
-        className={`list-none md:flex-1 grid grid-cols-2 md:[grid-template-columns:repeat(var(--n),minmax(0,1fr))] ${
-          hasThemes ? "" : "border-t border-ink"
-        }`}
-        style={{ "--n": groups.length } as React.CSSProperties}
-      >
+      {/* Specimen drawer: four trays across on a 12-column grid, and every row is full
+          because the trays that don't divide by four come first and wider (lib/tray-layout.ts) */}
+      <ol ref={drawer} className="list-none md:flex-1 grid grid-cols-2 md:grid-cols-12 border-t border-ink">
         {groups.map((g, i) => {
           const lead = g.records[0];
           const process = g.records[1]?.image;
-          const dim = active !== null && !themesOf(g).has(active);
+          const { span, rowEnd } = trays[i];
+          // a full-width tray is laid out as a record sheet: photo on the left, label beside it
+          const sheet = span === COLUMNS;
           return (
             <li
               key={g.title}
-              // sound: each tray's reel turns at its own speed, neighbours the other way
-              style={{ "--reel": `${6.5 + i * 1.4}s` } as React.CSSProperties}
-              className={`hp-rule group relative flex flex-col border-b border-r border-ink last:border-r-0 transition-opacity duration-300 ${
-                dim ? "opacity-25" : "opacity-100"
-              }`}
+              style={{ "--span": span, "--tray": trayHeight(span) } as React.CSSProperties}
+              className={`hp-tray hp-rule group relative flex flex-col border-b border-r border-ink max-md:even:border-r-0 ${
+                rowEnd ? "md:border-r-0" : ""
+              } ${sheet ? "md:flex-row" : ""}`}
             >
               {/* the tray */}
-              <div className="relative aspect-[4/5] md:aspect-auto md:flex-1 md:min-h-[260px]">
+              <div className={`relative aspect-[4/5] md:aspect-auto md:min-h-[var(--tray)] ${sheet ? "md:w-2/3" : "md:flex-1"}`}>
                 <CropMarks />
                 <span className="absolute top-5 left-7 font-mono text-[10px] uppercase tracking-wider">
                   <span className="text-rust">{projectNo(i)}</span>
@@ -309,7 +282,8 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                     {g.records.length} records
                   </span>
                 )}
-                <div className="absolute inset-x-6 top-10 bottom-11 md:inset-x-7 md:top-11 md:bottom-12 flex items-center justify-center">
+                {/* hp-well: a size container, so the reel clip can be sized from the frame's real dimensions */}
+                <div className="hp-well absolute inset-x-6 top-10 bottom-11 md:inset-x-7 md:top-11 md:bottom-12 flex items-center justify-center">
                   <div className="hp-frame relative w-full max-h-full aspect-[4/3] overflow-hidden">
                   {lead.image && (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -336,9 +310,13 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                 <Ruler />
               </div>
 
-              {/* the label */}
-              <div className="hp-rule border-t border-ink p-4 md:p-5 md:h-[172px] md:overflow-hidden">
-                <h2 className="font-sans text-xl md:text-2xl leading-tight transition-colors group-hover:text-rust">
+              {/* the label: under the tray, or beside it on a sheet, where it has room to say more */}
+              <div
+                className={`hp-rule border-t border-ink p-4 md:p-5 ${
+                  sheet ? "md:w-1/3 md:border-t-0 md:border-l md:p-8 md:flex md:flex-col md:justify-end" : "md:h-[172px] md:overflow-hidden"
+                }`}
+              >
+                <h2 className={`font-sans leading-tight transition-colors group-hover:text-rust ${sheet ? "text-2xl md:text-4xl" : "text-xl md:text-2xl"}`}>
                   {/* stretched link: the whole cell opens the lead record */}
                   <Link
                     href={`/projects/${lead.slug}`}
@@ -352,7 +330,11 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                     {lead.disciplines.join(" / ")}
                   </p>
                 )}
-                {lead.summary && <p className="mt-2 font-sans italic text-sm md:text-base leading-snug line-clamp-2">{lead.summary}</p>}
+                {lead.summary && (
+                  <p className={`mt-2 font-sans italic leading-snug ${sheet ? "md:mt-4 text-base md:text-lg max-w-[36ch]" : "text-sm md:text-base line-clamp-2"}`}>
+                    {lead.summary}
+                  </p>
+                )}
                 {g.records.length > 1 && (
                   <p className="relative z-10 mt-3 font-mono text-[10px] uppercase tracking-wider flex gap-3">
                     {g.records.map((r, j) => (

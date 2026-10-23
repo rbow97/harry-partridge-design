@@ -13,8 +13,21 @@ Node 22. `./node_modules/.bin/tsc --noEmit` and `next lint` must stay clean.
 - Concept: "precise, tactile, curious, but not cold". Projects are *records* (HP–001…).
 - Tokens (tailwind.config.ts): paper #F4F1EA, ink #1A1A17, muted #6B675E, rust #A4471F, rule.
   Fonts: Instrument Sans (`--font-sans`, variable wght/wdth), Martian Mono (`--font-mono`), Caveat (`--font-hand`).
-- Homepage (`components/ProjectColumns.tsx`): ruled grid, statement with three hover words, filter row,
-  one "specimen tray" column per project (crop marks, ruler, 4:3 image, hover swaps in the process record).
+- Homepage (`components/ProjectColumns.tsx`): ruled grid, statement with three hover words, one "specimen tray"
+  column per project (crop marks, ruler, 4:3 image, hover swaps in the process record). The drawer is a 12-column
+  grid, four trays across, and every row is full: the trays that don't divide by four come first and wider
+  (`lib/tray-layout.ts`, albumcolors style - 5 projects = one full-width hero then four). Wider trays are taller,
+  and a full-width hero is laid out as a record sheet (photo across two thirds, label beside it on the right,
+  bottom-aligned, bigger type) that fills the first screen exactly with 72px of the next row showing
+  (`--drawer-top` is measured in ProjectColumns). Chosen 2026-10-23 over a label-below hero, which looked like a
+  stretched tray.
+  The frame is always 4:3 (`width: min(100cqw, calc(100cqh * 4 / 3))`, the well is a size container), and the
+  reel clip is `circle(min(50cqh, 37.5cqw))`, both derived from the well so they hold at any tray size. Verified
+  with five projects (Harry has a "Test" one with no image as of 2026-10-23). There is no theme filter (removed 2026-10-23: dimming didn't shorten a long list, and the
+  animated alternatives either warp the photos or need empty trays; Rose chose none). `themes` stays in the schema.
+- Transitions between modes: `.hp-img` filters are one canonical list in every mode (CSS only interpolates
+  matching filter lists); the reel is a `clip-path: inset(... round 50%)` so it morphs from the rectangle; the
+  reel angle is written per frame by Tape.tsx and eased back upright on exit, never a keyframe that snaps.
 - Avoid copying liyakedar.com (the main reference): keep its ruled-grid *principle*, not its signatures.
 
 ## Hover modes (the signature feature)
@@ -24,11 +37,11 @@ Hovering **materials / sound / living systems** in the statement changes the who
 - materials: felt texture, woolly SVG filters (strength tweened in JS), cross-stitched statement
   (`components/CrossStitch.tsx`, canvas over the real text, drawn instantly).
 - sound: a tape machine (`components/Tape.tsx`). Tray images become spinning reels, the rulers become tape with the
-  recording's signal passing a head (canvas), a timecode replaces the project count, and the statement letters lift
-  with the recording's loudness (`--lvl`/`--lvl2` on `.hp-statement`, odd and even letters via `--sd`). Loudness comes
-  from decoding the file into a 100Hz envelope, so it speaks silently for quiet visitors; with sound on it plays the
-  spool and pauses the ambient voice. The recording is the first project with `audio`, else the ambient clip.
-  The nav has the only sound toggle after the entry gate.
+  recording's signal passing a head (canvas), and a timecode replaces the project count. The statement letters stay
+  still (Rose's call, 2026-10-23). The signal comes from decoding the file into a 100Hz envelope, so the tape runs
+  silently for quiet visitors; with sound on it plays the spool and pauses the ambient voice. The recording is the
+  first project with `audio`, else the ambient clip. The nav has the only sound control after the entry gate, a
+  switch labelled "Sound" with a bar meter for state.
 - living systems: **flock** (`components/Flock.tsx`, chosen 2026-10-22). The tray images dissolve into ~5k boids
   on a fixed canvas that wheel around the cursor and fly home to re-form the images on leave. Images are sampled
   from a 600px Sanity copy (`crossOrigin`), one particle per 10px, drawn as colour-bucketed rects. `<html data-flock>`

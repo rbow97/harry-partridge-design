@@ -42,15 +42,23 @@ const Nav = ({ pages }: { pages: Page[] }) => {
               </Link>
             );
           })}
-          {/* the only sound control after the entry gate: the sound hover and the spools follow it */}
+          {/* the only sound control after the entry gate: the sound hover and the spools follow it.
+              A switch whose label names the setting and whose meter shows the state: bars moving
+              means sound is on, flat means off. "Sound on"/"Sound off" read as commands as much as states */}
           <button
             type="button"
-            aria-pressed={soundOn}
+            role="switch"
+            aria-checked={soundOn}
             onClick={toggle}
-            className="hp-rule flex items-center gap-2 border-l border-ink px-4 md:px-6 font-mono text-[11px] uppercase tracking-wider hover:text-rust hover:transition-colors"
+            className="hp-rule flex items-center gap-2.5 border-l border-ink px-4 md:px-6 font-mono text-[11px] uppercase tracking-wider hover:text-rust hover:transition-colors"
           >
-            <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${soundOn ? "bg-rust" : "bg-current opacity-25"}`} />
-            Sound {soundOn ? "on" : "off"}
+            Sound
+            <span aria-hidden="true" className={`hp-meter ${soundOn ? "hp-meter-on" : ""}`}>
+              <span />
+              <span />
+              <span />
+              <span />
+            </span>
           </button>
         </nav>
       </header>
