@@ -134,12 +134,28 @@ export default defineType({
     defineField({
       name: "content",
       title: "Content",
+      description: "The work, top to bottom: photos, photos side by side, text, quotes and videos. No need for empty lines, the layout spaces them.",
       type: "array",
       of: [
-        defineArrayMember({ type: "block" }),
-        defineArrayMember({ type: "image", options: { hotspot: true }, fields: [altField(false)] }),
+        // text is plain paragraphs with links: headings and lists belong to the words column, not the work
+        defineArrayMember({ type: "block", styles: [{ title: "Normal", value: "normal" }], lists: [] }),
+        defineArrayMember({ type: "figure" }),
+        defineArrayMember({ type: "pair" }),
+        defineArrayMember({ type: "quote" }),
         defineArrayMember({ type: "video" }),
+        // the old free-standing photo, kept so content from before the blocks still opens. New photos are Photo blocks
+        defineArrayMember({ type: "image", title: "Image (old, use Photo)", options: { hotspot: true }, fields: [altField(false)] }),
       ],
+      // a warning, not a block on publishing: empty lines do no harm, the site skips them
+      validation: (rule) =>
+        rule
+          .custom((blocks) => {
+            const empty = (blocks ?? []).filter(
+              (b) => (b as { _type?: string })._type === "block" && !((b as { children?: { text?: string }[] }).children ?? []).some((s) => s.text?.trim())
+            );
+            return empty.length ? `Remove the ${empty.length} empty paragraph${empty.length > 1 ? "s" : ""}: the layout spaces the blocks` : true;
+          })
+          .warning(),
     }),
   ],
 });

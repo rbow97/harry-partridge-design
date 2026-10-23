@@ -12,8 +12,9 @@ import { videoAnchor } from "@/lib/video";
  * - SheetText: a Bio or Contact page. Harry writes the lede as "h1" blocks in Studio, so
  *   h1 sets large and "normal" is body; blank blocks are skipped; images are lifted out.
  * - RecordWords: a project's description, in the words column.
- * - RecordWork: a project's content, the work: every image at its own proportions, full
- *   width of the stack, with any text between them reading as a caption.
+ * - RecordWork: a project's content, the work: photos (each with its own caption and size), photos
+ *   side by side, quotes and text, every photo at its own proportions. Content from before those
+ *   blocks still reads any text after a photo as its caption.
  */
 
 export type ImageBlock = { _type: "image"; _key: string; alt?: string; asset: { _ref: string } };
@@ -94,33 +95,87 @@ const words = (embedded: string[]): PortableTextComponents => ({
   types: { image: () => null },
 });
 
-const work = (embedded: string[]): PortableTextComponents => ({
+// one photo in the work column, at its own proportions. `sizes` says how wide it shows, so the
+// browser fetches the smallest width that stays sharp
+function WorkImage({ image, sizes = SIZES.work }: { image: ImageBlock; sizes?: string }) {
+  if (!image?.asset?._ref) return null;
+  const { width, height } = getImageDimensions(image);
+  return (
+    <img
+      src={sized(imageSource(image), 1280)}
+      srcSet={srcset(imageSource(image))}
+      sizes={sizes}
+      alt={image.alt ?? ""}
+      className="hp-img w-full h-auto"
+      style={{ aspectRatio: `${width} / ${height}` }}
+      loading="lazy"
+      decoding="async"
+    />
+  );
+}
+
+const Caption = ({ text }: { text?: string | null }) =>
+  text?.trim() ? <figcaption className="mt-2 text-small leading-snug text-muted max-w-[52ch]">{text}</figcaption> : null;
+
+type Figure = { image: ImageBlock; caption?: string | null; size?: string | null };
+type Pair = { images?: ImageBlock[] | null; caption?: string | null };
+type Quote = { text?: string | null; cite?: string | null };
+
+// a photo's width in the column: inset and half keep portrait photos from running very tall
+const FIGURE_WIDTH: Record<string, string> = { full: "w-full", inset: "md:w-2/3", half: "md:w-1/2" };
+
+/**
+ * The work column. `legacy` is content from before the blocks, plain paragraphs between photos:
+ * there a paragraph is read as a caption for the photo above it. In the block form each photo
+ * carries its own caption, so a paragraph is just text, set small in ink so it reads but doesn't
+ * compete with the words column
+ */
+const work = (embedded: string[], legacy: boolean): PortableTextComponents => ({
   block: {
-    // text in the work column is a caption for the image above it: small, quiet and drawn up close
-    // to it, so the words column stays the one place to read and the two don't compete
     normal: ({ children }) =>
-      hasText(children) ? <p className="-mt-3 md:-mt-5 text-small leading-snug text-muted max-w-[52ch]">{children}</p> : null,
+      !hasText(children) ? null : legacy ? (
+        // text in the work column is a caption for the image above it: small, quiet and drawn up close
+        // to it, so the words column stays the one place to read and the two don't compete
+        <p className="-mt-3 md:-mt-5 text-small leading-snug text-muted max-w-[52ch]">{children}</p>
+      ) : (
+        // paragraphs that follow one another close up to read as one passage: the column's gap is for blocks
+        <p className="text-small leading-relaxed max-w-[60ch] [p+&]:-mt-3 md:[p+&]:-mt-5">{children}</p>
+      ),
   },
   marks: recordLink(embedded),
   types: {
-    image: ({ value }: { value: ImageBlock }) => {
-      if (!value?.asset?._ref) return null;
-      const { width, height } = getImageDimensions(value);
+    image: ({ value }: { value: ImageBlock }) => (
+      <figure>
+        <WorkImage image={value} />
+      </figure>
+    ),
+    figure: ({ value }: { value: Figure }) => (
+      <figure className={FIGURE_WIDTH[value.size ?? "full"] ?? "w-full"}>
+        <WorkImage image={value.image} sizes={value.size && value.size !== "full" ? SIZES.workHalf : SIZES.work} />
+        <Caption text={value.caption} />
+      </figure>
+    ),
+    pair: ({ value }: { value: Pair }) => {
+      const images = (value.images ?? []).filter((i) => i?.asset?._ref);
+      if (!images.length) return null;
       return (
         <figure>
-          <img
-            src={sized(imageSource(value), 1280)}
-            srcSet={srcset(imageSource(value))}
-            sizes={SIZES.work}
-            alt={value.alt ?? ""}
-            className="hp-img w-full h-auto"
-            style={{ aspectRatio: `${width} / ${height}` }}
-            loading="lazy"
-            decoding="async"
-          />
+          <div className={`grid gap-3 md:gap-5 items-start ${images.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+            {images.map((image) => (
+              <WorkImage key={image._key} image={image} sizes={images.length === 3 ? SIZES.workThird : SIZES.workHalf} />
+            ))}
+          </div>
+          <Caption text={value.caption} />
         </figure>
       );
     },
+    quote: ({ value }: { value: Quote }) =>
+      value.text?.trim() ? (
+        <blockquote className="max-w-[36ch] py-2">
+          <p className="text-lead leading-tight tracking-tight">“{value.text.trim()}”</p>
+          {value.cite?.trim() && <footer className="mt-3 hp-label text-muted">{value.cite.trim()}</footer>}
+        </blockquote>
+      ) : null,
     // video blocks play as islands between the runs of content (the record page splits at them)
     video: () => null,
   },
@@ -152,9 +207,11 @@ export const InfoNotes = ({ value }: { value: Content }) => <PortableText value=
 
 export const SheetText = ({ value }: { value: Content }) => <PortableText value={value} components={sheet} />;
 // embedded: the keys of the video links that play on this page
-type RecordProps = { value: Content; embedded?: string[] };
+type RecordProps = { value: Content; embedded?: string[]; legacy?: boolean };
 export const RecordWords = ({ value, embedded = [] }: RecordProps) => <PortableText value={value} components={words(embedded)} />;
-export const RecordWork = ({ value, embedded = [] }: RecordProps) => <PortableText value={value} components={work(embedded)} />;
+export const RecordWork = ({ value, embedded = [], legacy = false }: RecordProps) => (
+  <PortableText value={value} components={work(embedded, legacy)} />
+);
 
 /** a page image in a specimen tray, beside the text */
 export function SheetTray({ image, index }: { image: ImageBlock; index: number }) {

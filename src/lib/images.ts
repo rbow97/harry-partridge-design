@@ -53,6 +53,8 @@ export const SIZES = {
   tray: "(min-width: 768px) 45vw, 100vw",
   heroTray: "(min-width: 768px) 70vw, 100vw",
   work: "(min-width: 768px) 60vw, 100vw",
+  workHalf: "(min-width: 768px) 30vw, 50vw",
+  workThird: "(min-width: 768px) 20vw, 34vw",
   development: "(min-width: 640px) 30vw, 100vw",
   portrait: "(min-width: 1024px) 34vw, (min-width: 768px) 42vw, 100vw",
   sheetTray: "(min-width: 1024px) 40vw, 100vw",

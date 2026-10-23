@@ -59,6 +59,8 @@ for (const block of project.content ?? []) {
   if (last?.kind === "work") last.blocks.push(block);
   else pieces.push({ kind: "work", blocks: [block] });
 }
+// content from before the blocks (photos and paragraphs only) still reads paragraphs as captions
+const legacy = !(project.content ?? []).some((b) => ["figure", "pair", "quote"].includes((b as { _type?: string })._type ?? ""));
 const hasMeta = !!(project.year || project.materials || project.process || project.location || project.collaborators || project.press?.length);
 const meta = [
   ["Materials", project.materials],
@@ -155,7 +157,7 @@ const meta = [
         {videos.map((video) => <VideoEmbed client:visible video={video} />)}
         {pieces.map((piece) =>
           piece.kind === "work" ? (
-            <RecordWork value={piece.blocks} embedded={embedded} />
+            <RecordWork value={piece.blocks} embedded={embedded} legacy={legacy} />
           ) : piece.kind === "video" ? (
             <VideoEmbed client:visible video={piece.video} />
           ) : (

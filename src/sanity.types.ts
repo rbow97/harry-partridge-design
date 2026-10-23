@@ -157,6 +157,40 @@ export type SiteSettings = {
   };
 };
 
+export type Quote = {
+  _type: "quote";
+  text?: string;
+  cite?: string;
+};
+
+export type Pair = {
+  _type: "pair";
+  images?: Array<{
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+    _key: string;
+  }>;
+  caption?: string;
+};
+
+export type Figure = {
+  _type: "figure";
+  image?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  };
+  caption?: string;
+  size?: "full" | "inset" | "half";
+};
+
 export type Video = {
   _type: "video";
   url?: string;
@@ -272,9 +306,8 @@ export type Project = {
           _type: "span";
           _key: string;
         }>;
-        style?:
-          "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote";
-        listItem?: "bullet" | "number";
+        style?: "normal";
+        listItem?: never;
         markDefs?: Array<{
           href?: string;
           _type: "link";
@@ -284,6 +317,18 @@ export type Project = {
         _type: "block";
         _key: string;
       }
+    | ({
+        _key: string;
+      } & Figure)
+    | ({
+        _key: string;
+      } & Pair)
+    | ({
+        _key: string;
+      } & Quote)
+    | ({
+        _key: string;
+      } & Video)
     | {
         asset?: SanityImageAssetReference;
         media?: unknown;
@@ -293,9 +338,6 @@ export type Project = {
         _type: "image";
         _key: string;
       }
-    | ({
-        _key: string;
-      } & Video)
   >;
 };
 
@@ -405,6 +447,9 @@ export type AllSanitySchemaTypes =
   | SanityImageHotspot
   | SanityFileAssetReference
   | SiteSettings
+  | Quote
+  | Pair
+  | Figure
   | Video
   | Page
   | Slug
@@ -475,6 +520,15 @@ export type ProjectQueryResult = {
   content: Array<
     | ({
         _key: string;
+      } & Figure)
+    | ({
+        _key: string;
+      } & Pair)
+    | ({
+        _key: string;
+      } & Quote)
+    | ({
+        _key: string;
       } & Video)
     | {
         children?: Array<{
@@ -483,9 +537,8 @@ export type ProjectQueryResult = {
           _type: "span";
           _key: string;
         }>;
-        style?:
-          "blockquote" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "normal";
-        listItem?: "bullet" | "number";
+        style?: "normal";
+        listItem?: never;
         markDefs?: Array<{
           href?: string;
           _type: "link";
