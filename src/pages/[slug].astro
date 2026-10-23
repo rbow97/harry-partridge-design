@@ -1,10 +1,15 @@
 ---
 import Site from "@/layouts/Site.astro";
-import { getPage, getPages } from "@/lib/sanity";
-import { SheetText, SheetTray, isImage, type ImageBlock } from "@/components/RichText";
+import { getPage, getPages, imageUrl } from "@/lib/sanity";
+import { getImageDimensions } from "@sanity/asset-utils";
+import { InfoLede, InfoNotes } from "@/components/RichText";
+import { readBio, readContact } from "@/lib/info";
 
-/* A Sanity page (Bio, Contact) laid out as a record sheet, like the homepage hero:
-   the text runs down the left, any images sit in specimen trays on the right. */
+/* A Sanity page (Bio, Contact), after the info pages of maximesibue.com, davidspaeth.com,
+   samthies.com and brandonyasin.com: one statement, then the facts in small ruled rows.
+   - Contact: the email address is the page, set across the full width, over a ruled row of links.
+   - Bio, and any other page: the lede large beside the portrait, then a ruled band of fact
+     columns (clients and publications). */
 
 export async function getStaticPaths() {
   const pages = await getPages();
@@ -14,31 +19,183 @@ export async function getStaticPaths() {
 
 const page = await getPage(Astro.params.slug!);
 if (!page) return Astro.redirect("/404");
-const content = page.content ?? [];
-// the content array is typed as blocks; image blocks are objects beside them
-const images = (content as unknown[]).filter(isImage);
+const content = (page.content ?? []) as unknown[];
+const isContact = page.slug === "contact";
+
+const contact = readContact(content);
+const bio = readBio(content);
+// contact details live on the Contact page only, one link away in the nav.
+// The long lists (clients) lead, large and in two columns, with the short rows stacked beside them
+const lists = bio.rows.filter((r) => r.items.length > 2);
+const short = bio.rows.filter((r) => r.items.length <= 2);
+const rows = isContact ? [] : [...lists.map((r) => ({ ...r, kind: "list" as const })), ...short.map((r) => ({ ...r, kind: "short" as const }))];
+const [local, domain] = contact.email?.split("@") ?? [];
+const portrait = bio.images[0];
+const portraitSize = portrait ? getImageDimensions(portrait) : null;
+// whole page columns for each: at lg a list takes 5 of the 8 and the short rows the 3 beside it
+const spans = { list: "md:col-span-7 lg:col-span-5", short: "md:col-span-3 lg:col-span-3 lg:col-start-6" };
+const external = (href?: string) => !!href && /^https?:/.test(href);
 ---
 
 <Site title={page.title}>
-  <article class="min-h-screen bg-paper text-ink">
-    <div class="px-edge pt-28 md:pt-32 pb-24">
-      {/* the record line is the page's heading: small mono, but a real h1 */}
-      <h1 class="hp-label font-normal text-muted flex flex-wrap gap-x-3 m-0">
-        <span class="text-ink">Harry Partridge</span>
-        <span aria-hidden="true">·</span>
-        <span>{page.title}</span>
-      </h1>
-
-      <div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <div class:list={["flex flex-col gap-6", images.length ? "lg:col-span-7" : "lg:col-span-9"]}>
-          <SheetText value={content} />
-        </div>
-        {images.length > 0 && (
-          <aside class="lg:col-span-5 lg:sticky lg:top-24 self-start flex flex-col gap-8">
-            {images.map((img, i) => <SheetTray image={img} index={i} />)}
-          </aside>
+  {isContact ? (
+    <article class="min-h-[100svh] bg-paper text-ink flex flex-col pt-bar">
+      <div class="px-edge pt-14 pb-10 md:pb-14 flex-1 flex flex-col justify-end gap-5">
+        {/* the record line is the page's heading: small mono, but a real h1 */}
+        <h1 class="hp-label font-normal text-muted flex flex-wrap gap-x-3 m-0">
+          <span class="text-ink">Harry Partridge</span>
+          <span aria-hidden="true">·</span>
+          <span>{page.title}</span>
+        </h1>
+        {/* written here rather than in Studio, so it reads in Harry's voice above whatever his intro says */}
+        <p class="text-3xl md:text-5xl leading-[1.05] tracking-tight max-w-[22ch]">Say hello, I’d love to hear from you.</p>
+        <p class="text-xl md:text-2xl leading-snug tracking-tight max-w-[48ch]">
+          Whether it’s a project, a collaboration or a half-formed idea, I’m always up for a chat.
+          {contact.intro && <span class="text-muted"> {contact.intro}</span>}
+        </p>
+        {contact.email && (
+          <>
+            {/* sized to the width by the script below. Phones break it at the @ so each half can be larger */}
+            <a
+              href={`mailto:${contact.email}`}
+              data-fit
+              class="hp-email hp-link [--hp-thread-weight:2px] md:[--hp-thread-weight:3px] inline-block self-start whitespace-nowrap leading-[0.95] tracking-tight text-[10vw] sm:text-[6.5vw] hover:text-rust focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-rust"
+            >
+              <span class="block sm:inline">{local}</span><span class="block sm:inline">@{domain}</span>
+            </a>
+            <div class="flex items-center gap-4">
+              <button
+                type="button"
+                data-copy={contact.email}
+                hidden
+                class="hp-label hp-fill border border-ink px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rust"
+              >
+                Copy address
+              </button>
+              <span data-copy-status role="status" class="hp-label text-rust"></span>
+            </div>
+          </>
+        )}
+        {contact.notes.length > 0 && (
+          <div class="flex flex-col gap-2">
+            <InfoNotes value={contact.notes} />
+          </div>
         )}
       </div>
-    </div>
-  </article>
+      {contact.links.length > 0 && (
+        <ul class="hp-rule list-none grid grid-cols-1 md:grid-flow-col md:auto-cols-fr border-t border-ink">
+          {contact.links.map((l, i) => (
+            <li class:list={["hp-rule border-ink", i > 0 && "border-t md:border-t-0 md:border-l"]}>
+              <a
+                href={l.href}
+                {...(external(l.href) ? { target: "_blank", rel: "noopener" } : {})}
+                class="group relative flex items-baseline justify-between gap-6 px-edge py-6 md:py-10 text-2xl md:text-4xl tracking-tight hover:text-rust transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-rust"
+              >
+                <span>{l.text}</span>
+                <span aria-hidden="true" class="hp-label text-rust flex items-center gap-2">
+                  Open
+                  {/* the arrow leans out the way it points */}
+                  <span class="inline-block transition-transform duration-300 ease-out group-hover:translate-x-1 group-hover:-translate-y-1 motion-reduce:transition-none">↗</span>
+                </span>
+                <span aria-hidden="true" class="absolute inset-x-0 top-0 h-0.5 bg-rust origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"></span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </article>
+  ) : (
+    <article class="min-h-screen bg-paper text-ink">
+      {/* one 12-column grid, the same as a project record's, so every edge on the page is a column line:
+          the lede and the facts take the first 8 columns, the portrait the last 4 */}
+      <div class="px-edge pt-24 md:pt-[calc(var(--size-bar)+2.5rem)] pb-20 grid grid-cols-1 md:grid-cols-12 gap-x-8 lg:gap-x-12 gap-y-8 md:gap-y-10">
+        <h1 class="md:col-span-12 hp-label font-normal text-muted flex flex-wrap gap-x-3 m-0">
+          <span class="text-ink">Harry Partridge</span>
+          <span aria-hidden="true">·</span>
+          <span>{page.title}</span>
+        </h1>
+        {/* phones open on the portrait, as davidspaeth.com does. From md it sits beside the lede, top edges level */}
+        {portrait && (
+          <figure class="order-first md:order-none md:col-start-8 lg:col-start-9 md:col-span-5 lg:col-span-4 md:row-start-2 md:row-span-2 self-start">
+            <img
+              src={imageUrl(portrait, 1200)}
+              alt={portrait.alt ?? ""}
+              class="hp-img w-full h-auto"
+              style={{ aspectRatio: `${portraitSize!.width} / ${portraitSize!.height}` }}
+            />
+          </figure>
+        )}
+        {bio.lede.length > 0 && (
+          <div class:list={["md:row-start-2 flex flex-col gap-4", portrait ? "md:col-span-7 lg:col-span-8" : "md:col-span-10"]}>
+            <InfoLede value={bio.lede} />
+          </div>
+        )}
+        {/* the facts: one ruled band of columns, after the clients and contact columns of davidspaeth.com.
+            Subgrid keeps each column on the page's own column lines, and every label on one shared row */}
+        {rows.length > 0 && (
+          <dl class:list={["md:row-start-3 hp-rule border-t border-ink pt-4 grid grid-cols-1 gap-y-6 md:grid-cols-subgrid md:grid-rows-[auto_1fr] md:gap-y-3", portrait ? "md:col-span-7 lg:col-span-8" : "md:col-span-10"]}>
+            {rows.map((row) => (
+              <div class:list={["md:row-span-2 md:grid md:grid-rows-subgrid flex flex-col gap-2", spans[row.kind]]}>
+                <dt class="hp-label text-muted">{row.label}</dt>
+                <dd>
+                  <ul class:list={["list-none leading-snug", "text-lg md:text-xl", row.kind === "list" && "columns-2 gap-x-8 lg:gap-x-12"]}>
+                    {row.items.map((item) => (
+                      <li class="py-0.5 break-inside-avoid">
+                        {item.href ? (
+                          <a
+                            href={item.href}
+                            {...(external(item.href) ? { target: "_blank", rel: "noopener" } : {})}
+                            class="hp-link hover:text-rust"
+                          >
+                            {item.text}
+                          </a>
+                        ) : (
+                          item.text
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        {bio.notes.length > 0 && (
+          <div class:list={["flex flex-col gap-2", portrait ? "md:col-span-7 lg:col-span-8" : "md:col-span-10"]}>
+            <InfoNotes value={bio.notes} />
+          </div>
+        )}
+      </div>
+    </article>
+  )}
 </Site>
+
+<script>
+  // the address fills the width: measured at 100px, then scaled to fit, again whenever the width changes
+  const fit = () =>
+    document.querySelectorAll<HTMLElement>("[data-fit]").forEach((el) => {
+      const box = el.parentElement!;
+      const pad = getComputedStyle(box);
+      const room = box.clientWidth - parseFloat(pad.paddingLeft) - parseFloat(pad.paddingRight);
+      el.style.fontSize = "100px";
+      el.style.fontSize = `${Math.floor((100 * room) / el.getBoundingClientRect().width)}px`;
+    });
+  document.fonts.ready.then(fit);
+  addEventListener("resize", fit);
+
+  // copy the address, for anyone whose mail app doesn't open from a link
+  document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {
+    if (!navigator.clipboard) return;
+    const status = button.parentElement!.querySelector<HTMLElement>("[data-copy-status]");
+    button.hidden = false;
+    button.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.copy!);
+        if (status) status.textContent = "Copied";
+      } catch {
+        if (status) status.textContent = "Couldn't copy, select the address instead";
+      }
+      setTimeout(() => status && (status.textContent = ""), 2500);
+    });
+  });
+</script>

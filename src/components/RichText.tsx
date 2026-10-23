@@ -21,7 +21,7 @@ export const isImage = (b: unknown): b is ImageBlock => (b as { _type?: string }
 const hasText = (children: React.ReactNode) =>
   React.Children.toArray(children).some((c) => (typeof c === "string" ? c.trim().length > 0 : true));
 
-const linkClass = "text-rust underline decoration-1 underline-offset-4 hover:decoration-2 break-words";
+const linkClass = "hp-link text-rust break-words";
 
 // an email address typed as plain text becomes a mailto link (the Contact page has one)
 const EMAIL = /([\w.+-]+@[\w-]+\.[\w.-]+)/g;
@@ -111,6 +111,27 @@ const work = (embedded: string[]): PortableTextComponents => ({
   },
 });
 
+// the Bio's lede: Harry's heading blocks, large, the statement the page opens on
+const lede: PortableTextComponents = {
+  block: {
+    h1: ({ children }) =>
+      hasText(children) ? <p className="text-2xl md:text-[clamp(1.5rem,1.9vw,2.25rem)] leading-[1.18] tracking-tight">{linkify(children)}</p> : null,
+  },
+  marks: link,
+};
+
+// anything on a Bio that isn't the lede or a sheet row, set small so it reads as an aside
+const notes: PortableTextComponents = {
+  block: {
+    normal: ({ children }) => (hasText(children) ? <p className="text-sm leading-snug max-w-[60ch]">{linkify(children)}</p> : null),
+  },
+  marks: link,
+  types: { image: () => null },
+};
+
+export const InfoLede = ({ value }: { value: PortableTextBlock[] }) => <PortableText value={value} components={lede} />;
+export const InfoNotes = ({ value }: { value: PortableTextBlock[] }) => <PortableText value={value} components={notes} />;
+
 export const SheetText = ({ value }: { value: PortableTextBlock[] }) => <PortableText value={value} components={sheet} />;
 // embedded: the keys of the video links that play on this page
 type RecordProps = { value: PortableTextBlock[]; embedded?: string[] };
@@ -121,13 +142,12 @@ export const RecordWork = ({ value, embedded = [] }: RecordProps) => <PortableTe
 export function SheetTray({ image, index }: { image: ImageBlock; index: number }) {
   const { width, height } = getImageDimensions(image);
   return (
-    <figure className="relative border border-ink p-7 pt-10 pb-10">
+    <figure className="relative border border-ink p-7">
       <span aria-hidden="true">
         {["top-3 left-3 border-t border-l", "top-3 right-3 border-t border-r", "bottom-3 left-3 border-b border-l", "bottom-3 right-3 border-b border-r"].map((c) => (
           <span key={c} className={`hp-mark absolute w-3 h-3 border-ink/50 ${c}`} />
         ))}
       </span>
-      <figcaption className="absolute top-5 left-7 hp-label text-[10px] text-rust">Fig. {String(index + 1).padStart(2, "0")}</figcaption>
       <img
         src={imageUrl(image, 1200)}
         alt={image.alt ?? ""}
