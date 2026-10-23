@@ -40,7 +40,7 @@ export default function VideoEmbed({ video }: { video: Video }) {
             <span className="sr-only">Play video: {video.title}</span>
             <span
               aria-hidden="true"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-paper text-ink grid place-items-center transition-colors group-hover:bg-rust group-hover:text-paper"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-paper text-ink grid place-items-center transition duration-300 group-hover:bg-rust group-hover:text-paper group-hover:scale-110 motion-reduce:transition-none"
             >
               <svg viewBox="0 0 16 16" className="w-5 h-5 ml-0.5" fill="currentColor">
                 <path d="M4 2.5v11l9-5.5z" />

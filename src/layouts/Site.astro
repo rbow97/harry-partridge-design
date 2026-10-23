@@ -30,5 +30,19 @@ const pages = await getPages();
     <main>
       <slot />
     </main>
+    <script>
+      import Lenis from "lenis";
+      import "lenis/dist/lenis.css";
+
+      // eased, weighted scrolling, as samthies.com and brandonyasin.com have. Lenis only smooths the
+      // wheel and trackpad, so phones keep their own scrolling, and it's off for anyone who asks for
+      // reduced motion. Anchor links (a record's video links) glide too, and land clear of the nav bar
+      // by their own scroll-margin, which Lenis honours.
+      // autoToggle pauses it while the phone menu holds the page still. allowNestedScroll lets a record's
+      // words column scroll itself on the short windows where it has to
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        new Lenis({ autoRaf: true, autoToggle: true, allowNestedScroll: true, anchors: true });
+      }
+    </script>
   </body>
 </html>

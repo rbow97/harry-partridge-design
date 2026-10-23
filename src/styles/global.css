@@ -351,3 +351,93 @@ html[data-flock] .hp-frame .hp-img {
     transition: none !important;
   }
 }
+
+/* ------------------------------------------------------------------
+   Hover motion, in the site's own thread: links carry a rust thread
+   under their words, buttons fill with ink from the left. All of it
+   stops for anyone who asks for reduced motion.
+   ------------------------------------------------------------------ */
+
+/* a link's underline is a thread, 1px unless --hp-thread-weight says otherwise. On hover it's pulled through, out to the right and back in
+   from the left, the way the tray thread winds on. --hp-thread changes its colour, rust by default */
+@utility hp-link {
+  text-decoration: none;
+  background-image: linear-gradient(var(--hp-thread, var(--accent)), var(--hp-thread, var(--accent)));
+  background-repeat: no-repeat;
+  background-size: 100% var(--hp-thread-weight, 1px);
+  background-position: 0 100%;
+  padding-bottom: 0.1em;
+  transition: color 0.3s ease;
+}
+@keyframes hp-thread {
+  0% {
+    background-size: 100% var(--hp-thread-weight, 1px);
+    background-position: 100% 100%;
+  }
+  45% {
+    background-size: 0 var(--hp-thread-weight, 1px);
+    background-position: 100% 100%;
+  }
+  55% {
+    background-size: 0 var(--hp-thread-weight, 1px);
+    background-position: 0 100%;
+  }
+  100% {
+    background-size: 100% var(--hp-thread-weight, 1px);
+    background-position: 0 100%;
+  }
+}
+
+/* a button fills with ink from the left, and its label turns paper as the fill passes */
+@utility hp-fill {
+  background-image: linear-gradient(var(--text), var(--text));
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 0 100%;
+  transition:
+    background-size 0.35s cubic-bezier(0.65, 0, 0.35, 1),
+    color 0.35s ease;
+}
+.hp-fill:hover,
+.hp-fill:focus-visible {
+  background-size: 100% 100%;
+  color: var(--surface);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hp-link:hover,
+  .hp-link:focus-visible {
+    animation: hp-thread 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-fill {
+    transition: none;
+  }
+}
+
+/* the scrollbar, in the bars' language: a paper track ruled off with a hairline, an ink thumb that
+   turns rust when held. It follows the mode, since both colours are roles.
+   Chrome and Firefox take the standard properties. Safari only reads the -webkit- ones */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text) var(--surface);
+}
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--surface);
+    border-left: 1px solid var(--text);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--text);
+    border: 3px solid var(--surface);
+    border-left-width: 4px;
+  }
+  ::-webkit-scrollbar-thumb:active {
+    background: var(--accent);
+  }
+}

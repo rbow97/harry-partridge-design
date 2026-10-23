@@ -55,10 +55,20 @@ const Nav = ({ pages, pathname }: { pages: Page[]; pathname: string }) => {
               key={page._id}
               href={`/${page.slug}`}
               aria-current={active ? "page" : undefined}
-              className="hp-rule flex items-center gap-2 border-l border-ink px-7 font-mono text-[11px] uppercase tracking-wider hover:text-rust hover:transition-colors"
+              className="group relative hp-rule flex items-center gap-2 border-l border-ink px-7 font-mono text-[11px] uppercase tracking-wider hover:text-rust transition-colors"
             >
-              <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${active ? "bg-rust" : "bg-current opacity-25"}`} />
+              <span
+                aria-hidden="true"
+                className={`w-1.5 h-1.5 rounded-full transition-transform duration-300 group-hover:scale-150 motion-reduce:transition-none ${active ? "bg-rust" : "bg-current opacity-25"}`}
+              />
               {page.title}
+              {/* the thread winds along the foot of the cell, as it does under a tray, and stays wound on the page you're on */}
+              <span
+                aria-hidden="true"
+                className={`absolute inset-x-0 -bottom-px h-0.5 bg-rust origin-left transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none ${
+                  active ? "scale-x-100" : "scale-x-0"
+                }`}
+              />
             </a>
           );
         })}
@@ -103,11 +113,18 @@ const Nav = ({ pages, pathname }: { pages: Page[]; pathname: string }) => {
               ref={i === 0 ? firstLink : undefined}
               href={`/${page.slug}`}
               aria-current={active ? "page" : undefined}
-              className={`hp-rule flex items-center px-6 py-4 border-b border-ink font-mono text-sm uppercase tracking-wider hover:text-rust ${
+              className={`group relative hp-rule flex items-center px-6 py-4 border-b border-ink font-mono text-sm uppercase tracking-wider hover:text-rust ${
                 active ? "text-rust" : ""
               }`}
             >
               {page.title}
+              {/* the same thread as the bar: drawn on the page you're on */}
+              <span
+                aria-hidden="true"
+                className={`absolute inset-x-0 -bottom-px h-0.5 bg-rust origin-left transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none ${
+                  active ? "scale-x-100" : "scale-x-0"
+                }`}
+              />
             </a>
           );
         })}
