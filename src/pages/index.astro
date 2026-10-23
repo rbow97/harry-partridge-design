@@ -1,13 +1,15 @@
 ---
 import Site from "@/layouts/Site.astro";
 import ProjectColumns from "@/components/ProjectColumns";
-import { getProjects } from "@/lib/sanity";
+import { getProjects, getSettings } from "@/lib/sanity";
 import { groupProjects } from "@/lib/group-projects";
+import { siteSettings } from "@/lib/site";
 
 const groups = groupProjects(await getProjects());
+const settings = siteSettings(await getSettings());
 ---
 
 <Site>
   {/* the whole homepage is one island: the statement's modes, the drawer and the canvases share state */}
-  <ProjectColumns client:load groups={groups} />
+  <ProjectColumns client:load groups={groups} statement={settings.statement} ambient={settings.ambient} />
 </Site>

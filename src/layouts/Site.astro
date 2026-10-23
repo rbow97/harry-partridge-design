@@ -1,15 +1,19 @@
 ---
 import "@/styles/global.css";
 import Nav from "@/components/Nav";
-import { getPages } from "@/lib/sanity";
+import { getPages, getSettings } from "@/lib/sanity";
+import { siteSettings } from "@/lib/site";
 
 interface Props {
   title?: string;
   description?: string;
 }
 
-const { title, description = "Portfolio site for Harry Partridge" } = Astro.props;
-const fullTitle = title ? `${title} · Harry Partridge` : "Harry Partridge Design";
+// the site's name, description, share image and ambient recording come from Site settings in Studio,
+// each falling back to what the site shipped with until it's filled in (lib/site.ts)
+const settings = siteSettings(await getSettings());
+const { title, description = settings.description } = Astro.props;
+const fullTitle = title ? `${title} · ${settings.name}` : settings.homeTitle;
 const pages = await getPages();
 ---
 
@@ -20,12 +24,16 @@ const pages = await getPages();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    {settings.shareImage && <meta property="og:image" content={`${settings.shareImage}?w=1200&h=630&fit=crop`} />}
+    {settings.shareImageAlt && <meta property="og:image:alt" content={settings.shareImageAlt} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
   </head>
   <body class="relative bg-paper text-ink font-sans">
     {/* the ambient "voice from the yarn": loops while the Sound switch is on and nothing else has the floor (stores/sound.ts) */}
-    <audio id="hp-ambient" src="/assets/harry-grad-movie.mp4" preload="none" loop></audio>
+    <audio id="hp-ambient" src={settings.ambient} preload="none" loop></audio>
     <Nav client:load pages={pages} pathname={Astro.url.pathname} />
     <main>
       <slot />

@@ -1,9 +1,9 @@
 ---
 import Site from "@/layouts/Site.astro";
-import { getPage, getPages, imageUrl } from "@/lib/sanity";
+import { getAbout, getContact, getPage, getPages, imageUrl } from "@/lib/sanity";
 import { getImageDimensions } from "@sanity/asset-utils";
 import { InfoLede, InfoNotes } from "@/components/RichText";
-import { readBio, readContact } from "@/lib/info";
+import { bioFrom, contactFrom } from "@/lib/site";
 
 /* A Sanity page (Bio, Contact), after the info pages of maximesibue.com, davidspaeth.com,
    samthies.com and brandonyasin.com: one statement, then the facts in small ruled rows.
@@ -22,8 +22,11 @@ if (!page) return Astro.redirect("/404");
 const content = (page.content ?? []) as unknown[];
 const isContact = page.slug === "contact";
 
-const contact = readContact(content);
-const bio = readBio(content);
+// the About and Contact documents in Studio, once filled in. Until then, and field by field, the page
+// reads its own free text as before (lib/site.ts). About fills the Bio page, whatever it's called
+const isBio = page.slug === "bio" || page.slug === "about";
+const contact = contactFrom(isContact ? await getContact() : null, content);
+const bio = bioFrom(isBio ? await getAbout() : null, content);
 // contact details live on the Contact page only, one link away in the nav.
 // The long lists (clients) lead, large and in two columns, with the short rows stacked beside them
 const lists = bio.rows.filter((r) => r.items.length > 2);
@@ -47,11 +50,11 @@ const external = (href?: string) => !!href && /^https?:/.test(href);
           <span aria-hidden="true">·</span>
           <span>{page.title}</span>
         </h1>
-        {/* written here rather than in Studio, so it reads in Harry's voice above whatever his intro says */}
-        <p class="text-3xl md:text-5xl leading-[1.05] tracking-tight max-w-[22ch]">Say hello, I’d love to hear from you.</p>
+        {/* from the Contact document in Studio, falling back to the lines the page was written with */}
+        <p class="text-3xl md:text-5xl leading-[1.05] tracking-tight max-w-[22ch]">{contact.headline}</p>
         <p class="text-xl md:text-2xl leading-snug tracking-tight max-w-[48ch]">
-          Whether it’s a project, a collaboration or a half-formed idea, I’m always up for a chat.
-          {contact.intro && <span class="text-muted"> {contact.intro}</span>}
+          {contact.intro}
+          {contact.emailLead && <span class="text-muted"> {contact.emailLead}</span>}
         </p>
         {contact.email && (
           <>

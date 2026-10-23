@@ -15,10 +15,22 @@
 export declare const internalGroqTypeReferenceTo: unique symbol;
 
 // Source: schema.json
-export type Video = {
-  _type: "video";
-  url?: string;
-  caption?: string;
+export type Contact = {
+  _id: string;
+  _type: "contact";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  headline?: string;
+  intro?: string;
+  emailLead?: string;
+  email?: string;
+  links?: Array<{
+    label?: string;
+    url?: string;
+    _type: "link";
+    _key: string;
+  }>;
 };
 
 export type SanityImageAssetReference = {
@@ -26,6 +38,129 @@ export type SanityImageAssetReference = {
   _type: "reference";
   _weak?: boolean;
   [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+};
+
+export type ProjectReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "project";
+};
+
+export type About = {
+  _id: string;
+  _type: "about";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  lede?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal";
+    listItem?: never;
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+  portrait?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  };
+  sections?: Array<{
+    label?: string;
+    items?: Array<{
+      text?: string;
+      project?: ProjectReference;
+      url?: string;
+      _type: "item";
+      _key: string;
+    }>;
+    _type: "section";
+    _key: string;
+  }>;
+};
+
+export type SanityImageCrop = {
+  _type: "sanity.imageCrop";
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+};
+
+export type SanityImageHotspot = {
+  _type: "sanity.imageHotspot";
+  x?: number;
+  y?: number;
+  height?: number;
+  width?: number;
+};
+
+export type SanityFileAssetReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
+};
+
+export type SiteSettings = {
+  _id: string;
+  _type: "siteSettings";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  statement?: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal";
+    listItem?: never;
+    markDefs?: Array<{
+      mode?: "materials" | "sound" | "living";
+      _type: "mode";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }>;
+  ambient?: {
+    asset?: SanityFileAssetReference;
+    media?: unknown;
+    _type: "file";
+  };
+  title?: string;
+  description?: string;
+  shareImage?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  };
+};
+
+export type Video = {
+  _type: "video";
+  url?: string;
+  caption?: string;
 };
 
 export type Page = {
@@ -68,40 +203,10 @@ export type Page = {
   >;
 };
 
-export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top?: number;
-  bottom?: number;
-  left?: number;
-  right?: number;
-};
-
-export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x?: number;
-  y?: number;
-  height?: number;
-  width?: number;
-};
-
 export type Slug = {
   _type: "slug";
   current?: string;
   source?: string;
-};
-
-export type ProjectReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "project";
-};
-
-export type SanityFileAssetReference = {
-  _ref: string;
-  _type: "reference";
-  _weak?: boolean;
-  [internalGroqTypeReferenceTo]?: "sanity.fileAsset";
 };
 
 export type Project = {
@@ -292,14 +397,17 @@ export type Geopoint = {
 };
 
 export type AllSanitySchemaTypes =
-  | Video
+  | Contact
   | SanityImageAssetReference
-  | Page
+  | ProjectReference
+  | About
   | SanityImageCrop
   | SanityImageHotspot
-  | Slug
-  | ProjectReference
   | SanityFileAssetReference
+  | SiteSettings
+  | Video
+  | Page
+  | Slug
   | Project
   | SanityImagePaletteSwatch
   | SanityImagePalette
@@ -471,6 +579,92 @@ export type PageQueryResult = {
   > | null;
 } | null;
 
+// Source: src/lib/sanity.ts
+// Variable: settingsQuery
+// Query: *[_type == "siteSettings" && _id == "siteSettings"][0]{  title,  description,  "shareImage": shareImage.asset->url,  "shareImageAlt": shareImage.alt,  statement,  "ambient": ambient.asset->url}
+export type SettingsQueryResult = {
+  title: string | null;
+  description: string | null;
+  shareImage: string | null;
+  shareImageAlt: string | null;
+  statement: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal";
+    listItem?: never;
+    markDefs?: Array<{
+      mode?: "living" | "materials" | "sound";
+      _type: "mode";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }> | null;
+  ambient: string | null;
+} | null;
+
+// Source: src/lib/sanity.ts
+// Variable: aboutQuery
+// Query: *[_type == "about" && _id == "about"][0]{  lede,  portrait,  sections[]{ _key, label, items[]{ _key, text, url, "project": project->slug.current } }}
+export type AboutQueryResult = {
+  lede: Array<{
+    children?: Array<{
+      marks?: Array<string>;
+      text?: string;
+      _type: "span";
+      _key: string;
+    }>;
+    style?: "normal";
+    listItem?: never;
+    markDefs?: Array<{
+      href?: string;
+      _type: "link";
+      _key: string;
+    }>;
+    level?: number;
+    _type: "block";
+    _key: string;
+  }> | null;
+  portrait: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  } | null;
+  sections: Array<{
+    _key: string;
+    label: string | null;
+    items: Array<{
+      _key: string;
+      text: string | null;
+      url: string | null;
+      project: string | null;
+    }> | null;
+  }> | null;
+} | null;
+
+// Source: src/lib/sanity.ts
+// Variable: contactQuery
+// Query: *[_type == "contact" && _id == "contact"][0]{ headline, intro, emailLead, email, links[]{ _key, label, url } }
+export type ContactQueryResult = {
+  headline: string | null;
+  intro: string | null;
+  emailLead: string | null;
+  email: string | null;
+  links: Array<{
+    _key: string;
+    label: string | null;
+    url: string | null;
+  }> | null;
+} | null;
+
 // Query TypeMap
 declare global {
   interface SanityQueries {
@@ -478,6 +672,9 @@ declare global {
     '*[_type == "project" && slug.current == $slug][0]{\n      \n  _id,\n  _createdAt,\n  name,\n  "slug": slug.current,\n  "image": image.asset->url,\n  "imageAlt": image.alt,\n  orderRank,\n  priority,\n  "audio": audio.asset->url,\n  "partOf": partOf._ref,\n  recordLabel,\n  disciplines,\n  // fall back to Harry\'s existing description until a summary is written\n  "summary": coalesce(summary, pt::text(description))\n,\n      description,\n      content,\n      year,\n      materials,\n      process,\n      location,\n      collaborators,\n      press,\n      // a development record links back to its main project\n      "parent": partOf->{ name, "slug": slug.current },\n      // a main project shows its development records at the end of the page\n      "development": *[_type == "project" && partOf._ref == ^._id] | order(orderRank asc, coalesce(priority, 999) asc){\n        _id,\n        name,\n        "slug": slug.current,\n        "image": image.asset->url,\n        recordLabel,\n        "summary": coalesce(summary, pt::text(description))\n      }\n    }': ProjectQueryResult;
     '*[_type == "page" && defined(title) && defined(slug.current)]{ _id, _createdAt, title, "slug": slug.current }': PagesQueryResult;
     '*[_type == "page" && slug.current == $slug][0]{ _id, _createdAt, title, "slug": slug.current, content }': PageQueryResult;
+    '*[_type == "siteSettings" && _id == "siteSettings"][0]{\n  title,\n  description,\n  "shareImage": shareImage.asset->url,\n  "shareImageAlt": shareImage.alt,\n  statement,\n  "ambient": ambient.asset->url\n}': SettingsQueryResult;
+    '*[_type == "about" && _id == "about"][0]{\n  lede,\n  portrait,\n  sections[]{ _key, label, items[]{ _key, text, url, "project": project->slug.current } }\n}': AboutQueryResult;
+    '*[_type == "contact" && _id == "contact"][0]{ headline, intro, emailLead, email, links[]{ _key, label, url } }': ContactQueryResult;
   }
 }
 // Lets @sanity/client releases that predate the global registry read it too

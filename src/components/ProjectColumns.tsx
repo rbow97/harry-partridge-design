@@ -8,10 +8,7 @@ import Flock from "./Flock";
 import Stitch from "./Stitch";
 import Tape from "./Tape";
 
-// the recording the sound hover runs: the first record with a spool, else the ambient voice
-const AMBIENT = "/assets/harry-grad-movie.mp4";
-
-type Mode = "materials" | "sound" | "living";
+import { FALLBACK, type Mode, type SentencePart } from "@/lib/site";
 
 /** Split text into letters so the page modes can animate them. The letter spans are hidden
  *  from assistive tech and the text is repeated once, visually hidden, so it reads as words */
@@ -63,7 +60,16 @@ function Ruler() {
   );
 }
 
-export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
+// statement and ambient come from Site settings in Studio, falling back to what the site shipped with (lib/site.ts)
+export default function ProjectColumns({
+  groups,
+  statement: sentence = FALLBACK.statement,
+  ambient = FALLBACK.ambient,
+}: {
+  groups: ProjectGroup[];
+  statement?: SentencePart[];
+  ambient?: string;
+}) {
   const [mode, setMode] = useState<Mode | null>(null);
   // Hover intent, both ways. A word takes over only once the pointer rests on it, so brushing past
   // one on the way somewhere else doesn't flash the whole page into its mode. Leaving waits a
@@ -177,15 +183,6 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
     return () => cancelAnimationFrame(raf);
   }, [mode]);
 
-  const sentence = [
-    "I am a designer trained in art and engineering, building working objects from ",
-    ["materials", "materials"],
-    ", ",
-    ["sound", "sound"],
-    " and ",
-    ["living systems", "living"],
-    ".",
-  ] as const;
   let count = 0;
   const trays = trayLayout(groups.length);
 
@@ -212,7 +209,8 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
       <Tape
         active={mode === "sound"}
         audible={pinned === "sound"}
-        src={groups.flatMap((g) => g.records).find((r) => r.audio)?.audio ?? AMBIENT}
+        // the recording the sound hover runs: the first record with a spool, else the ambient voice
+        src={groups.flatMap((g) => g.records).find((r) => r.audio)?.audio ?? ambient}
       />
       {/* SVG filters for the materials mode (felt / fuzz) */}
       <svg aria-hidden="true" width="0" height="0" className="absolute">

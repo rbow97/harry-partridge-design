@@ -61,6 +61,28 @@ export const getPages = () => sanityClient.fetch(pagesQuery);
 export const pageQuery = defineQuery(`*[_type == "page" && slug.current == $slug][0]{ _id, _createdAt, title, "slug": slug.current, content }`);
 export const getPage = (slug: string) => sanityClient.fetch(pageQuery, { slug });
 
+// the three one-off documents (sanity/schemas), each at its fixed id. Any of them may not exist yet,
+// so every query returns null until Harry publishes it, and src/lib/site.ts falls back
+export const settingsQuery = defineQuery(`*[_type == "siteSettings" && _id == "siteSettings"][0]{
+  title,
+  description,
+  "shareImage": shareImage.asset->url,
+  "shareImageAlt": shareImage.alt,
+  statement,
+  "ambient": ambient.asset->url
+}`);
+export const getSettings = () => sanityClient.fetch(settingsQuery);
+
+export const aboutQuery = defineQuery(`*[_type == "about" && _id == "about"][0]{
+  lede,
+  portrait,
+  sections[]{ _key, label, items[]{ _key, text, url, "project": project->slug.current } }
+}`);
+export const getAbout = () => sanityClient.fetch(aboutQuery);
+
+export const contactQuery = defineQuery(`*[_type == "contact" && _id == "contact"][0]{ headline, intro, emailLead, email, links[]{ _key, label, url } }`);
+export const getContact = () => sanityClient.fetch(contactQuery);
+
 const builder = createImageUrlBuilder(sanityClient);
 /** a Sanity image at a given width, in the browser's best format */
 export const imageUrl = (source: Parameters<typeof builder.image>[0], width: number) =>
