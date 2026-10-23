@@ -80,14 +80,18 @@ Hovering **materials / sound / living systems** in the statement changes the who
 - Sanity schema (`sanity/schemas/project-schema.tsx`): disciplines (multi-select), summary, themes, partOf
   (reference → groups dev records under a main project, see `lib/group-projects.ts`), year/materials/press/audio.
   `scripts/seed-homepage-fields.mjs` is a one-off seeder (needs SANITY_API_WRITE_TOKEN; values are guesses).
-- Nav (`components/Nav.tsx`): slim ruled bar for home + project pages; legacy nav elsewhere.
+- Nav (`components/Nav.tsx`): the slim ruled bar on every page, with the Sound switch.
 
 ## Open / next
 - Tune the flock by eye on a real machine and a real phone (frame rate on a phone is unmeasured).
 - Materials hover still to review against the flock and the tape: the felt filter blurs text and rules, and nothing
   in it responds to the visitor. Options discussed: a needle/running stitch that follows the cursor, or per-project
   textures instead of felt everywhere.
-- Bio page still uses the old design. Credentials were removed from home; could live on Bio.
+- Bio and Contact (`app/(site)/[slug]/page.tsx`) are record sheets too (2026-10-23): text down the left, any
+  images in specimen trays on the right. Harry writes his lede as `h1` blocks in Studio, so h1 sets large and
+  `normal` is body; blank blocks are skipped. The legacy nav, dark-mode provider and theme switch are deleted,
+  every page uses the slim ruled bar. `html` and `body` carry the paper colour (and the mode's colour), so
+  overscroll never shows white.
 - `/projects` redirects to `/` (next.config.js) and the old grid page is deleted (2026-10-23): the homepage is the
   index. The nav drops any Sanity page with slug `projects` (`Nav.tsx`), so Harry's Studio document can stay.
   Record pages at `/projects/[project]` are unchanged.

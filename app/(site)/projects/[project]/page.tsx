@@ -48,7 +48,8 @@ async function ProjectDetail({ params }: Props) {
 
   return (
     <article className="min-h-screen bg-paper text-ink font-sans">
-      <div className="max-w-7xl mx-auto px-5 md:px-10 pt-36 md:pt-44 pb-24">
+      {/* the same 28px inset as the homepage, so every page shares the edge */}
+      <div className="px-6 md:px-7 pt-28 md:pt-32 pb-24">
         {/* Record line */}
         <p className="font-mono text-[11px] uppercase tracking-wider text-muted flex flex-wrap gap-x-3">
           <span className="text-ink">{recordNo}</span>

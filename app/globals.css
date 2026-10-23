@@ -55,12 +55,24 @@
   inherits: true;
   initial-value: 0;
 }
+/* the root carries the page colour too, so overscroll past the top or bottom shows paper
+   (or the mode's colour), never the browser's white */
 html {
   --hp-amp: 0;
-  transition: --hp-amp 0.6s ease;
+  background-color: #f4f1ea;
+  transition: --hp-amp 0.6s ease, background-color 0.5s;
 }
 html[data-mode] {
   --hp-amp: 1;
+}
+html[data-mode="materials"] {
+  background-color: #e9dcc6;
+}
+html[data-mode="sound"] {
+  background-color: #1a1a17;
+}
+html[data-mode="living"] {
+  background-color: #efe4c2;
 }
 
 .hp-rule,

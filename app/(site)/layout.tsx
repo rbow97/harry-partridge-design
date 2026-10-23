@@ -2,7 +2,6 @@ import Nav from "@/components/Nav";
 import "../globals.css";
 import { getPages } from "@/sanity/sanity-utils";
 import SoundProvider from "@/components/sound/SoundProvider";
-import dynamic from "next/dynamic";
 import { Caveat, Instrument_Sans, Martian_Mono } from "next/font/google";
 
 // handwriting for the herbarium specimen labels
@@ -22,10 +21,6 @@ const mono = Martian_Mono({
   display: "swap",
 });
 
-const DarkModeThemeProvider = dynamic(() => import("./theme-provider"), {
-  ssr: false,
-});
-
 export const metadata = {
   title: "Harry Partridge Design",
   description: "Portfolio site for Harry Partridge",
@@ -40,14 +35,12 @@ export default async function RootLayout({
   const pages = await getPages();
 
   return (
-    <html lang="en" className={`dark ${sans.variable} ${mono.variable} ${hand.variable}`}>
-      <body className="font-inconsolata relative bg-white dark:bg-black">
-        <DarkModeThemeProvider>
-          <SoundProvider>
-            <Nav pages={pages} />
-            <main>{children}</main>
-          </SoundProvider>
-        </DarkModeThemeProvider>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${hand.variable}`}>
+      <body className="relative bg-paper text-ink">
+        <SoundProvider>
+          <Nav pages={pages} />
+          <main>{children}</main>
+        </SoundProvider>
       </body>
     </html>
   );
