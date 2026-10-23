@@ -69,16 +69,16 @@ const recordLink = (embedded: string[]): PortableTextComponents["marks"] => ({
 
 const sheet: PortableTextComponents = {
   block: {
-    normal: ({ children }) => (hasText(children) ? <p className="text-lg md:text-xl leading-relaxed">{linkify(children)}</p> : null),
+    normal: ({ children }) => (hasText(children) ? <p className="text-body leading-relaxed">{linkify(children)}</p> : null),
     h1: ({ children }) =>
-      hasText(children) ? <p className="text-2xl md:text-4xl leading-tight tracking-tight max-w-[32ch]">{linkify(children)}</p> : null,
-    h2: ({ children }) => (hasText(children) ? <p className="text-2xl md:text-3xl leading-tight tracking-tight">{linkify(children)}</p> : null),
+      hasText(children) ? <p className="text-lead leading-tight tracking-tight max-w-[32ch]">{linkify(children)}</p> : null,
+    h2: ({ children }) => (hasText(children) ? <p className="text-lead leading-tight tracking-tight">{linkify(children)}</p> : null),
     h3: ({ children }) => (hasText(children) ? <p className="hp-label text-muted pt-4">{children}</p> : null),
     blockquote: ({ children }) => <blockquote className="border-l border-ink pl-5 italic">{children}</blockquote>,
   },
   list: {
-    bullet: ({ children }) => <ul className="text-lg md:text-xl leading-relaxed pl-5 list-disc marker:text-accent">{children}</ul>,
-    number: ({ children }) => <ol className="text-lg md:text-xl leading-relaxed pl-5 list-decimal marker:text-accent">{children}</ol>,
+    bullet: ({ children }) => <ul className="text-body leading-relaxed pl-5 list-disc marker:text-accent">{children}</ul>,
+    number: ({ children }) => <ol className="text-body leading-relaxed pl-5 list-decimal marker:text-accent">{children}</ol>,
   },
   marks: link,
   types: { image: () => null },
@@ -86,9 +86,9 @@ const sheet: PortableTextComponents = {
 
 const words = (embedded: string[]): PortableTextComponents => ({
   block: {
-    normal: ({ children }) => (hasText(children) ? <p className="text-sm leading-snug">{children}</p> : null),
-    h1: ({ children }) => (hasText(children) ? <p className="text-base md:text-lg leading-snug">{children}</p> : null),
-    h2: ({ children }) => (hasText(children) ? <p className="text-base md:text-lg leading-snug">{children}</p> : null),
+    normal: ({ children }) => (hasText(children) ? <p className="text-small leading-snug">{children}</p> : null),
+    h1: ({ children }) => (hasText(children) ? <p className="text-body leading-snug">{children}</p> : null),
+    h2: ({ children }) => (hasText(children) ? <p className="text-body leading-snug">{children}</p> : null),
   },
   marks: recordLink(embedded),
   types: { image: () => null },
@@ -99,7 +99,7 @@ const work = (embedded: string[]): PortableTextComponents => ({
     // text in the work column is a caption for the image above it: small, quiet and drawn up close
     // to it, so the words column stays the one place to read and the two don't compete
     normal: ({ children }) =>
-      hasText(children) ? <p className="-mt-3 md:-mt-5 text-sm leading-snug text-muted max-w-[52ch]">{children}</p> : null,
+      hasText(children) ? <p className="-mt-3 md:-mt-5 text-small leading-snug text-muted max-w-[52ch]">{children}</p> : null,
   },
   marks: recordLink(embedded),
   types: {
@@ -128,7 +128,7 @@ const work = (embedded: string[]): PortableTextComponents => ({
 
 // the Bio's lede: Harry's heading blocks, large, the statement the page opens on
 const ledeLine = ({ children }: { children?: React.ReactNode }) =>
-  hasText(children) ? <p className="text-2xl md:text-[clamp(1.5rem,1.9vw,2.25rem)] leading-[1.18] tracking-tight">{linkify(children)}</p> : null;
+  hasText(children) ? <p className="text-lead leading-[1.18] tracking-tight">{linkify(children)}</p> : null;
 // every heading level sets the same: Harry picks whichever in Studio, and it's all the one statement
 const lede: PortableTextComponents = {
   block: { h1: ledeLine, h2: ledeLine, h3: ledeLine, h4: ledeLine, h5: ledeLine, h6: ledeLine, normal: ledeLine },
@@ -138,7 +138,7 @@ const lede: PortableTextComponents = {
 // anything on a Bio that isn't the lede or a sheet row, set small so it reads as an aside
 const notes: PortableTextComponents = {
   block: {
-    normal: ({ children }) => (hasText(children) ? <p className="text-sm leading-snug max-w-[60ch]">{linkify(children)}</p> : null),
+    normal: ({ children }) => (hasText(children) ? <p className="text-small leading-snug max-w-[60ch]">{linkify(children)}</p> : null),
   },
   marks: link,
   types: { image: () => null },

@@ -227,7 +227,7 @@ export default function ProjectColumns({
         {/* the statement is the page's heading; phones centre it, from md it sits on the shared left edge */}
         <h1
           ref={statement}
-          className="hp-statement relative font-sans font-normal text-[8vw] md:text-[3vw] leading-[1.05] tracking-tight max-w-[34ch] text-center md:text-left mx-auto md:mx-0 m-0">
+          className="hp-statement relative font-sans font-normal text-display leading-[1.05] tracking-tight max-w-[34ch] text-center md:text-left mx-auto md:mx-0 m-0">
           {sentence.map((part, k) => {
             if (typeof part === "string") {
               const el = <Letters key={k} text={part} start={count} />;
@@ -277,7 +277,7 @@ export default function ProjectColumns({
         {/* sound: the tape's timecode, a readout in the corner of the statement (written per frame in Tape.tsx) */}
         <span
           aria-hidden="true"
-          className="hp-tc absolute right-6 md:right-7 bottom-3 font-mono text-[11px] uppercase tracking-wider tabular-nums"
+          className="hp-tc absolute right-6 md:right-7 bottom-3 font-mono text-label uppercase tracking-wider tabular-nums"
         >
           00:00.0
         </span>
@@ -306,7 +306,7 @@ export default function ProjectColumns({
                 <CropMarks />
                 {/* the development records live at the end of the project's page, so the tray only says they're there */}
                 {g.records.length > 1 && (
-                  <span className="hp-tag absolute top-5 right-7 font-mono text-[10px] uppercase tracking-wider text-muted">
+                  <span className="hp-tag absolute top-5 right-7 font-mono text-label uppercase tracking-wider text-muted">
                     + {g.records.length === 2 ? recordLabel(g.records[1]) : `${g.records.length - 1} records`}
                   </span>
                 )}
@@ -340,10 +340,10 @@ export default function ProjectColumns({
               {/* the label: under the tray, or beside it on a sheet, where it has room to say more */}
               <div
                 className={`hp-rule border-t border-ink p-4 md:p-5 ${
-                  sheet ? "md:w-1/3 md:border-t-0 md:border-l md:p-8 md:flex md:flex-col md:justify-end" : "md:h-[172px] md:overflow-hidden"
+                  sheet ? "md:w-1/3 md:border-t-0 md:border-l md:p-8 md:flex md:flex-col md:justify-end" : "md:h-[10.75rem] md:overflow-hidden"
                 }`}
               >
-                <h2 className={`font-sans leading-tight transition-colors group-hover:text-accent ${sheet ? "text-2xl md:text-4xl" : "text-xl md:text-2xl"}`}>
+                <h2 className={`font-sans leading-tight transition-colors group-hover:text-accent text-lead`}>
                   {/* stretched link: the whole cell opens the lead record */}
                   <a
                     href={`/projects/${lead.slug}`}
@@ -354,12 +354,12 @@ export default function ProjectColumns({
                   </a>
                 </h2>
                 {!!lead.disciplines?.length && (
-                  <p className="mt-2 font-mono text-[10px] md:text-[11px] uppercase tracking-wider text-muted">
+                  <p className="mt-2 font-mono text-label uppercase tracking-wider text-muted">
                     {lead.disciplines.join(" / ")}
                   </p>
                 )}
                 {lead.summary && (
-                  <p className={`mt-2 font-sans italic leading-snug ${sheet ? "md:mt-4 text-base md:text-lg max-w-[36ch]" : "text-sm md:text-base line-clamp-2"}`}>
+                  <p className={`mt-2 font-sans italic leading-snug ${sheet ? "md:mt-4 text-body max-w-[36ch]" : "text-small line-clamp-2"}`}>
                     {lead.summary}
                   </p>
                 )}

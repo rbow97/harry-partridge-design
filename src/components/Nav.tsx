@@ -41,7 +41,7 @@ const Nav = ({ pages, pathname }: { pages: Page[]; pathname: string }) => {
       <a
         href="/"
         // the same inset as the photos in their trays, so the name, the statement and the images share an edge
-        className="flex items-center px-6 md:px-7 font-sans text-base md:text-lg tracking-tight whitespace-nowrap hover:text-accent hover:transition-colors"
+        className="flex items-center px-6 md:px-7 font-sans text-body tracking-tight whitespace-nowrap hover:text-accent hover:transition-colors"
       >
         Harry Partridge
       </a>
@@ -55,7 +55,7 @@ const Nav = ({ pages, pathname }: { pages: Page[]; pathname: string }) => {
               key={page._id}
               href={`/${page.slug}`}
               aria-current={active ? "page" : undefined}
-              className="group relative hp-rule flex items-center gap-2 border-l border-ink px-7 font-mono text-[11px] uppercase tracking-wider hover:text-accent transition-colors"
+              className="group relative hp-rule flex items-center gap-2 border-l border-ink px-7 font-mono text-label uppercase tracking-wider hover:text-accent transition-colors"
             >
               <span
                 aria-hidden="true"
@@ -113,7 +113,7 @@ const Nav = ({ pages, pathname }: { pages: Page[]; pathname: string }) => {
               ref={i === 0 ? firstLink : undefined}
               href={`/${page.slug}`}
               aria-current={active ? "page" : undefined}
-              className={`group relative hp-rule flex items-center px-6 py-4 border-b border-ink font-mono text-sm uppercase tracking-wider hover:text-accent ${
+              className={`group relative hp-rule flex items-center px-6 py-4 border-b border-ink font-mono text-label uppercase tracking-wider hover:text-accent ${
                 active ? "text-accent" : ""
               }`}
             >

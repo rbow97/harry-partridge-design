@@ -95,7 +95,7 @@ const meta = [
               </a>
             </p>
           )}
-          <h1 class="text-2xl md:text-3xl leading-tight tracking-tight">
+          <h1 class="text-lead leading-tight tracking-tight">
             {/* the title speaks: its letters follow the loudness of whatever is playing */}
             <VoiceType client:visible text={project.name ?? ""} />
           </h1>
@@ -107,7 +107,7 @@ const meta = [
           {!!project.disciplines?.length && (
             <div>
               <p class="hp-label text-muted">Work</p>
-              <p class="mt-1 text-sm">{project.disciplines.join(", ")}</p>
+              <p class="mt-1 text-small">{project.disciplines.join(", ")}</p>
             </div>
           )}
           {/* the spool only appears when this record has a recording of its own */}
@@ -117,13 +117,13 @@ const meta = [
               {meta.map(([label, value]) => (
                 <div class="grid grid-cols-[6rem_1fr] gap-4 py-3 border-t border-rule">
                   <dt class="hp-label text-muted pt-1">{label}</dt>
-                  <dd class="text-base">{value}</dd>
+                  <dd class="text-body">{value}</dd>
                 </div>
               ))}
               {!!project.press?.length && (
                 <div class="grid grid-cols-[6rem_1fr] gap-4 py-3 border-t border-rule">
                   <dt class="hp-label text-muted pt-1">Press</dt>
-                  <dd class="text-base">
+                  <dd class="text-body">
                     {project.press.map((p) => (
                       <a href={p.url} target="_blank" rel="noopener" class="hp-link text-accent">
                         {p.title}
@@ -159,7 +159,7 @@ const meta = [
           ) : piece.kind === "video" ? (
             <VideoEmbed client:visible video={piece.video} />
           ) : (
-            <p class="text-sm">
+            <p class="text-small">
               <a href={piece.url} target="_blank" rel="noopener" class="hp-link text-accent">{piece.caption}</a>
             </p>
           )
@@ -186,7 +186,7 @@ const meta = [
                     </div>
                   )}
                   <div class="flex flex-col gap-2">
-                    <h3 class="text-2xl leading-tight tracking-tight transition-colors group-hover:text-accent">
+                    <h3 class="text-lead leading-tight tracking-tight transition-colors group-hover:text-accent">
                       {/* stretched link: the whole entry opens the record */}
                       <a href={`/projects/${r.slug}`} class="after:absolute after:inset-0 focus-visible:outline-none focus-visible:underline">
                         {recordLabel(r)}
@@ -211,7 +211,7 @@ const meta = [
         From md it sits on the page's own 12 columns, so its first divider carries the edge of the pictures down */}
     <nav
       aria-label="Projects"
-      class="hp-rule sticky bottom-0 z-30 h-bar flex md:grid md:grid-cols-12 md:gap-x-8 lg:gap-x-12 md:px-edge border-t border-ink bg-paper font-mono text-[11px] uppercase tracking-wider"
+      class="hp-rule sticky bottom-0 z-30 h-bar flex md:grid md:grid-cols-12 md:gap-x-8 lg:gap-x-12 md:px-edge border-t border-ink bg-paper font-mono text-label uppercase tracking-wider"
     >
       <a href="/" class="group relative flex-1 min-w-0 flex items-center pl-edge md:pl-0 pr-4 md:col-span-5 xl:col-span-4 whitespace-nowrap hover:text-accent transition-colors">
         All projects

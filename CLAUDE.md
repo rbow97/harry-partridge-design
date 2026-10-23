@@ -18,6 +18,11 @@ Astro 7 (static output, Vercel adapter) + React islands + Tailwind v4 + Sanity (
   `take(el)`/`release(el)` hand the floor between a spool or the tape and the ambient voice.
 - Fonts are self-hosted from Fontsource (`@fontsource-variable/instrument-sans/wdth.css` keeps the width axis
   VoiceType uses, `martian-mono/standard.css`), imported in `src/styles/global.css`. Caveat is gone.
+- Type: five steps only, in rem so they follow the reader's default text size: `text-label` 0.6875rem
+  (11px) mono, `text-small` 0.875rem, `text-body` 1rem/1.125rem, `text-lead` clamp(1.375rem, 1rem + 0.65vw,
+  1.875rem), `text-display` 0.25rem + 7vw / 2.8vw (tokens.css `--type-*`). Tailwind's default sizes are
+  cleared in global.css (`--text-*: initial`), so `text-xl` and the like don't exist. The Contact address is
+  the one exception, fitted to the width by script.
 - Tokens: `src/styles/tokens.css` in three tiers (primitives, semantic roles, `[data-mode]` reassignments). Tailwind
   v4 `@theme inline` maps `paper/ink/muted/accent/rule` onto the roles, so `text-ink` is "the text colour" and
   follows the mode; `px-edge` is the 28px/24px shared edge, `h-bar`/`top-bar` the 56px bar, `hp-label` the mono

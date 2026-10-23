@@ -52,8 +52,8 @@ const external = (href?: string) => !!href && /^https?:/.test(href);
           <span>{page.title}</span>
         </h1>
         {/* from the Contact document in Studio, falling back to the lines the page was written with */}
-        <p class="text-3xl md:text-5xl leading-[1.05] tracking-tight max-w-[22ch]">{contact.headline}</p>
-        <p class="text-xl md:text-2xl leading-snug tracking-tight max-w-[48ch]">
+        <p class="text-lead leading-[1.1] tracking-tight max-w-[22ch]">{contact.headline}</p>
+        <p class="text-body leading-snug tracking-tight max-w-[48ch]">
           {contact.intro}
           {contact.emailLead && <span class="text-muted"> {contact.emailLead}</span>}
         </p>
@@ -93,7 +93,7 @@ const external = (href?: string) => !!href && /^https?:/.test(href);
               <a
                 href={l.href}
                 {...(external(l.href) ? { target: "_blank", rel: "noopener" } : {})}
-                class="group relative flex items-baseline justify-between gap-6 px-edge py-6 md:py-10 text-2xl md:text-4xl tracking-tight hover:text-accent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-accent"
+                class="group relative flex items-baseline justify-between gap-6 px-edge py-6 md:py-10 text-lead tracking-tight hover:text-accent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-accent"
               >
                 <span>{l.text}</span>
                 <span aria-hidden="true" class="hp-label text-accent flex items-center gap-2">
@@ -145,7 +145,7 @@ const external = (href?: string) => !!href && /^https?:/.test(href);
               <div class:list={["md:row-span-2 md:grid md:grid-rows-subgrid flex flex-col gap-2", spans[row.kind]]}>
                 <dt class="hp-label text-muted">{row.label}</dt>
                 <dd>
-                  <ul class:list={["list-none leading-snug", "text-base md:text-lg", row.kind === "list" && "columns-2 gap-x-8 lg:gap-x-12"]}>
+                  <ul class:list={["list-none leading-snug", "text-body", row.kind === "list" && "columns-2 gap-x-8 lg:gap-x-12"]}>
                     {row.items.map((item) => (
                       <li class="py-0.5 break-inside-avoid">
                         {item.href ? (

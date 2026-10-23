@@ -53,7 +53,7 @@ export default function SpoolPlayer({ src, label }: { src: string; label?: strin
         type="button"
         onClick={press}
         aria-label={playing ? "Pause the spool" : label ?? "Play a spool"}
-        className="group flex items-center gap-3 shrink-0 font-mono text-xs uppercase tracking-wider text-ink hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+        className="group flex items-center gap-3 shrink-0 font-mono text-label uppercase tracking-wider text-ink hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
       >
         <svg
           viewBox="0 0 40 40"

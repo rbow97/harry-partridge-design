@@ -16,13 +16,21 @@
   --font-sans: "Instrument Sans Variable", system-ui, sans-serif;
   --font-mono: "Martian Mono Variable", ui-monospace, monospace;
   --spacing-edge: var(--space-edge);
+  /* the type scale (tokens.css), and only it: Tailwind's default sizes are cleared, so a text-xl
+     simply doesn't exist and nothing can drift off the scale */
+  --text-*: initial;
+  --text-label: var(--type-label);
+  --text-small: var(--type-small);
+  --text-body: var(--type-body);
+  --text-lead: var(--type-lead);
+  --text-display: var(--type-display);
   --spacing-bar: var(--size-bar);
 }
 
 /* the mono label used for record numbers, nav items, disciplines and the like */
 @utility hp-label {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--type-label);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

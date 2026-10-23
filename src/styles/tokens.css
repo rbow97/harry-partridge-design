@@ -32,6 +32,16 @@
   --rule-strong: var(--ink); /* the ruled grid */
   --mark: color-mix(in srgb, var(--ink) 50%, transparent); /* crop marks */
 
+  /* type: five steps, so every piece of text is one of these (Tailwind's own sizes are switched
+     off in global.css). The Contact address is the one exception, fitted to the width by script.
+     In rem, so they follow the reader's own default text size; the sizes that grow with the
+     screen keep a rem part for the same reason. Sizes at the browser default of 16px: */
+  --type-label: 0.6875rem; /* 11px. mono, uppercase: nav, record line, labels, chips */
+  --type-small: 0.875rem; /* 14px. the words column, captions, notes, tray summaries */
+  --type-body: 1rem; /* 16px. facts, intros, metadata, the wordmark */
+  --type-lead: clamp(1.375rem, 1rem + 0.65vw, 1.875rem); /* 22 to 30px. statements and titles */
+  --type-display: calc(0.25rem + 7vw); /* the homepage statement, about 31px on a phone */
+
   /* layout */
   --space-edge: 28px; /* the shared left and right edge: brand, statement, photos */
   --size-bar: 56px; /* the nav bar */
@@ -53,6 +63,12 @@
 @media (max-width: 767px) {
   :root {
     --space-edge: 24px;
+  }
+}
+@media (min-width: 768px) {
+  :root {
+    --type-body: 1.125rem; /* 18px */
+    --type-display: calc(0.25rem + 2.8vw); /* about 44px at 1440 */
   }
 }
 
