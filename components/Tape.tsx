@@ -61,6 +61,10 @@ function standIn(t: number) {
   return Math.max(0, syllable * phrase * breath);
 }
 
+// the trays, and turning their reels: --reel is read by the .hp-img transform
+const trays = () => Array.from(document.querySelectorAll<HTMLElement>("ol > li"));
+const turn = (angles: number[]) => trays().forEach((li, i) => li.style.setProperty("--reel", `${(angles[i] ?? 0).toFixed(2)}deg`));
+
 export default function Tape({ active, src }: { active: boolean; src: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const audio = useRef<HTMLAudioElement>(null);
@@ -74,12 +78,13 @@ export default function Tape({ active, src }: { active: boolean; src: string }) 
   const heard = useRef(false); // whether this hover is audible, decided when it starts
   // the reels' angles, kept between hovers so a reel never jumps; written to --reel on each tray
   const reels = useRef<number[]>([]);
-  const trays = () => Array.from(document.querySelectorAll<HTMLElement>("ol > li"));
-  const turn = (angles: number[]) => trays().forEach((li, i) => li.style.setProperty("--reel", `${(angles[i] ?? 0).toFixed(2)}deg`));
 
   useEffect(() => {
     const el = canvas.current;
     const ctx = el?.getContext("2d");
+    // held for the cleanup, which runs after the refs may have moved on
+    const spool = audio.current;
+    const clk = clock.current;
     if (!el || !ctx) return;
     if (!active) {
       cancelAnimationFrame(raf.current);
@@ -199,9 +204,8 @@ export default function Tape({ active, src }: { active: boolean; src: string }) 
       raf.current = 0;
       removeEventListener("scroll", remeasure);
       // remember where the tape got to
-      const a = audio.current;
-      const playing = !!a && !a.paused;
-      clock.current.offset = playing ? a.currentTime : clock.current.offset + (performance.now() - clock.current.start) / 1000;
+      const playing = !!spool && !spool.paused;
+      clk.offset = playing ? spool.currentTime : clk.offset + (performance.now() - clk.start) / 1000;
     };
   }, [active, src]);
 

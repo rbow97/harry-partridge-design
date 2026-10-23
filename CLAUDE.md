@@ -87,5 +87,8 @@ Hovering **materials / sound / living systems** in the statement changes the who
 - Materials hover still to review against the flock and the tape: the felt filter blurs text and rules, and nothing
   in it responds to the visitor. Options discussed: a needle/running stitch that follows the cursor, or per-project
   textures instead of felt everywhere.
-- Bio page and `/projects` grid still use the old design. Credentials were removed from home; could live on Bio.
+- Bio page still uses the old design. Credentials were removed from home; could live on Bio.
+- `/projects` redirects to `/` (next.config.js) and the old grid page is deleted (2026-10-23): the homepage is the
+  index. The nav drops any Sanity page with slug `projects` (`Nav.tsx`), so Harry's Studio document can stay.
+  Record pages at `/projects/[project]` are unchanged.
 - Commit, push `redesign`, get a Vercel preview for Harry.

@@ -10,6 +10,8 @@ import { useSound } from "./sound/SoundProvider";
 const Nav = ({ pages }: { pages: Page[] }) => {
   const router = usePathname();
   const { soundOn, toggle } = useSound();
+  // the homepage is the projects index, so the Projects page gets no nav item (and /projects redirects home)
+  const links = pages?.filter((page) => page.slug !== "projects");
   const isHome = router === "/" || router?.startsWith("/local");
   // Redesign prototype: home + project pages use the new paper/ink system
   const isRedesign = isHome || router?.startsWith("/projects/");
@@ -26,7 +28,7 @@ const Nav = ({ pages }: { pages: Page[] }) => {
           Harry Partridge
         </Link>
         <nav aria-label="Main" className="ml-auto flex items-stretch">
-          {pages?.map((page) => {
+          {links?.map((page) => {
             const active = router?.startsWith(`/${page.slug}`);
             return (
               <Link
@@ -77,7 +79,7 @@ const Nav = ({ pages }: { pages: Page[] }) => {
         Harry Partridge
       </Link>
       <div className="flex items-center gap-3 md:gap-5">
-        {pages?.map((page) => (
+        {links?.map((page) => (
           <Link
             key={page._id}
             href={`/${page.slug}`}
