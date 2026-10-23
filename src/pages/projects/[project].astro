@@ -69,7 +69,7 @@ const meta = [
           {project.parent && (
             <p class="hp-label text-muted">
               Part of{" "}
-              <a href={`/projects/${project.parent.slug}`} class="hp-link text-rust">
+              <a href={`/projects/${project.parent.slug}`} class="hp-link text-accent">
                 {project.parent.name.trim()}
               </a>
             </p>
@@ -104,7 +104,7 @@ const meta = [
                   <dt class="hp-label text-muted pt-1">Press</dt>
                   <dd class="text-base">
                     {project.press.map((p) => (
-                      <a href={p.url} target="_blank" rel="noopener" class="hp-link text-rust">
+                      <a href={p.url} target="_blank" rel="noopener" class="hp-link text-accent">
                         {p.title}
                       </a>
                     ))}
@@ -132,21 +132,21 @@ const meta = [
             <h2 id="development" class="hp-label text-muted">How it was made</h2>
             <ul class="list-none mt-5 flex flex-col gap-10">
               {development.map((r) => (
-                <li class="group relative [&:has(a:focus-visible)]:outline [&:has(a:focus-visible)]:outline-2 [&:has(a:focus-visible)]:outline-offset-4 [&:has(a:focus-visible)]:outline-rust grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8 items-end">
+                <li class="group relative [&:has(a:focus-visible)]:outline [&:has(a:focus-visible)]:outline-2 [&:has(a:focus-visible)]:outline-offset-4 [&:has(a:focus-visible)]:outline-accent grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8 items-end">
                   {r.image && (
                     <div class="aspect-[4/3] overflow-hidden">
                       <img src={r.image} alt="" loading="lazy" class="hp-img w-full h-full object-cover" />
                     </div>
                   )}
                   <div class="flex flex-col gap-2">
-                    <h3 class="text-2xl leading-tight tracking-tight transition-colors group-hover:text-rust">
+                    <h3 class="text-2xl leading-tight tracking-tight transition-colors group-hover:text-accent">
                       {/* stretched link: the whole entry opens the record */}
                       <a href={`/projects/${r.slug}`} class="after:absolute after:inset-0 focus-visible:outline-none focus-visible:underline">
                         {recordLabel(r)}
                       </a>
                     </h3>
                     {r.summary && <p class="italic leading-snug max-w-[36ch]">{r.summary}</p>}
-                    <p aria-hidden="true" class="hp-label text-rust">
+                    <p aria-hidden="true" class="hp-label text-accent">
                       Read the record{" "}
                       <span class="inline-block transition-transform duration-300 ease-out group-hover:translate-x-1 motion-reduce:transition-none">→</span>
                     </p>
@@ -166,9 +166,9 @@ const meta = [
       aria-label="Projects"
       class="hp-rule sticky bottom-0 z-30 h-bar flex md:grid md:grid-cols-12 md:gap-x-8 lg:gap-x-12 md:px-edge border-t border-ink bg-paper font-mono text-[11px] uppercase tracking-wider"
     >
-      <a href="/" class="group relative flex-1 min-w-0 flex items-center pl-edge md:pl-0 pr-4 md:col-span-5 xl:col-span-4 whitespace-nowrap hover:text-rust transition-colors">
+      <a href="/" class="group relative flex-1 min-w-0 flex items-center pl-edge md:pl-0 pr-4 md:col-span-5 xl:col-span-4 whitespace-nowrap hover:text-accent transition-colors">
         All projects
-        <span aria-hidden="true" class="absolute inset-x-0 -top-px h-0.5 bg-rust origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"></span>
+        <span aria-hidden="true" class="absolute inset-x-0 -top-px h-0.5 bg-accent origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"></span>
       </a>
       {/* phones: the two cells sit straight in the bar. md up: they split the pictures' columns in half, ruled off at the left */}
       <div class="contents md:grid md:grid-cols-2 md:col-span-7 xl:col-span-8 md:-mr-edge hp-rule md:border-l border-ink">
@@ -180,15 +180,15 @@ const meta = [
             <a
               href={`/projects/${p.slug}`}
               class:list={[
-                "group relative hp-rule flex items-center gap-3 px-4 md:px-7 last:pr-edge whitespace-nowrap hover:text-rust transition-colors",
+                "group relative hp-rule flex items-center gap-3 px-4 md:px-7 last:pr-edge whitespace-nowrap hover:text-accent transition-colors",
                 label === "Next" ? "border-l border-ink md:justify-end" : "border-l md:border-l-0 border-ink",
               ]}
             >
               <span>{label}</span>{" "}
               {/* the mono face is wide, so the number only fits beside the label from sm up */}
-              <span class="hidden sm:inline text-rust whitespace-nowrap shrink-0">{p.no}</span>
+              <span class="hidden sm:inline text-accent whitespace-nowrap shrink-0">{p.no}</span>
               <span class="sr-only">: {p.name}</span>
-              <span aria-hidden="true" class="absolute inset-x-0 -top-px h-0.5 bg-rust origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"></span>
+              <span aria-hidden="true" class="absolute inset-x-0 -top-px h-0.5 bg-accent origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"></span>
             </a>
           ) : null
         )}

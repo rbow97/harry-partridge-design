@@ -59,7 +59,7 @@ const external = (href?: string) => !!href && /^https?:/.test(href);
             <a
               href={`mailto:${contact.email}`}
               data-fit
-              class="hp-email hp-link [--hp-thread-weight:2px] md:[--hp-thread-weight:3px] inline-block self-start whitespace-nowrap leading-[0.95] tracking-tight text-[10vw] sm:text-[6.5vw] hover:text-rust focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-rust"
+              class="hp-email hp-link inline-block self-start whitespace-nowrap leading-[0.95] tracking-tight text-[10vw] sm:text-[6.5vw] hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-accent"
             >
               <span class="block sm:inline">{local}</span><span class="block sm:inline">@{domain}</span>
             </a>
@@ -68,11 +68,11 @@ const external = (href?: string) => !!href && /^https?:/.test(href);
                 type="button"
                 data-copy={contact.email}
                 hidden
-                class="hp-label hp-fill border border-ink px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rust"
+                class="hp-label hp-fill border border-ink px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 Copy address
               </button>
-              <span data-copy-status role="status" class="hp-label text-rust"></span>
+              <span data-copy-status role="status" class="hp-label text-accent"></span>
             </div>
           </>
         )}
@@ -89,15 +89,15 @@ const external = (href?: string) => !!href && /^https?:/.test(href);
               <a
                 href={l.href}
                 {...(external(l.href) ? { target: "_blank", rel: "noopener" } : {})}
-                class="group relative flex items-baseline justify-between gap-6 px-edge py-6 md:py-10 text-2xl md:text-4xl tracking-tight hover:text-rust transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-rust"
+                class="group relative flex items-baseline justify-between gap-6 px-edge py-6 md:py-10 text-2xl md:text-4xl tracking-tight hover:text-accent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-accent"
               >
                 <span>{l.text}</span>
-                <span aria-hidden="true" class="hp-label text-rust flex items-center gap-2">
+                <span aria-hidden="true" class="hp-label text-accent flex items-center gap-2">
                   Open
                   {/* the arrow leans out the way it points */}
                   <span class="inline-block transition-transform duration-300 ease-out group-hover:translate-x-1 group-hover:-translate-y-1 motion-reduce:transition-none">↗</span>
                 </span>
-                <span aria-hidden="true" class="absolute inset-x-0 -top-px h-0.5 bg-rust origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"></span>
+                <span aria-hidden="true" class="absolute inset-x-0 -top-px h-0.5 bg-accent origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"></span>
               </a>
             </li>
           ))}
@@ -145,7 +145,7 @@ const external = (href?: string) => !!href && /^https?:/.test(href);
                           <a
                             href={item.href}
                             {...(external(item.href) ? { target: "_blank", rel: "noopener" } : {})}
-                            class="hp-link hover:text-rust"
+                            class="hp-link text-accent"
                           >
                             {item.text}
                           </a>

@@ -14,8 +14,8 @@ type Token =
   | "--rule-strong"
   | "--paper"
   | "--ink"
-  | "--rust"
-  | "--ember";
+  | "--verdigris"
+  | "--verdigris-light";
 
 export function token(name: Token): string {
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();

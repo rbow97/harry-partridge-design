@@ -13,11 +13,11 @@
   --paper: #f4f1ea;
   --ink: #1a1a17;
   --muted: #6b675e;
-  --rust: #a4471f;
+  --verdigris: #2b6b5f; /* the accent: copper's green, the wire recorder and conductive yarn */
   --felt: #e9dcc6; /* materials surface */
   --felt-rule: #9a6b45;
   --felt-muted: #5a4f41; /* muted, darkened to clear 4.5:1 on felt */
-  --ember: #e8875e; /* the accent on the dark sound surface */
+  --verdigris-light: #7cc4b3; /* the accent on the dark sound surface */
   --moss: #efe4c2; /* living surface */
   --moss-ink: #2f3a22;
   --moss-rule: #5c6b2e;
@@ -27,7 +27,7 @@
   --surface: var(--paper);
   --text: var(--ink);
   --text-muted: var(--muted);
-  --accent: var(--rust);
+  --accent: var(--verdigris);
   --rule: color-mix(in srgb, var(--ink) 15%, transparent); /* the quiet rule on record pages */
   --rule-strong: var(--ink); /* the ruled grid */
   --mark: color-mix(in srgb, var(--ink) 50%, transparent); /* crop marks */
@@ -67,7 +67,7 @@ html[data-mode="sound"] {
   --surface: var(--ink);
   --text: var(--paper);
   --text-muted: color-mix(in srgb, var(--paper) 60%, transparent);
-  --accent: var(--ember);
+  --accent: var(--verdigris-light);
   --rule: color-mix(in srgb, var(--paper) 30%, transparent);
   --rule-strong: color-mix(in srgb, var(--paper) 25%, transparent);
   --mark: color-mix(in srgb, var(--paper) 50%, transparent);

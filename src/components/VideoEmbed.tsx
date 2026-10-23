@@ -35,12 +35,12 @@ export default function VideoEmbed({ video }: { video: Video }) {
             className="absolute inset-0 w-full h-full border-0"
           />
         ) : (
-          <button type="button" onClick={play} className="group absolute inset-0 w-full h-full cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-rust">
+          <button type="button" onClick={play} className="group absolute inset-0 w-full h-full cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-accent">
             {video.poster && <img src={video.poster} alt="" loading="lazy" className="hp-img absolute inset-0 w-full h-full object-cover" />}
             <span className="sr-only">Play video: {video.title}</span>
             <span
               aria-hidden="true"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-paper text-ink grid place-items-center transition duration-300 group-hover:bg-rust group-hover:text-paper group-hover:scale-110 motion-reduce:transition-none"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-paper text-ink grid place-items-center transition duration-300 group-hover:bg-accent group-hover:text-paper group-hover:scale-110 motion-reduce:transition-none"
             >
               <svg viewBox="0 0 16 16" className="w-5 h-5 ml-0.5" fill="currentColor">
                 <path d="M4 2.5v11l9-5.5z" />

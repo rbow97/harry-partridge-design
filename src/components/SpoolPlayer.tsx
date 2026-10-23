@@ -53,7 +53,7 @@ export default function SpoolPlayer({ src, label }: { src: string; label?: strin
         type="button"
         onClick={press}
         aria-label={playing ? "Pause the spool" : label ?? "Play a spool"}
-        className="group flex items-center gap-3 shrink-0 font-mono text-xs uppercase tracking-wider text-ink hover:text-rust focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rust"
+        className="group flex items-center gap-3 shrink-0 font-mono text-xs uppercase tracking-wider text-ink hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
       >
         <svg
           viewBox="0 0 40 40"
@@ -74,7 +74,7 @@ export default function SpoolPlayer({ src, label }: { src: string; label?: strin
       {/* the thread */}
       <div className="relative flex-1 h-px bg-rule" aria-hidden="true">
         <div
-          className="absolute inset-y-0 left-0 bg-rust"
+          className="absolute inset-y-0 left-0 bg-accent"
           style={{ width: `${progress * 100}%`, height: 2, top: -0.5 }}
         />
       </div>

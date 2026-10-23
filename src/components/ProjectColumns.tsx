@@ -260,9 +260,9 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                 // a clean name for the button: its letters are spans, and the sentence's own
                 // letters are hidden from readers in favour of plain text (see Letters)
                 aria-label={label}
-                // the focus ring is rust and offset, so it shows in every mode, including
+                // the focus ring is the accent and offset, so it shows in every mode, including
                 // materials where the letters themselves go transparent
-                className={`focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rust ${
+                className={`focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent ${
                   m === "living" ? "hp-living inline-block whitespace-nowrap" : ""
                 }`}
               >
@@ -298,7 +298,7 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
               key={g.title}
               data-sheet={sheet || undefined}
               style={{ "--span": span, "--tray": trayHeight(span) } as React.CSSProperties}
-              className={`hp-tray hp-rule group relative flex flex-col border-b md:border-r border-ink [&:has(a:focus-visible)]:outline [&:has(a:focus-visible)]:outline-2 [&:has(a:focus-visible)]:-outline-offset-2 [&:has(a:focus-visible)]:outline-rust ${
+              className={`hp-tray hp-rule group relative flex flex-col border-b md:border-r border-ink [&:has(a:focus-visible)]:outline [&:has(a:focus-visible)]:outline-2 [&:has(a:focus-visible)]:-outline-offset-2 [&:has(a:focus-visible)]:outline-accent ${
                 rowEnd ? "md:border-r-0" : ""
               } ${sheet ? "md:flex-row" : ""}`}
             >
@@ -338,7 +338,7 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                   sheet ? "md:w-1/3 md:border-t-0 md:border-l md:p-8 md:flex md:flex-col md:justify-end" : "md:h-[172px] md:overflow-hidden"
                 }`}
               >
-                <h2 className={`font-sans leading-tight transition-colors group-hover:text-rust ${sheet ? "text-2xl md:text-4xl" : "text-xl md:text-2xl"}`}>
+                <h2 className={`font-sans leading-tight transition-colors group-hover:text-accent ${sheet ? "text-2xl md:text-4xl" : "text-xl md:text-2xl"}`}>
                   {/* stretched link: the whole cell opens the lead record */}
                   <a
                     href={`/projects/${lead.slug}`}
@@ -361,7 +361,7 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                 {/* the thread winds out along the bottom edge */}
                 <span
                   aria-hidden="true"
-                  className="absolute left-0 right-0 bottom-0 h-0.5 bg-rust origin-left scale-x-0 transition-transform duration-700 ease-out group-hover:scale-x-100 motion-reduce:transition-none"
+                  className="absolute left-0 right-0 bottom-0 h-0.5 bg-accent origin-left scale-x-0 transition-transform duration-700 ease-out group-hover:scale-x-100 motion-reduce:transition-none"
                 />
               </div>
             </li>

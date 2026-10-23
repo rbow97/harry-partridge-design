@@ -18,7 +18,7 @@ export default function SoundSwitch() {
       aria-checked={soundOn}
       aria-label="Sound"
       onClick={toggle}
-      className="hp-rule flex items-center gap-2.5 border-l border-ink px-4 md:px-6 font-mono text-[11px] uppercase tracking-wider text-muted hover:text-rust hover:transition-colors"
+      className="hp-rule flex items-center gap-2.5 border-l border-ink px-4 md:px-6 font-mono text-[11px] uppercase tracking-wider text-muted hover:text-accent hover:transition-colors"
     >
       <span className="hidden md:inline">Sound</span>
       <span aria-hidden="true" className={`hp-meter ${soundOn ? "hp-meter-on" : ""}`}>

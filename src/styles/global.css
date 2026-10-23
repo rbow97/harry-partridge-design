@@ -11,7 +11,7 @@
   --color-paper: var(--surface);
   --color-ink: var(--text);
   --color-muted: var(--text-muted);
-  --color-rust: var(--accent);
+  --color-accent: var(--accent);
   --color-rule: var(--rule);
   --font-sans: "Instrument Sans Variable", system-ui, sans-serif;
   --font-mono: "Martian Mono Variable", ui-monospace, monospace;
@@ -44,10 +44,10 @@ html {
    ends up a whole transition behind (see .hp-surface) */
 .text-ink,
 .text-muted,
-.text-rust,
+.text-accent,
 .text-paper,
 .bg-ink,
-.bg-rust,
+.bg-accent,
 .bg-paper,
 .bg-rule {
   transition: color var(--dur-mode), background-color var(--dur-mode);
@@ -377,21 +377,21 @@ html[data-flock="settling"] .hp-flock {
 }
 
 /* ------------------------------------------------------------------
-   Hover motion, in the site's own thread: links carry a rust thread
+   Hover motion, in the site's own thread: links carry an accent thread
    under their words, buttons fill with ink from the left. All of it
    stops for anyone who asks for reduced motion.
    ------------------------------------------------------------------ */
 
 :root {
   /* the cross-stitch, one tile per thread colour: an SVG can't read a CSS colour */
-  --hp-stitch: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%225%22%20height%3D%225%22%20viewBox%3D%220%200%205%205%22%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22rgb%2890%2C60%2C35%29%22%20fill-opacity%3D%220.16%22/%3E%3Cpath%20d%3D%22M0.8999999999999999%200.8999999999999999L4.1%204.1M4.1%200.8999999999999999L0.8999999999999999%204.1%22%20stroke%3D%22%23a4471f%22%20stroke-width%3D%221.30%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3C/svg%3E");
+  --hp-stitch: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%225%22%20height%3D%225%22%20viewBox%3D%220%200%205%205%22%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22rgb%2890%2C60%2C35%29%22%20fill-opacity%3D%220.16%22/%3E%3Cpath%20d%3D%22M0.8999999999999999%200.8999999999999999L4.1%204.1M4.1%200.8999999999999999L0.8999999999999999%204.1%22%20stroke%3D%22%232b6b5f%22%20stroke-width%3D%221.30%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3C/svg%3E");
 }
 html[data-mode="sound"] {
-  --hp-stitch: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%225%22%20height%3D%225%22%20viewBox%3D%220%200%205%205%22%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22rgb%2890%2C60%2C35%29%22%20fill-opacity%3D%220.16%22/%3E%3Cpath%20d%3D%22M0.8999999999999999%200.8999999999999999L4.1%204.1M4.1%200.8999999999999999L0.8999999999999999%204.1%22%20stroke%3D%22%23e8875e%22%20stroke-width%3D%221.30%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3C/svg%3E");
+  --hp-stitch: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%225%22%20height%3D%225%22%20viewBox%3D%220%200%205%205%22%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22rgb%2890%2C60%2C35%29%22%20fill-opacity%3D%220.16%22/%3E%3Cpath%20d%3D%22M0.8999999999999999%200.8999999999999999L4.1%204.1M4.1%200.8999999999999999L0.8999999999999999%204.1%22%20stroke%3D%22%237cc4b3%22%20stroke-width%3D%221.30%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3C/svg%3E");
 }
 
-/* Links: rust, with an arrow after them, so they read as links without leaning on colour alone
-   (rust against the body ink is under 3:1): ↗ leaves the site, → stays on it. No underline at rest.
+/* Links: the accent, with an arrow after them, so they read as links without leaning on colour alone
+   (the accent against the body ink is under 3:1): ↗ leaves the site, → stays on it. No underline at rest.
    On hover the arrow leans out the way it points and the materials mode's cross-stitch
    (CrossStitch.tsx) is sewn in underneath from the left: a strip of page colour hiding the
    stitches draws back to the right. Its leading edge is feathered over 10px, so each cross
@@ -465,7 +465,7 @@ html[data-mode="sound"] {
 }
 
 /* the scrollbar, in the bars' language: a paper track ruled off with a hairline, an ink thumb that
-   turns rust when held. It follows the mode, since both colours are roles.
+   turns the accent when held. It follows the mode, since both colours are roles.
    Chrome and Firefox take the standard properties. Safari only reads the -webkit- ones */
 html {
   scrollbar-width: thin;

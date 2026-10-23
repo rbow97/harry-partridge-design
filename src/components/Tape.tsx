@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { release, take } from "@/stores/sound";
+import { alpha } from "@/lib/tokens";
 
 /**
  * Tape (sound mode): the page becomes a tape machine. A recording runs while you
@@ -184,6 +185,8 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, innerWidth, innerHeight);
+      // the signal is printed in the accent, read each frame so it follows the palette (tokens.css)
+      const signal = alpha("--accent", 0.9);
       for (const r of rulers) {
         if (r.bottom < 0 || r.top > innerHeight) continue;
         const x0 = r.left, w = r.width, y0 = r.bottom - BAND;
@@ -193,7 +196,7 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
         ctx.fillRect(x0, y0, w, 1);
         ctx.fillRect(x0, y0 + BAND - 1, w, 1);
         // the signal printed on the tape: left of the head has played, right is still to come
-        ctx.fillStyle = "rgba(232,135,94,0.9)";
+        ctx.fillStyle = signal;
         const mid = y0 + BAND / 2;
         for (let x = 0; x < w; x += 1) {
           const h = level(t + (x - w / 2) / SPEED) * (BAND - 5);

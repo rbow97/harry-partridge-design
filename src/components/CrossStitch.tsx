@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { token } from "@/lib/tokens";
 
 /**
  * Re-sews the statement as cross-stitch (materials mode).
@@ -113,7 +114,7 @@ export default function CrossStitch({
         return { x: r.left - box.left, y: r.bottom - box.top + 2, w: r.width };
       });
 
-      const thread = "#a4471f";
+      const thread = token("--accent");
       const sew = (x: number, y: number) => {
         const p = cell * 0.18;
         ctx.beginPath();

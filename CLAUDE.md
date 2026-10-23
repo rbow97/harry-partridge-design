@@ -19,10 +19,10 @@ Astro 7 (static output, Vercel adapter) + React islands + Tailwind v4 + Sanity (
 - Fonts are self-hosted from Fontsource (`@fontsource-variable/instrument-sans/wdth.css` keeps the width axis
   VoiceType uses, `martian-mono/standard.css`), imported in `src/styles/global.css`. Caveat is gone.
 - Tokens: `src/styles/tokens.css` in three tiers (primitives, semantic roles, `[data-mode]` reassignments). Tailwind
-  v4 `@theme inline` maps `paper/ink/muted/rust/rule` onto the roles, so `text-ink` is "the text colour" and
+  v4 `@theme inline` maps `paper/ink/muted/accent/rule` onto the roles, so `text-ink` is "the text colour" and
   follows the mode; `px-edge` is the 28px/24px shared edge, `h-bar`/`top-bar` the 56px bar, `hp-label` the mono
   label. Canvas code reads roles with `src/lib/tokens.ts` (`token("--accent")`). The per-mode `.text-muted` and
-  `.text-rust` override blocks are gone. Mode art direction (felt, reel, flock) stays as `html[data-mode] .hp-*`.
+  `.text-accent` override blocks are gone. Mode art direction (felt, reel, flock) stays as `html[data-mode] .hp-*`.
 - The embedded Studio needs its origin in the project's CORS list at manage.sanity.io (allow credentials), or it
   shows a blank page with CORS errors for `users/me`. `http://localhost:3000` is already there, so dev is pinned to
   3000 in `astro.config.mjs`. Project `aewk7apr` belongs to Harry's Sanity account, so only Harry can add the
@@ -38,8 +38,8 @@ Astro 7 (static output, Vercel adapter) + React islands + Tailwind v4 + Sanity (
 
 ## Design
 - Concept: "precise, tactile, curious, but not cold". Projects are *records* (HP–001…).
-- Palette: paper #F4F1EA, ink #1A1A17, muted #6B675E, rust #A4471F, plus the mode surfaces felt #E9DCC6, ember
-  #E8875E, moss #EFE4C2 (see `src/styles/tokens.css`). Fonts: Instrument Sans (variable wght/wdth), Martian Mono.
+- Palette: paper #F4F1EA, ink #1A1A17, muted #6B675E, verdigris #2B6B5F (the accent, chosen 2026-10-23 over the old rust), plus the mode surfaces
+  felt #E9DCC6, verdigris-light #7CC4B3 (the accent on the sound mode), moss #EFE4C2 (see `src/styles/tokens.css`). Fonts: Instrument Sans (variable wght/wdth), Martian Mono.
 - Phones (2026-10-23, after liyakedar.com's phone layout): one specimen per row, the 4:3 photo running wall to
   wall between the rules, number and crop marks above, ruler below, label under. The well is `inline-size`
   contained on phones (in flow) and `size` contained from md (absolute in the tray).
@@ -131,7 +131,7 @@ Hovering **materials / sound / living systems** in the statement changes the who
 - Sanity schema (`sanity/schemas/project-schema.tsx`): disciplines (multi-select), summary, themes, partOf
   (reference → groups dev records under a main project, see `lib/group-projects.ts`), year/materials/press/audio.
   `scripts/seed-homepage-fields.mjs` is a one-off seeder (needs SANITY_API_WRITE_TOKEN; values are guesses).
-- Favicon: `public/favicon.svg` (the record stamp: HP in rust between the tray's crop marks, drawn as paths, chosen from nine
+- Favicon: `public/favicon.svg` (the record stamp: HP in verdigris between the tray's crop marks, drawn as paths, chosen from nine
   variants; a cross-stitch leaned on one subject) and `public/apple-touch-icon.png` rendered from it at
   180px; `Site.astro` writes the link tags.
 - Nav (`src/components/Nav.tsx`): the slim ruled bar on every page. On phones the pages sit behind a menu button (three rules that fold into a cross, after liyakedar.com) that drops a panel

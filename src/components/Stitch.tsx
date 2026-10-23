@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { token } from "@/lib/tokens";
 
 /**
  * Stitch (materials mode). Two jobs on one canvas:
@@ -15,7 +16,6 @@ const REACH = 14; // px either side of a rule where the needle catches it
 const STEP = 9; // px from one running stitch to the next
 const STITCH = 5.5; // px, a running stitch's length
 const BLOCK = 3; // a stitch of yours is a cross made of the text's stitches: the diagonals of a 3x3 block
-const THREAD = "#a4471f";
 const HOLES = "rgba(90, 60, 35, 0.16)"; // the Aida cloth's holes, as in CrossStitch.tsx
 
 type Seg = { x1: number; y1: number; x2: number; y2: number; flat: boolean };
@@ -115,8 +115,10 @@ export default function Stitch({ cloth: on, sewing }: { cloth: boolean; sewing: 
       ctx.stroke();
     };
     const paint = (s: Sewn) => {
-      ctx.fillStyle = THREAD;
-      ctx.strokeStyle = THREAD;
+      // the thread is the accent (tokens.css), read as it sews so it follows the palette
+      const thread = token("--accent");
+      ctx.fillStyle = thread;
+      ctx.strokeStyle = thread;
       ctx.lineCap = "round";
       if (s.kind === "run") ctx.fillRect(s.x, s.y, s.w, s.h);
       else {

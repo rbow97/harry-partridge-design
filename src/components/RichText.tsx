@@ -21,7 +21,7 @@ export const isImage = (b: unknown): b is ImageBlock => (b as { _type?: string }
 const hasText = (children: React.ReactNode) =>
   React.Children.toArray(children).some((c) => (typeof c === "string" ? c.trim().length > 0 : true));
 
-const linkClass = "hp-link text-rust break-words";
+const linkClass = "hp-link text-accent break-words";
 
 // an email address typed as plain text becomes a mailto link (the Contact page has one)
 const EMAIL = /([\w.+-]+@[\w-]+\.[\w.-]+)/g;
@@ -76,8 +76,8 @@ const sheet: PortableTextComponents = {
     blockquote: ({ children }) => <blockquote className="border-l border-ink pl-5 italic">{children}</blockquote>,
   },
   list: {
-    bullet: ({ children }) => <ul className="text-lg md:text-xl leading-relaxed pl-5 list-disc marker:text-rust">{children}</ul>,
-    number: ({ children }) => <ol className="text-lg md:text-xl leading-relaxed pl-5 list-decimal marker:text-rust">{children}</ol>,
+    bullet: ({ children }) => <ul className="text-lg md:text-xl leading-relaxed pl-5 list-disc marker:text-accent">{children}</ul>,
+    number: ({ children }) => <ol className="text-lg md:text-xl leading-relaxed pl-5 list-decimal marker:text-accent">{children}</ol>,
   },
   marks: link,
   types: { image: () => null },
