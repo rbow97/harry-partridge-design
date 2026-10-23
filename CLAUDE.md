@@ -34,8 +34,23 @@ Node 22. `./node_modules/.bin/tsc --noEmit` and `next lint` must stay clean.
 Hovering **materials / sound / living systems** in the statement changes the whole page (nav included).
 - `<html data-mode>` = target look; `<html data-anim>` lingers ~650ms after leaving so motion eases out.
   `--hp-amp` (0→1) scales all motion. All CSS in `app/globals.css`.
-- materials: felt texture, woolly SVG filters (strength tweened in JS), cross-stitched statement
-  (`components/CrossStitch.tsx`, canvas over the real text, drawn instantly).
+- materials: felt texture, woolly photos (`#hp-fuzz`, strength tweened in JS), cross-stitched statement
+  (`components/CrossStitch.tsx`, canvas over the real text, drawn instantly), and the cursor sews
+  (`components/Stitch.tsx`), but only once the word has been clicked (pinned): hovering shows the embroidered
+  statement, clicking lets you sew. Across the whole statement block it lays crosses wherever it goes, each one five of
+  the text's own stitches on the diagonals of a 3x3 block of the text's grid (~10px, same cell size, origin, stroke
+  and thread as CrossStitch), never over the letters or underlined words, and it extends the Aida holes over the
+  block so the cloth is one piece. Along any rule it lays running stitch. Both fade with the mode. Fat rounded
+  8px/14px crosses were tried and rejected: they looked like icons, not thread. A needle-cursor with thread and a hint label were tried and rejected (2026-10-23). The felt displacement
+  used to sit on every `.hp-rule` too; removed because it blurred all the text and cost ~19fps on entry (57 after).
+- Mode lifetime: hover is the word alone, leave it and the mode ends (a block-wide hover was tried on 2026-10-23 and
+  felt stuck, in all three modes). A click pins a mode, shown by a dashed outline round the word (`aria-pressed`),
+  so the cursor can roam the whole page: click the word again, click anywhere that isn't one of the three words
+  (the plain statement text counts as away), or Escape to release.
+  Materials on hover already turns the whole header into cloth (Stitch draws the Aida holes beyond the text box);
+  only the sewing waits for the pin.
+- Shared edge: the brand, the statement, the nav's right edge and the photos all sit 28px in (24px on phones). The
+  hero's photo is left-aligned in its well for the same reason.
 - sound: a tape machine (`components/Tape.tsx`). Tray images become spinning reels, the rulers become tape with the
   recording's signal passing a head (canvas), and a timecode replaces the project count. The statement letters stay
   still (Rose's call, 2026-10-23). The signal comes from decoding the file into a 100Hz envelope, so the tape runs

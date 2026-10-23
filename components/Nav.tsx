@@ -20,7 +20,8 @@ const Nav = ({ pages }: { pages: Page[] }) => {
         <Link
           href="/"
           // colour transitions only while hovered, so the links follow a page mode change in step with the header
-          className="flex items-center px-5 md:px-10 font-sans text-base md:text-lg tracking-tight hover:text-rust hover:transition-colors"
+          // the same inset as the photos in their trays, so the name, the statement and the images share an edge
+          className="flex items-center px-6 md:px-7 font-sans text-base md:text-lg tracking-tight hover:text-rust hover:transition-colors"
         >
           Harry Partridge
         </Link>
@@ -32,7 +33,7 @@ const Nav = ({ pages }: { pages: Page[] }) => {
                 key={page._id}
                 href={`/${page.slug}`}
                 aria-current={active ? "page" : undefined}
-                className="hp-rule flex items-center gap-2 border-l border-ink px-4 md:px-6 font-mono text-[11px] uppercase tracking-wider hover:text-rust hover:transition-colors"
+                className="hp-rule flex items-center gap-2 border-l border-ink px-4 md:px-7 font-mono text-[11px] uppercase tracking-wider hover:text-rust hover:transition-colors"
               >
                 <span
                   aria-hidden="true"
@@ -50,7 +51,7 @@ const Nav = ({ pages }: { pages: Page[] }) => {
             role="switch"
             aria-checked={soundOn}
             onClick={toggle}
-            className="hp-rule flex items-center gap-2.5 border-l border-ink px-4 md:px-6 font-mono text-[11px] uppercase tracking-wider hover:text-rust hover:transition-colors"
+            className="hp-rule flex items-center gap-2.5 border-l border-ink px-4 md:px-7 font-mono text-[11px] uppercase tracking-wider hover:text-rust hover:transition-colors"
           >
             Sound
             <span aria-hidden="true" className={`hp-meter ${soundOn ? "hp-meter-on" : ""}`}>

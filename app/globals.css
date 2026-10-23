@@ -185,10 +185,9 @@ html[data-mode="materials"] .hp-surface::before {
 html[data-mode="materials"] .hp-rule {
   border-color: #9a6b45;
 }
-/* felt filters stay applied while the mode eases out; their strength is tweened in JS */
-html[data-anim~="materials"] .hp-rule {
-  filter: url(#hp-felt); /* woolly lines and soft, fibrous text */
-}
+/* the fuzz stays applied while the mode eases out; its strength is tweened in JS. Only the
+   photos get it: a displacement filter on every ruled element blurred all the text and
+   cost ~19fps on entry, and the cross-stitch already says "cloth" */
 html[data-mode="materials"] .hp-mark {
   border-color: #9a6b45;
 }
@@ -204,6 +203,27 @@ html[data-mode="materials"] .hp-statement .hp-letter {
 }
 html[data-mode="materials"] .hp-statement .hp-kw {
   border-color: transparent;
+}
+
+/* a pinned word: its mode stays on while the cursor roams, so say so */
+.hp-statement button[aria-pressed="true"] {
+  outline: 1px dashed currentColor;
+  outline-offset: 6px;
+}
+
+/* the cloth and the needle's stitches (components/Stitch.tsx): drawn as you go, fading with the mode */
+.hp-stitch {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 55;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+html[data-mode="materials"] .hp-stitch {
+  opacity: 1;
 }
 
 /* SOUND — a signal on an oscilloscope */

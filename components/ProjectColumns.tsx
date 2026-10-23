@@ -6,6 +6,7 @@ import type { ProjectGroup } from "@/lib/group-projects";
 import { COLUMNS, trayHeight, trayLayout } from "@/lib/tray-layout";
 import CrossStitch from "./CrossStitch";
 import Flock from "./Flock";
+import Stitch from "./Stitch";
 import Tape from "./Tape";
 
 // the recording the sound hover runs: the first record with a spool, else the ambient voice
@@ -90,15 +91,33 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
   const statement = useRef<HTMLParagraphElement>(null);
   // whether the last pointer on a statement word was a finger (see the word buttons)
   const touch = useRef(false);
-  // on touch there is no mouseleave, so a tap anywhere outside the statement ends the mode
+  // a click pins a mode, so the cursor can leave the word and roam the page in it (the
+  // flock follows the cursor, the needle stitches where it goes). A tap does the same.
+  // Clicking the word again, clicking anywhere that isn't one of the three words, or
+  // Escape releases it
+  const [pinned, setPinned] = useState<Mode | null>(null);
   useEffect(() => {
     if (!mode) return;
     const off = (e: PointerEvent) => {
-      if (e.pointerType === "touch" && !statement.current?.contains(e.target as Node)) setMode(null);
+      if ((e.target as Element | null)?.closest?.(".hp-statement button")) return;
+      if (pinned || e.pointerType === "touch") {
+        setPinned(null);
+        setMode(null);
+      }
+    };
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setPinned(null);
+        setMode(null);
+      }
     };
     document.addEventListener("pointerdown", off);
-    return () => document.removeEventListener("pointerdown", off);
-  }, [mode]);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("pointerdown", off);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [mode, pinned]);
 
   // The whole page (nav included) takes on the hovered word — see globals.css.
   // data-mode = the target look (colours transition to it).
@@ -144,8 +163,7 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
     };
   }, []);
 
-  // Felt: tween the filters' displacement so the fuzz relaxes rather than snapping
-  const felt = useRef<SVGFEDisplacementMapElement>(null);
+  // Felt: tween the photo fuzz's displacement so it relaxes rather than snapping
   const fuzz = useRef<SVGFEDisplacementMapElement>(null);
   const feltAmount = useRef(0);
   useEffect(() => {
@@ -157,7 +175,6 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
       const t = Math.min(1, (now - start) / 450);
       const v = from + (target - from) * (1 - Math.pow(1 - t, 3));
       feltAmount.current = v;
-      felt.current?.setAttribute("scale", String(2.5 * v));
       fuzz.current?.setAttribute("scale", String(10 * v));
       if (t < 1) raf = requestAnimationFrame(tick);
     };
@@ -193,14 +210,12 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
     <div className="hp-surface relative bg-paper text-ink pt-14 md:min-h-[100svh] flex flex-col">
       {/* living systems: the tray images take off as a flock */}
       <Flock active={mode === "living"} />
+      {/* materials: the header is cloth; once the word is clicked (pinned), the cursor sews it and the rules */}
+      <Stitch cloth={mode === "materials"} sewing={mode === "materials" && pinned === "materials"} />
       {/* sound: the page runs a recording like a tape machine */}
       <Tape active={mode === "sound"} src={groups.flatMap((g) => g.records).find((r) => r.audio)?.audio ?? AMBIENT} />
       {/* SVG filters for the materials mode (felt / fuzz) */}
       <svg aria-hidden="true" width="0" height="0" className="absolute">
-        <filter id="hp-felt" x="-2%" y="-2%" width="104%" height="104%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="3" result="n" />
-          <feDisplacementMap ref={felt} in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
         <filter id="hp-fuzz" x="-8%" y="-8%" width="116%" height="116%">
           <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="3" seed="8" result="n" />
           <feDisplacementMap ref={fuzz} in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G" />
@@ -208,7 +223,8 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
       </svg>
 
       {/* Statement */}
-      <section className="relative px-5 md:px-10 py-7 md:py-8">
+      {/* inset to the photo edge in the trays below (their wells are inset-x-6 / md:inset-x-7) */}
+      <section className="relative px-6 md:px-7 py-7 md:py-8">
         <p
           ref={statement}
           aria-label="I am a designer trained in art and engineering, building working objects from materials, sound and living systems."
@@ -224,15 +240,20 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
               <button
                 key={k}
                 type="button"
-                aria-pressed={mode === m}
+                aria-pressed={pinned === m}
                 // touch: a tap fires emulated hover and focus before the click, which
                 // would toggle the mode straight back off, so touch only listens to taps
                 onPointerDown={(e) => (touch.current = e.pointerType === "touch")}
-                onMouseEnter={() => !touch.current && setMode(m)}
-                onMouseLeave={() => !touch.current && setMode(null)}
-                onFocus={() => !touch.current && setMode(m)}
-                onBlur={() => !touch.current && setMode(null)}
-                onClick={() => setMode(mode === m ? null : m)}
+                // hover is the word alone; to keep a mode on while the cursor roams, click (pin)
+                onMouseEnter={() => !touch.current && !pinned && setMode(m)}
+                onMouseLeave={() => !touch.current && !pinned && setMode(null)}
+                onFocus={() => !touch.current && !pinned && setMode(m)}
+                onBlur={() => !touch.current && !pinned && setMode(null)}
+                onClick={() => {
+                  const release = pinned === m;
+                  setPinned(release ? null : m);
+                  setMode(release ? null : m);
+                }}
                 // hp-living: where the flock takes its bearings from (components/Flock.tsx)
                 className={`focus-visible:outline-none ${m === "living" ? "hp-living inline-block whitespace-nowrap" : ""}`}
               >
@@ -248,7 +269,7 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
         {/* sound: the tape's timecode, a readout in the corner of the statement (written per frame in Tape.tsx) */}
         <span
           aria-hidden="true"
-          className="hp-tc absolute right-5 md:right-10 bottom-3 font-mono text-[11px] uppercase tracking-wider tabular-nums"
+          className="hp-tc absolute right-6 md:right-7 bottom-3 font-mono text-[11px] uppercase tracking-wider tabular-nums"
         >
           00:00.0
         </span>
@@ -283,7 +304,11 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                   </span>
                 )}
                 {/* hp-well: a size container, so the reel clip can be sized from the frame's real dimensions */}
-                <div className="hp-well absolute inset-x-6 top-10 bottom-11 md:inset-x-7 md:top-11 md:bottom-12 flex items-center justify-center">
+                <div
+                  className={`hp-well absolute inset-x-6 top-10 bottom-11 md:inset-x-7 md:top-11 md:bottom-12 flex items-center ${
+                    sheet ? "justify-start" : "justify-center"
+                  }`}
+                >
                   <div className="hp-frame relative w-full max-h-full aspect-[4/3] overflow-hidden">
                   {lead.image && (
                     // eslint-disable-next-line @next/next/no-img-element
