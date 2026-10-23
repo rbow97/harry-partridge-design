@@ -25,6 +25,8 @@ export default defineConfig({
   redirects: {
     "/projects": "/",
   },
+  // port 3000 is already a Sanity CORS origin. host: true also serves it on the network, so a phone on the same wifi can open it
+  server: { port: 3000, host: true },
   vite: {
     plugins: [tailwindcss()],
   },

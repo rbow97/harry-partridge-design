@@ -2,7 +2,7 @@
 
 Portfolio site for Harry Partridge (designer: materials, sound, living systems). Owner/dev: Rose.
 Astro 7 (static output, Vercel adapter) + React islands + Tailwind v4 + Sanity (Studio embedded at /admin via
-@sanity/astro, project `aewk7apr`). Run: `npm run dev` → localhost:4321. `npm run check` (astro check) and
+@sanity/astro, project `aewk7apr`). Run: `npm run dev` → localhost:3000. `npm run check` (astro check) and
 `npm run build` must stay clean. Node 22+.
 
 ## Stack (moved from Next 13 on 2026-10-23, branch `astro`)
@@ -23,8 +23,10 @@ Astro 7 (static output, Vercel adapter) + React islands + Tailwind v4 + Sanity (
   follows the mode; `px-edge` is the 28px/24px shared edge, `h-bar`/`top-bar` the 56px bar, `hp-label` the mono
   label. Canvas code reads roles with `src/lib/tokens.ts` (`token("--accent")`). The per-mode `.text-muted` and
   `.text-rust` override blocks are gone. Mode art direction (felt, reel, flock) stays as `html[data-mode] .hp-*`.
-- The embedded Studio needs `http://localhost:4321` and the production domain added as CORS origins at
-  manage.sanity.io (allow credentials), or it shows a blank page with CORS errors for `users/me`.
+- The embedded Studio needs its origin in the project's CORS list at manage.sanity.io (allow credentials), or it
+  shows a blank page with CORS errors for `users/me`. `http://localhost:3000` is already there, so dev is pinned to
+  3000 in `astro.config.mjs`. Project `aewk7apr` belongs to Harry's Sanity account, so only Harry can add the
+  production domain or invite collaborators.
 - Astro's own dev-server tip: `npx astro dev --background`; the desktop app's preview reads a global launch.json,
   so open the pane with the URL once the server is up.
 
@@ -100,7 +102,7 @@ Hovering **materials / sound / living systems** in the statement changes the who
   toggle; a tap outside the statement ends the mode.
 - Islands still render on the server: nothing may touch `window`, `innerWidth` or `document` outside an effect. A
   ref initialised from `innerWidth` in Flock once threw on the server and silently made the homepage client-only.
-  Check with `curl localhost:4321 | grep hp-statement` after touching mode code.
+  Check with `curl localhost:3000 | grep hp-statement` after touching mode code.
 - Accessibility baseline (2026-10-23): the statement is the homepage `h1`; Bio, Contact and record pages each have
   one `h1` and their own `<title>` via the layout's `title` prop; the word buttons carry `aria-label`s and a rust
   focus-visible ring (visible in materials, where the letters go transparent); letter spans are `aria-hidden` with
