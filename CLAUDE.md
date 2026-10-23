@@ -97,7 +97,7 @@ Hovering **materials / sound / living systems** in the statement changes the who
 - Project page (`app/(site)/projects/[project]/page.tsx`, after laylabaghai.com/probio, 2026-10-23): the words in
   a screen-tall sticky column on the left with its content at the bottom (record line, title, description at
   text-sm, "Work" disciplines, the spool only if the record has a recording, metadata rows only where filled),
-  nothing scrolling inside it, the work as a 760px stack of images on the right at their own proportions.
+  nothing scrolling inside it, the work as a stack of images on the right, up to 60vw wide, at their own proportions.
   Sticky by `bottom` was tried and doesn't hold while scrolling down; sticky by `top` with a min-height does. Phones: words first, then
   the stack. No "to add" placeholders. As of 2026-10-23 no record
   in Sanity has a recording or any metadata, so the spool and the rows are hidden everywhere until Harry fills them.

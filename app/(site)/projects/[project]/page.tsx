@@ -160,7 +160,7 @@ async function ProjectDetail({ params }: Props) {
         </div>
 
         {/* the work: the lead image, then everything in the record, one stack no wider than a sheet */}
-        <div className="md:col-span-7 xl:col-span-8 md:pt-14 flex flex-col gap-6 md:gap-8 w-full max-w-[760px]">
+        <div className="md:col-span-7 xl:col-span-8 md:pt-14 flex flex-col gap-6 md:gap-8 w-full max-w-[min(100%,60vw)]">
           {project.image && (
             <figure>
               <Image src={project.image} alt={project.name} width={1920} height={1440} priority className="hp-img w-full h-auto" />
