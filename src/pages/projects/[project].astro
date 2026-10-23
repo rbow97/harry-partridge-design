@@ -8,6 +8,7 @@ import SpoolPlayer from "@/components/SpoolPlayer";
 import VideoEmbed from "@/components/VideoEmbed";
 import { embeddable, videoBlock, videosIn, type Video } from "@/lib/video";
 import { recordLabel } from "@/types/Project";
+import { SIZES, dimensionsOf, sized, srcset } from "@/lib/images";
 import { groupProjects, placeOf } from "@/lib/group-projects";
 
 /* A project record: the words in a screen-tall column on the left with its content at the
@@ -140,7 +141,15 @@ const meta = [
       <div class="md:col-span-7 xl:col-span-8 md:pt-bar flex flex-col gap-6 md:gap-8 w-full md:max-w-[min(100%,60vw)]">
         {project.image && (
           <figure>
-            <img src={project.image} alt={project.imageAlt ?? ""} class="hp-img w-full h-auto" />
+            <img
+              src={sized(project.image, 1280)}
+              srcset={srcset(project.image)}
+              sizes={SIZES.work}
+              {...(dimensionsOf(project.image) ?? {})}
+              fetchpriority="high"
+              alt={project.imageAlt ?? ""}
+              class="hp-img w-full h-auto"
+            />
           </figure>
         )}
         {videos.map((video) => <VideoEmbed client:visible video={video} />)}
@@ -165,7 +174,15 @@ const meta = [
                 <li class="group relative [&:has(a:focus-visible)]:outline [&:has(a:focus-visible)]:outline-2 [&:has(a:focus-visible)]:outline-offset-4 [&:has(a:focus-visible)]:outline-accent grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8 items-end">
                   {r.image && (
                     <div class="aspect-[4/3] overflow-hidden">
-                      <img src={r.image} alt="" loading="lazy" class="hp-img w-full h-full object-cover" />
+                      <img
+                        src={sized(r.image, 720)}
+                        srcset={srcset(r.image)}
+                        sizes={SIZES.development}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        class="hp-img w-full h-full object-cover"
+                      />
                     </div>
                   )}
                   <div class="flex flex-col gap-2">

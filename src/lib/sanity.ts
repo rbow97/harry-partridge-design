@@ -84,6 +84,5 @@ export const contactQuery = defineQuery(`*[_type == "contact" && _id == "contact
 export const getContact = () => sanityClient.fetch(contactQuery);
 
 const builder = createImageUrlBuilder(sanityClient);
-/** a Sanity image at a given width, in the browser's best format */
-export const imageUrl = (source: Parameters<typeof builder.image>[0], width: number) =>
-  builder.image(source).width(width).auto("format").url();
+/** a Sanity image's own URL, with any crop set in Studio applied, for lib/images.ts to size */
+export const imageSource = (source: Parameters<typeof builder.image>[0]) => builder.image(source).url();

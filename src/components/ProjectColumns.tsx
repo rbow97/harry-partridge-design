@@ -9,6 +9,7 @@ import Stitch from "./Stitch";
 import Tape from "./Tape";
 
 import { FALLBACK, type Mode, type SentencePart } from "@/lib/site";
+import { SIZES, sized, srcset } from "@/lib/images";
 
 /** Split text into letters so the page modes can animate them. The letter spans are hidden
  *  from assistive tech and the text is repeated once, visually hidden, so it reads as words */
@@ -319,7 +320,13 @@ export default function ProjectColumns({
                   <div className="hp-frame relative w-full max-h-full aspect-[4/3] overflow-hidden">
                   {lead.image && (
                     <img
-                      src={lead.image}
+                      src={sized(lead.image, 960)}
+                      srcSet={srcset(lead.image)}
+                      // a tray crops its photo to fill it, so ask for the width it shows at, not the tray's
+                      sizes={sheet ? SIZES.heroTray : SIZES.tray}
+                      // the first row is on screen at once, the rest load as they're scrolled to
+                      loading={i < 4 ? "eager" : "lazy"}
+                      decoding="async"
                       alt=""
                       data-img="lead"
                       className="hp-img absolute inset-0 w-full h-full object-cover"

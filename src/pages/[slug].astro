@@ -1,6 +1,7 @@
 ---
 import Site from "@/layouts/Site.astro";
-import { getAbout, getContact, getPage, getPages, imageUrl } from "@/lib/sanity";
+import { getAbout, getContact, getPage, getPages, imageSource } from "@/lib/sanity";
+import { SIZES, sized, srcset } from "@/lib/images";
 import { getImageDimensions } from "@sanity/asset-utils";
 import { InfoLede, InfoNotes } from "@/components/RichText";
 import { bioFrom, contactFrom } from "@/lib/site";
@@ -121,7 +122,10 @@ const external = (href?: string) => !!href && /^https?:/.test(href);
         {portrait && (
           <figure class="order-first md:order-none md:col-start-8 lg:col-start-9 md:col-span-5 lg:col-span-4 md:row-start-2 md:row-span-2 self-start">
             <img
-              src={imageUrl(portrait, 1200)}
+              src={sized(imageSource(portrait), 960)}
+              srcset={srcset(imageSource(portrait))}
+              sizes={SIZES.portrait}
+              fetchpriority="high"
               alt={portrait.alt ?? ""}
               class="hp-img w-full h-auto"
               style={{ aspectRatio: `${portraitSize!.width} / ${portraitSize!.height}` }}

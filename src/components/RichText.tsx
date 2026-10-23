@@ -2,7 +2,8 @@ import React from "react";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { TypedObject } from "@portabletext/types";
 import { getImageDimensions } from "@sanity/asset-utils";
-import { imageUrl } from "@/lib/sanity";
+import { imageSource } from "@/lib/sanity";
+import { SIZES, sized, srcset } from "@/lib/images";
 import { videoAnchor } from "@/lib/video";
 
 /**
@@ -107,7 +108,16 @@ const work = (embedded: string[]): PortableTextComponents => ({
       const { width, height } = getImageDimensions(value);
       return (
         <figure>
-          <img src={imageUrl(value, 1800)} alt={value.alt ?? ""} className="hp-img w-full h-auto" style={{ aspectRatio: `${width} / ${height}` }} loading="lazy" />
+          <img
+            src={sized(imageSource(value), 1280)}
+            srcSet={srcset(imageSource(value))}
+            sizes={SIZES.work}
+            alt={value.alt ?? ""}
+            className="hp-img w-full h-auto"
+            style={{ aspectRatio: `${width} / ${height}` }}
+            loading="lazy"
+            decoding="async"
+          />
         </figure>
       );
     },
@@ -157,7 +167,9 @@ export function SheetTray({ image, index }: { image: ImageBlock; index: number }
         ))}
       </span>
       <img
-        src={imageUrl(image, 1200)}
+        src={sized(imageSource(image), 960)}
+        srcSet={srcset(imageSource(image))}
+        sizes={SIZES.sheetTray}
         alt={image.alt ?? ""}
         className="hp-img w-full h-auto"
         style={{ aspectRatio: `${width} / ${height}` }}
