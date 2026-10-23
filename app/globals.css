@@ -173,29 +173,76 @@ html[data-mode="sound"] .hp-img {
 html[data-mode="sound"] .hp-frame::after {
   opacity: 1;
 }
-html[data-anim~="sound"] .hp-letter {
-  animation: hp-wave 1.1s ease-in-out infinite;
-  animation-delay: calc(var(--i) * -45ms);
+
+/* the tape machine (see components/Tape.tsx for the tape, counter and the statement's levels) */
+/* the trays' images become reels: round, with a hub, turning while the tape runs */
+html[data-mode="sound"] .hp-frame {
+  border-radius: 50%;
+  aspect-ratio: 1;
 }
-html[data-mode="sound"] .hp-ruler {
-  filter: invert(1);
+.hp-frame::before {
+  content: "";
+  position: absolute;
+  inset: 40%;
+  z-index: 2;
+  border-radius: 50%;
+  background: #1a1a17;
+  border: 2px solid rgba(244, 241, 234, 0.55);
+  opacity: 0;
+  transition: opacity 0.5s;
 }
-html[data-anim~="sound"] .hp-ruler > span {
-  animation: hp-meter 1.2s linear infinite;
+html[data-mode="sound"] .hp-frame::before {
+  opacity: 1;
 }
-@keyframes hp-wave {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(calc(-0.16em * var(--hp-amp)));
-  }
+html[data-anim~="sound"] .hp-img {
+  animation: hp-reel var(--reel, 7s) linear infinite;
 }
-@keyframes hp-meter {
+html[data-anim~="sound"] li:nth-child(even) .hp-img {
+  animation-direction: reverse;
+}
+@keyframes hp-reel {
   to {
-    background-position: -40px bottom, -40px bottom;
+    transform: rotate(360deg);
   }
+}
+/* the ruler gives way to the tape drawn over it */
+html[data-mode="sound"] .hp-ruler {
+  opacity: 0;
+}
+.hp-tape {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 55;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+html[data-mode="sound"] .hp-tape {
+  opacity: 1;
+}
+/* the tape counter takes the project count's place */
+.hp-tc {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+html[data-mode="sound"] .hp-tc {
+  opacity: 1;
+}
+html[data-mode="sound"] .hp-count {
+  opacity: 0;
+}
+/* the statement speaks: letters lift with the recording's loudness. Odd letters follow
+   the live level and even ones a level from a moment before, so neighbours stutter
+   against each other the way speech does. Transform only, so nothing reflows */
+html[data-anim~="sound"] .hp-statement .hp-letter {
+  transform: translateY(
+      calc(-0.22em * var(--hp-amp) * (var(--lvl, 0) * (1 + var(--sd, 1)) / 2 + var(--lvl2, 0) * (1 - var(--sd, 1)) / 2))
+    )
+    scaleY(calc(1 + 0.08 * var(--hp-amp) * var(--lvl, 0)));
+  transform-origin: 50% 100%;
+  transition: none;
 }
 
 /* LIVING SYSTEMS — a petri dish */
@@ -217,6 +264,7 @@ html[data-mode="living"] .hp-rule {
 @media (prefers-reduced-motion: reduce) {
   html[data-anim] .hp-letter,
   .hp-frame,
+  .hp-img,
   .hp-ruler > span {
     animation: none !important;
     transition: none !important;

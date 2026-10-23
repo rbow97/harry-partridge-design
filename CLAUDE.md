@@ -5,8 +5,8 @@ Next 13 (app router) + Sanity (Studio at /admin, project `aewk7apr`) + Tailwind.
 Node 22. `./node_modules/.bin/tsc --noEmit` and `next lint` must stay clean.
 
 ## State
-- Branch `redesign`. `929d439` first pass, `693b947` modes and living-systems variants. The flock, the variant
-  cleanup, the nav colour fix and the touch fix are uncommitted on top. Nothing pushed. `main` = old live site (Vercel).
+- Branch `redesign`. `929d439` first pass, `693b947` modes and variants, `df6b51f` flock + cleanup + nav and touch
+  fixes, then the tape machine. Nothing pushed. `main` = old live site (Vercel).
 - Live content is Harry's real Sanity data; new fields are already filled in by Rose in Studio.
 
 ## Design
@@ -23,7 +23,12 @@ Hovering **materials / sound / living systems** in the statement changes the who
   `--hp-amp` (0→1) scales all motion. All CSS in `app/globals.css`.
 - materials: felt texture, woolly SVG filters (strength tweened in JS), cross-stitched statement
   (`components/CrossStitch.tsx`, canvas over the real text, drawn instantly).
-- sound: dark oscilloscope, rippling letters, scanlines, scrolling rulers.
+- sound: a tape machine (`components/Tape.tsx`). Tray images become spinning reels, the rulers become tape with the
+  recording's signal passing a head (canvas), a timecode replaces the project count, and the statement letters lift
+  with the recording's loudness (`--lvl`/`--lvl2` on `.hp-statement`, odd and even letters via `--sd`). Loudness comes
+  from decoding the file into a 100Hz envelope, so it speaks silently for quiet visitors; with sound on it plays the
+  spool and pauses the ambient voice. The recording is the first project with `audio`, else the ambient clip.
+  The nav has the only sound toggle after the entry gate.
 - living systems: **flock** (`components/Flock.tsx`, chosen 2026-10-22). The tray images dissolve into ~5k boids
   on a fixed canvas that wheel around the cursor and fly home to re-form the images on leave. Images are sampled
   from a 600px Sanity copy (`crossOrigin`), one particle per 10px, drawn as colour-bucketed rects. `<html data-flock>`
@@ -40,8 +45,7 @@ Hovering **materials / sound / living systems** in the statement changes the who
 ## Other pieces
 - Sound: `components/sound/SoundProvider.tsx` (Web Audio analyser), `components/EntryGate.tsx` (enter with/without
   sound), `components/VoiceType.tsx` (headlines react to loudness), `components/SpoolPlayer.tsx` ("Play a spool" on
-  project pages). The homepage sound *hover* does not use the analyser: it is fixed CSS (bobbing letters, scanlines,
-  scrolling rulers).
+  project pages). The spool and the ambient voice are the same placeholder file until Harry supplies recordings.
 - Project page (`app/(site)/projects/[project]/page.tsx`): record layout with metadata column.
 - Sanity schema (`sanity/schemas/project-schema.tsx`): disciplines (multi-select), summary, themes, partOf
   (reference → groups dev records under a main project, see `lib/group-projects.ts`), year/materials/press/audio.
@@ -50,6 +54,8 @@ Hovering **materials / sound / living systems** in the statement changes the who
 
 ## Open / next
 - Tune the flock by eye on a real machine and a real phone (frame rate on a phone is unmeasured).
-- Review the materials and sound hovers against the flock, which is now the most ambitious of the three.
+- Materials hover still to review against the flock and the tape: the felt filter blurs text and rules, and nothing
+  in it responds to the visitor. Options discussed: a needle/running stitch that follows the cursor, or per-project
+  textures instead of felt everywhere.
 - Bio page and `/projects` grid still use the old design. Credentials were removed from home; could live on Bio.
 - Commit, push `redesign`, get a Vercel preview for Harry.

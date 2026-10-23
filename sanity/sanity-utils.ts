@@ -14,6 +14,7 @@ export async function getProjects(): Promise<Project[]> {
       url,
       priority,
       content,
+      "audio": audio.asset->url,
       "partOf": partOf._ref,
       themes,
       disciplines,

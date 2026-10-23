@@ -5,6 +5,10 @@ import React, { useEffect, useRef, useState } from "react";
 import type { ProjectGroup } from "@/lib/group-projects";
 import CrossStitch from "./CrossStitch";
 import Flock from "./Flock";
+import Tape from "./Tape";
+
+// the recording the sound hover runs: the first record with a spool, else the ambient voice
+const AMBIENT = "/assets/harry-grad-movie.mp4";
 
 const THEMES = ["materials", "sound", "living systems"] as const;
 type Theme = (typeof THEMES)[number];
@@ -182,6 +186,8 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
     <div className="hp-surface relative bg-paper text-ink pt-14 md:min-h-[100svh] flex flex-col">
       {/* living systems: the tray images take off as a flock */}
       <Flock active={mode === "living"} />
+      {/* sound: the page runs a recording like a tape machine */}
+      <Tape active={mode === "sound"} src={groups.flatMap((g) => g.records).find((r) => r.audio)?.audio ?? AMBIENT} />
       {/* SVG filters for the materials mode (felt / fuzz) */}
       <svg aria-hidden="true" width="0" height="0" className="absolute">
         <filter id="hp-felt" x="-2%" y="-2%" width="104%" height="104%">
@@ -239,7 +245,7 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
         <div
           role="group"
           aria-label="Filter projects by theme"
-          className="hp-rule border-y border-ink px-5 md:px-10 py-3 flex flex-wrap items-center gap-x-2 gap-y-2 font-mono text-[11px] uppercase tracking-wider"
+          className="hp-rule relative border-y border-ink px-5 md:px-10 py-3 flex flex-wrap items-center gap-x-2 gap-y-2 font-mono text-[11px] uppercase tracking-wider"
         >
           <span className="text-muted mr-2">Filter</span>
           {THEMES.map((t) => {
@@ -262,8 +268,12 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
               </button>
             );
           })}
-          <span className="ml-auto text-muted" aria-live="polite">
+          <span className="hp-count ml-auto text-muted" aria-live="polite">
             {active ? `${shown} of ${groups.length} projects` : `All ${groups.length} projects`}
+          </span>
+          {/* sound: the tape counter takes the count's place (written per frame in Tape.tsx) */}
+          <span aria-hidden="true" className="hp-tc absolute right-5 md:right-10 tabular-nums">
+            00:00.0
           </span>
         </div>
       )}
@@ -282,6 +292,8 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
           return (
             <li
               key={g.title}
+              // sound: each tray's reel turns at its own speed, neighbours the other way
+              style={{ "--reel": `${6.5 + i * 1.4}s` } as React.CSSProperties}
               className={`hp-rule group relative flex flex-col border-b border-r border-ink last:border-r-0 transition-opacity duration-300 ${
                 dim ? "opacity-25" : "opacity-100"
               }`}

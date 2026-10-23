@@ -5,9 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import ThemeSwitchButton from "./ThemeSwitchButton";
+import { useSound } from "./sound/SoundProvider";
 
 const Nav = ({ pages }: { pages: Page[] }) => {
   const router = usePathname();
+  const { soundOn, toggle } = useSound();
   const isHome = router === "/" || router?.startsWith("/local");
   // Redesign prototype: home + project pages use the new paper/ink system
   const isRedesign = isHome || router?.startsWith("/projects/");
@@ -40,6 +42,16 @@ const Nav = ({ pages }: { pages: Page[] }) => {
               </Link>
             );
           })}
+          {/* the only sound control after the entry gate: the sound hover and the spools follow it */}
+          <button
+            type="button"
+            aria-pressed={soundOn}
+            onClick={toggle}
+            className="hp-rule flex items-center gap-2 border-l border-ink px-4 md:px-6 font-mono text-[11px] uppercase tracking-wider hover:text-rust hover:transition-colors"
+          >
+            <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${soundOn ? "bg-rust" : "bg-current opacity-25"}`} />
+            Sound {soundOn ? "on" : "off"}
+          </button>
         </nav>
       </header>
     );
