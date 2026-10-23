@@ -71,9 +71,11 @@ Hovering **materials / sound / living systems** in the statement changes the who
   transition chases the inherited value and lags the page (this was the nav lag).
 
 ## Other pieces
-- Sound: `components/sound/SoundProvider.tsx` (Web Audio analyser), `components/EntryGate.tsx` (enter with/without
-  sound), `components/VoiceType.tsx` (headlines react to loudness), `components/SpoolPlayer.tsx` ("Play a spool" on
-  project pages). The spool and the ambient voice are the same placeholder file until Harry supplies recordings.
+- Sound: `components/sound/SoundProvider.tsx` (Web Audio analyser, ambient voice behind the nav's Sound switch),
+  `components/VoiceType.tsx` (headlines react to loudness, used on project pages), `components/SpoolPlayer.tsx`
+  ("Play a spool" on project pages). The entry gate ("Enter with sound / quietly") was removed on 2026-10-23, so
+  sound is off until the nav switch is clicked, which is the gesture that unlocks audio. The spool and the ambient
+  voice are the same placeholder file until Harry supplies recordings.
 - Project page (`app/(site)/projects/[project]/page.tsx`): record layout with metadata column.
 - Sanity schema (`sanity/schemas/project-schema.tsx`): disciplines (multi-select), summary, themes, partOf
   (reference → groups dev records under a main project, see `lib/group-projects.ts`), year/materials/press/audio.

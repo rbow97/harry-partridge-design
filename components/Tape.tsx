@@ -9,8 +9,8 @@ import { useSound } from "./sound/SoundProvider";
  * the tray images turn as reels, and a timecode counts.
  *
  * The signal comes from the file itself, decoded once into a loudness envelope, so
- * the tape shows it even for visitors who entered quietly. Visitors with sound on
- * hear the recording too. Canvas 2D; hidden unless <html data-mode="sound">.
+ * the tape shows it with the site's sound off. With sound on (the nav switch) the
+ * recording plays too. Canvas 2D; hidden unless <html data-mode="sound">.
  */
 
 const SPEED = 70; // px of tape per second

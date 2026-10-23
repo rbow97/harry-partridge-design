@@ -1,24 +1,19 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useRef, useState } from "react";
 
 /**
  * One shared audio graph for the whole site.
- * - An ambient "voice from the yarn" that plays after Enter with sound
- * - Any other <audio> (e.g. a project's spool) can connect to the same analyser
+ * - An ambient "voice from the yarn" behind the nav's Sound switch (off until clicked:
+ *   there is no entry gate, so the switch is the gesture that unlocks audio)
+ * - Any other <audio> (a project's spool, the homepage tape) can connect to the same analyser
  * - getLevel() returns a smoothed 0–1 loudness for things like VoiceType
  */
 
 const AMBIENT_SRC = "/assets/harry-grad-movie.mp4"; // placeholder until Harry supplies a clip
-const STORAGE_KEY = "hp-entry";
-
-type Choice = "sound" | "quiet" | null;
 
 type SoundCtx = {
-  choice: Choice;
-  ready: boolean;
   soundOn: boolean;
-  enter: (withSound: boolean) => void;
   toggle: () => void;
   getLevel: () => number;
   connectElement: (el: HTMLMediaElement) => void;
@@ -34,9 +29,7 @@ export function useSound() {
 }
 
 export default function SoundProvider({ children }: { children: React.ReactNode }) {
-  const [choice, setChoice] = useState<Choice>(null);
   const [soundOn, setSoundOn] = useState(false);
-  const [ready, setReady] = useState(false);
 
   const ambient = useRef<HTMLAudioElement>(null);
   const audioCtx = useRef<AudioContext | null>(null);
@@ -44,17 +37,6 @@ export default function SoundProvider({ children }: { children: React.ReactNode 
   const connected = useRef(new WeakSet<HTMLMediaElement>());
   const buffer = useRef<Uint8Array | null>(null);
   const level = useRef(0);
-
-  // Remember the entry choice for this browser session only
-  useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem(STORAGE_KEY) as Choice;
-      // Already entered this session: skip the gate. Audio can't auto-resume
-      // without a gesture, so sound starts off and the toggle brings it back.
-      if (saved === "quiet" || saved === "sound") setChoice(saved);
-    } catch {}
-    setReady(true);
-  }, []);
 
   const ensureGraph = useCallback(() => {
     if (!audioCtx.current) {
@@ -77,22 +59,6 @@ export default function SoundProvider({ children }: { children: React.ReactNode 
       connected.current.add(el);
     },
     [ensureGraph]
-  );
-
-  const enter = useCallback(
-    (withSound: boolean) => {
-      const c: Choice = withSound ? "sound" : "quiet";
-      setChoice(c);
-      try {
-        sessionStorage.setItem(STORAGE_KEY, c);
-      } catch {}
-      if (withSound && ambient.current) {
-        connectElement(ambient.current);
-        ambient.current.play().catch(() => {});
-        setSoundOn(true);
-      }
-    },
-    [connectElement]
   );
 
   const toggle = useCallback(() => {
@@ -132,7 +98,7 @@ export default function SoundProvider({ children }: { children: React.ReactNode 
   }, []);
 
   return (
-    <Ctx.Provider value={{ choice, ready, soundOn, enter, toggle, getLevel, connectElement, pauseAmbient }}>
+    <Ctx.Provider value={{ soundOn, toggle, getLevel, connectElement, pauseAmbient }}>
       <audio ref={ambient} src={AMBIENT_SRC} preload="none" onEnded={() => setSoundOn(false)} />
       {children}
     </Ctx.Provider>
