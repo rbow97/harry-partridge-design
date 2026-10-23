@@ -3,6 +3,7 @@ import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 import { getImageDimensions } from "@sanity/asset-utils";
 import { imageUrl } from "@/lib/sanity";
+import { videoAnchor } from "@/lib/video";
 
 /**
  * Portable Text from Sanity, rendered to static HTML (these components take no client
@@ -39,17 +40,31 @@ const linkify = (children: React.ReactNode) =>
       : c
   );
 
-const link: PortableTextComponents["marks"] = {
-  link: ({ value, children }) => (
-    <a
-      href={value?.href?.trim()}
-      {...(value?.blank || /^https?:/.test(value?.href ?? "") ? { target: "_blank", rel: "noopener" } : {})}
-      className={linkClass}
-    >
-      {children}
-    </a>
-  ),
-};
+type LinkMark = { _key: string; href?: string; blank?: boolean };
+
+const ExternalLink = ({ value, children }: { value?: LinkMark; children: React.ReactNode }) => (
+  <a
+    href={value?.href?.trim()}
+    {...(value?.blank || /^https?:/.test(value?.href ?? "") ? { target: "_blank", rel: "noopener" } : {})}
+    className={linkClass}
+  >
+    {children}
+  </a>
+);
+
+const link: PortableTextComponents["marks"] = { link: ExternalLink };
+
+// on a record, a link to a video embedded on the page jumps to it in the work column instead of leaving the site
+const recordLink = (embedded: string[]): PortableTextComponents["marks"] => ({
+  link: ({ value, children }: { value?: LinkMark; children: React.ReactNode }) =>
+    value && embedded.includes(value._key) ? (
+      <a href={`#${videoAnchor(value._key)}`} className={linkClass}>
+        {children}
+      </a>
+    ) : (
+      <ExternalLink value={value}>{children}</ExternalLink>
+    ),
+});
 
 const sheet: PortableTextComponents = {
   block: {
@@ -68,21 +83,21 @@ const sheet: PortableTextComponents = {
   types: { image: () => null },
 };
 
-const words: PortableTextComponents = {
+const words = (embedded: string[]): PortableTextComponents => ({
   block: {
     normal: ({ children }) => (hasText(children) ? <p className="text-sm leading-snug">{children}</p> : null),
     h1: ({ children }) => (hasText(children) ? <p className="text-base md:text-lg leading-snug">{children}</p> : null),
     h2: ({ children }) => (hasText(children) ? <p className="text-base md:text-lg leading-snug">{children}</p> : null),
   },
-  marks: link,
+  marks: recordLink(embedded),
   types: { image: () => null },
-};
+});
 
-const work: PortableTextComponents = {
+const work = (embedded: string[]): PortableTextComponents => ({
   block: {
     normal: ({ children }) => (hasText(children) ? <p className="text-sm md:text-base leading-relaxed max-w-[60ch]">{children}</p> : null),
   },
-  marks: link,
+  marks: recordLink(embedded),
   types: {
     image: ({ value }: { value: ImageBlock }) => {
       if (!value?.asset?._ref) return null;
@@ -94,11 +109,13 @@ const work: PortableTextComponents = {
       );
     },
   },
-};
+});
 
 export const SheetText = ({ value }: { value: PortableTextBlock[] }) => <PortableText value={value} components={sheet} />;
-export const RecordWords = ({ value }: { value: PortableTextBlock[] }) => <PortableText value={value} components={words} />;
-export const RecordWork = ({ value }: { value: PortableTextBlock[] }) => <PortableText value={value} components={work} />;
+// embedded: the keys of the video links that play on this page
+type RecordProps = { value: PortableTextBlock[]; embedded?: string[] };
+export const RecordWords = ({ value, embedded = [] }: RecordProps) => <PortableText value={value} components={words(embedded)} />;
+export const RecordWork = ({ value, embedded = [] }: RecordProps) => <PortableText value={value} components={work(embedded)} />;
 
 /** a page image in a specimen tray, beside the text */
 export function SheetTray({ image, index }: { image: ImageBlock; index: number }) {

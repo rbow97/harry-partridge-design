@@ -22,6 +22,7 @@ let analyser: AnalyserNode | null = null;
 let buffer: Uint8Array<ArrayBuffer> | null = null;
 let level = 0;
 let floor: HTMLMediaElement | null = null; // whoever has taken over from the ambient voice
+let embedded = false; // a YouTube or Vimeo player has been started, so the ambient voice stays quiet on this page
 const connected = new WeakSet<HTMLMediaElement>();
 
 const ambient = () => (typeof document === "undefined" ? null : document.querySelector<HTMLAudioElement>("#hp-ambient"));
@@ -43,7 +44,7 @@ function connect(el: HTMLMediaElement) {
 
 function playAmbient() {
   const el = ambient();
-  if (!el || floor) return;
+  if (!el || floor || embedded) return;
   connect(el);
   el.play().catch(() => {});
 }
@@ -77,6 +78,14 @@ export function release(el: HTMLMediaElement) {
   el.pause();
   floor = null;
   if ($soundOn.get()) playAmbient();
+}
+
+// an embedded video plays its own sound in an iframe we can't route, so everything else stops
+// for the rest of the page. The switch keeps its state, since the visitor still wants sound
+export function hush() {
+  embedded = true;
+  ambient()?.pause();
+  floor?.pause();
 }
 
 // Read loudness lazily — callers poll this from their own rAF loop
