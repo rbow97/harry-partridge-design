@@ -30,8 +30,8 @@ Astro 7 (static output, Vercel adapter) + React islands + Tailwind v4 + Sanity (
   `.text-accent` override blocks are gone. Mode art direction (felt, reel, flock) stays as `html[data-mode] .hp-*`.
 - The embedded Studio needs its origin in the project's CORS list at manage.sanity.io (allow credentials), or it
   shows a blank page with CORS errors for `users/me`. `http://localhost:3000` is already there, so dev is pinned to
-  3000 in `astro.config.mjs`. Project `aewk7apr` belongs to Harry's Sanity account, so only Harry can add the
-  production domain or invite collaborators.
+  3000 in `astro.config.mjs`. Harry has handed project `aewk7apr` over to Rose (2026-10-23), so
+  she can add CORS origins, edit content in Studio and run migrations herself.
 - Astro's own dev-server tip: `npx astro dev --background`; the desktop app's preview reads a global launch.json,
   so open the pane with the URL once the server is up.
 

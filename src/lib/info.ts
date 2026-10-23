@@ -82,8 +82,8 @@ export function readBio(content: unknown[]) {
 
 const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]+/;
 
-// accounts that no longer exist but are still linked in Studio. Delete an entry once Harry
-// removes that line from the Contact page, so a new account of the same kind can show
+// accounts that no longer exist but are still linked in Studio. Delete an entry once that line
+// is removed from the Contact page, so a new account of the same kind can show
 const RETIRED = ["instagram.com/harrypartridgedesign"];
 const retired = (href?: string) => !!href && RETIRED.some((r) => href.replace(/^https?:\/\/(www\.)?/, "").startsWith(r));
 
