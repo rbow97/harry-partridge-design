@@ -34,33 +34,38 @@ export default function CrossStitch({
       cancelAnimationFrame(raf);
       const box = el.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      cv.width = Math.round(box.width * dpr);
-      cv.height = Math.round(box.height * dpr);
-      cv.style.width = `${box.width}px`;
-      cv.style.height = `${box.height}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      clear();
-
       const letters = Array.from(el.querySelectorAll<HTMLElement>(".hp-letter"));
       if (!letters.length) return;
       const cs = getComputedStyle(letters[0]);
       const fontSize = parseFloat(cs.fontSize);
       const cell = Math.max(3, Math.round(fontSize / 12));
 
+      // the cloth runs a little past the text box so the last line's underline isn't clipped
+      const height = box.height + cell * 2;
+      cv.width = Math.round(box.width * dpr);
+      cv.height = Math.round(height * dpr);
+      cv.style.width = `${box.width}px`;
+      cv.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      clear();
+
       // rasterise every letter where it actually sits
       const off = document.createElement("canvas");
       off.width = Math.ceil(box.width);
-      off.height = Math.ceil(box.height);
+      off.height = Math.ceil(height);
       const o = off.getContext("2d", { willReadFrequently: true })!;
       // a heavier weight than the printed text: embroidery reads better with fuller strokes
       o.font = `${cs.fontStyle} 520 ${cs.fontSize} ${cs.fontFamily}`;
-      o.textBaseline = "middle";
+      // CSS centres the font's ascent and descent in each line, not the em square, so sit
+      // the stitched glyphs on that same baseline or they float a pixel or two high
+      o.textBaseline = "alphabetic";
       o.fillStyle = "#000";
+      const { fontBoundingBoxAscent: ascent, fontBoundingBoxDescent: descent } = o.measureText("Hg");
       const rects = letters.map((l) => {
         const r = l.getBoundingClientRect();
         const x = r.left - box.left;
         const y = r.top - box.top;
-        o.fillText(l.textContent ?? "", x, y + r.height / 2);
+        o.fillText(l.textContent ?? "", x, y + (r.height - (ascent + descent)) / 2 + ascent);
         return { x, y, w: r.width, h: r.height };
       });
       const px = o.getImageData(0, 0, off.width, off.height).data;
@@ -80,7 +85,7 @@ export default function CrossStitch({
 
       // Aida cloth: faint holes on the stitch grid
       ctx.fillStyle = "rgba(90, 60, 35, 0.16)";
-      for (let y = 0; y < box.height; y += cell) {
+      for (let y = 0; y < height; y += cell) {
         for (let x = 0; x < box.width; x += cell) ctx.fillRect(x - 0.5, y - 0.5, 1, 1);
       }
 
