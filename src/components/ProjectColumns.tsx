@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import type { ProjectGroup } from "@/lib/group-projects";
+import { projectNo, type ProjectGroup } from "@/lib/group-projects";
+import { recordLabel } from "@/types/Project";
 import CropMarks from "./CropMarks";
 import { COLUMNS, trayHeight, trayLayout } from "@/lib/tray-layout";
 import CrossStitch from "./CrossStitch";
@@ -43,8 +44,6 @@ function Letters({ text, start, wordClass = "" }: { text: string; start: number;
   );
 }
 
-const projectNo = (i: number) => `HP–${String(i + 1).padStart(3, "0")}`;
-const letter = (j: number) => String.fromCharCode(65 + j);
 
 /** A ruler along the bottom of the tray */
 function Ruler() {
@@ -287,11 +286,12 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
               <div className={`relative pt-12 pb-12 md:p-0 md:min-h-[var(--tray)] ${sheet ? "md:w-2/3" : "md:flex-1"}`}>
                 <CropMarks />
                 <span className="absolute top-5 left-7 font-mono text-[10px] uppercase tracking-wider">
-                  <span className="text-rust">{projectNo(i)}</span>
+                  <span className="text-rust whitespace-nowrap">{projectNo(i)}</span>
                 </span>
+                {/* the development records live at the end of the project's page, so the tray only says they're there */}
                 {g.records.length > 1 && (
                   <span className="absolute top-5 right-7 font-mono text-[10px] uppercase tracking-wider text-muted">
-                    {g.records.length} records
+                    + {g.records.length === 2 ? recordLabel(g.records[1]) : `${g.records.length - 1} records`}
                   </span>
                 )}
                 {/* hp-well: a size container, so the reel clip can be sized from the frame's real dimensions */}
@@ -349,15 +349,6 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                 {lead.summary && (
                   <p className={`mt-2 font-sans italic leading-snug ${sheet ? "md:mt-4 text-base md:text-lg max-w-[36ch]" : "text-sm md:text-base line-clamp-2"}`}>
                     {lead.summary}
-                  </p>
-                )}
-                {g.records.length > 1 && (
-                  <p className="relative z-10 mt-3 font-mono text-[10px] uppercase tracking-wider flex gap-3">
-                    {g.records.map((r, j) => (
-                      <a key={r._id} href={`/projects/${r.slug}`} className="underline underline-offset-4 hover:text-rust">
-                        Record {letter(j)}
-                      </a>
-                    ))}
                   </p>
                 )}
                 {/* the thread winds out along the bottom edge */}

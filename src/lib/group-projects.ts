@@ -19,3 +19,19 @@ export function groupProjects(projects: Project[]): ProjectGroup[] {
       records: [lead, ...byPriority.filter((p) => p.partOf === lead._id)],
     }));
 }
+
+/** A project's record number, from its place in the drawer, so the homepage and its pages agree */
+export const projectNo = (i: number) => `HP–${String(i + 1).padStart(3, "0")}`;
+
+/**
+ * Where a record sits in the drawer, for its number and the project bar along the foot of
+ * its page. A development record shares its main project's place.
+ */
+export function placeOf(groups: ProjectGroup[], id: string) {
+  const current = Math.max(0, groups.findIndex((g) => g.records.some((r) => r._id === id)));
+  return {
+    no: projectNo(current),
+    current,
+    projects: groups.map((g, j) => ({ no: projectNo(j), name: g.title, slug: g.records[0].slug })),
+  };
+}

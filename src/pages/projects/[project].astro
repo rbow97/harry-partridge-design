@@ -1,9 +1,14 @@
 ---
+import type { InferGetStaticPropsType } from "astro";
 import Site from "@/layouts/Site.astro";
 import { getProject, getProjects } from "@/lib/sanity";
 import { RecordWords, RecordWork } from "@/components/RichText";
 import VoiceType from "@/components/VoiceType";
 import SpoolPlayer from "@/components/SpoolPlayer";
+import VideoEmbed from "@/components/VideoEmbed";
+import { embeddable, videosIn, type Video } from "@/lib/video";
+import { recordLabel } from "@/types/Project";
+import { groupProjects, placeOf } from "@/lib/group-projects";
 
 /* A project record: the words in a screen-tall column on the left with its content at the
    bottom, stuck under the bar so it sits still while the work scrolls past; the work as a
@@ -12,13 +17,25 @@ import SpoolPlayer from "@/components/SpoolPlayer";
 
 export async function getStaticPaths() {
   const projects = await getProjects();
-  return projects.map((p) => ({ params: { project: p.slug } }));
+  const groups = groupProjects(projects);
+  return projects.map((p) => ({ params: { project: p.slug }, props: placeOf(groups, p._id) }));
 }
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const { no: recordNo, current, projects } = Astro.props as Props;
+// the projects either side in the drawer, looping round at the ends. With two projects both sides are the same one, so only next shows
+const next = projects.length > 1 ? projects[(current + 1) % projects.length] : null;
+const previous = projects.length > 2 ? projects[(current - 1 + projects.length) % projects.length] : null;
 
 const project = await getProject(Astro.params.project!);
 if (!project) return Astro.redirect("/404");
 
-const recordNo = `HP–${String(project.priority ?? 0).padStart(3, "0")}`;
+const development = project.development ?? [];
+// YouTube and Vimeo links anywhere in the record play here instead of on another site
+const videos = (await Promise.all([...videosIn(project.description), ...videosIn(project.content)].map(embeddable))).filter(
+  (v): v is Video => !!v
+);
+const embedded = videos.map((v) => v.key);
 const hasMeta = !!(project.year || project.materials || project.process || project.location || project.collaborators || project.press?.length);
 const meta = [
   ["Materials", project.materials],
@@ -30,15 +47,17 @@ const meta = [
 
 <Site title={project.name}>
   <article class="min-h-screen bg-paper text-ink">
-    <div class="px-edge pt-24 md:pt-bar pb-24 grid grid-cols-1 md:grid-cols-12 gap-x-8 lg:gap-x-12 gap-y-10">
+    <div class="px-edge pt-24 md:pt-bar pb-12 md:pb-24 grid grid-cols-1 md:grid-cols-12 gap-x-8 lg:gap-x-12 gap-y-10">
       {/* the words: a screen-tall column stuck under the bar with its content at the bottom.
           Nothing scrolls inside it; the type is sized so the longest record fits a laptop window */}
-      <div class="md:col-span-5 xl:col-span-4 self-start flex flex-col justify-end md:sticky md:top-bar md:min-h-[calc(100svh-var(--size-bar))] md:pb-7 md:pr-4">
-        <div class="flex flex-col gap-3">
+      {/* between the two bars. A window too short for the longest record scrolls the column rather than hiding its end under the project bar */}
+      <div class="md:col-span-5 xl:col-span-4 self-start flex flex-col md:sticky md:top-bar md:h-[calc(100svh-2*var(--size-bar))] md:overflow-y-auto md:pb-7 md:pr-4">
+        {/* mt-auto, not justify-end, so the top stays reachable when the column has to scroll */}
+        <div class="mt-auto flex flex-col gap-3">
           <p class="hp-label text-muted flex flex-wrap gap-x-3">
-            <span class="text-ink">{recordNo}</span>
+            <span class="text-ink whitespace-nowrap">{recordNo}</span>
             <span aria-hidden="true">·</span>
-            <span>Project record</span>
+            <span>{project.parent ? recordLabel(project) : "Project record"}</span>
             {project.year && (
               <>
                 <span aria-hidden="true">·</span>
@@ -46,13 +65,22 @@ const meta = [
               </>
             )}
           </p>
+          {/* a development record points back to the project it belongs to */}
+          {project.parent && (
+            <p class="hp-label text-muted">
+              Part of{" "}
+              <a href={`/projects/${project.parent.slug}`} class="text-rust underline decoration-1 underline-offset-4">
+                {project.parent.name.trim()}
+              </a>
+            </p>
+          )}
           <h1 class="text-2xl md:text-3xl leading-tight tracking-tight">
             {/* the title speaks: its letters follow the loudness of whatever is playing */}
             <VoiceType client:visible text={project.name} />
           </h1>
           {project.description && (
             <div class="flex flex-col gap-3 max-w-[48ch]">
-              <RecordWords value={project.description} />
+              <RecordWords value={project.description} embedded={embedded} />
             </div>
           )}
           {!!project.disciplines?.length && (
@@ -89,14 +117,75 @@ const meta = [
       </div>
 
       {/* the work: the lead image, then everything in the record, one stack that grows with the screen */}
-      <div class="md:col-span-7 xl:col-span-8 md:pt-bar flex flex-col gap-6 md:gap-8 w-full max-w-[min(100%,60vw)]">
+      <div class="md:col-span-7 xl:col-span-8 md:pt-bar flex flex-col gap-6 md:gap-8 w-full md:max-w-[min(100%,60vw)]">
         {project.image && (
           <figure>
             <img src={project.image} alt={project.imageAlt ?? ""} class="hp-img w-full h-auto" />
           </figure>
         )}
-        {project.content && <RecordWork value={project.content} />}
+        {videos.map((video) => <VideoEmbed client:visible video={video} />)}
+        {project.content && <RecordWork value={project.content} embedded={embedded} />}
+
+        {/* how it was made: the development records, once the work itself has been seen */}
+        {development.length > 0 && (
+          <section aria-labelledby="development" class="mt-6 md:mt-16">
+            <h2 id="development" class="hp-label text-muted">How it was made</h2>
+            <ul class="list-none mt-5 flex flex-col gap-10">
+              {development.map((r) => (
+                <li class="group relative [&:has(a:focus-visible)]:outline [&:has(a:focus-visible)]:outline-2 [&:has(a:focus-visible)]:outline-offset-4 [&:has(a:focus-visible)]:outline-rust grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8 items-end">
+                  {r.image && (
+                    <div class="aspect-[4/3] overflow-hidden">
+                      <img src={r.image} alt="" loading="lazy" class="hp-img w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div class="flex flex-col gap-2">
+                    <h3 class="text-2xl leading-tight tracking-tight transition-colors group-hover:text-rust">
+                      {/* stretched link: the whole entry opens the record */}
+                      <a href={`/projects/${r.slug}`} class="after:absolute after:inset-0 focus-visible:outline-none focus-visible:underline">
+                        {recordLabel(r)}
+                      </a>
+                    </h3>
+                    {r.summary && <p class="italic leading-snug max-w-[36ch]">{r.summary}</p>}
+                    <p aria-hidden="true" class="hp-label text-rust">Read the record</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
     </div>
+
+    {/* the project bar along the foot of the screen (after liyakedar.com): back to every project, or on to the
+        ones either side. It stays three cells however many projects there are, so it never gets cramped.
+        From md it sits on the page's own 12 columns, so its first divider carries the edge of the pictures down */}
+    <nav
+      aria-label="Projects"
+      class="hp-rule sticky bottom-0 z-30 h-bar flex md:grid md:grid-cols-12 md:gap-x-8 lg:gap-x-12 md:px-edge border-t border-ink bg-paper font-mono text-[11px] uppercase tracking-wider"
+    >
+      <a href="/" class="flex-1 min-w-0 flex items-center pl-edge md:pl-0 pr-4 md:col-span-5 xl:col-span-4 whitespace-nowrap hover:text-rust">All projects</a>
+      {/* phones: the two cells sit straight in the bar. md up: they split the pictures' columns in half, ruled off at the left */}
+      <div class="contents md:grid md:grid-cols-2 md:col-span-7 xl:col-span-8 md:-mr-edge hp-rule md:border-l border-ink">
+        {[
+          { label: "Previous", p: previous },
+          { label: "Next", p: next },
+        ].map(({ label, p }) =>
+          p ? (
+            <a
+              href={`/projects/${p.slug}`}
+              class:list={[
+                "hp-rule flex items-center gap-3 px-4 md:px-7 last:pr-edge whitespace-nowrap hover:text-rust",
+                label === "Next" ? "border-l border-ink md:justify-end" : "border-l md:border-l-0 border-ink",
+              ]}
+            >
+              <span>{label}</span>{" "}
+              {/* the mono face is wide, so the number only fits beside the label from sm up */}
+              <span class="hidden sm:inline text-rust whitespace-nowrap shrink-0">{p.no}</span>
+              <span class="sr-only">: {p.name}</span>
+            </a>
+          ) : null
+        )}
+      </div>
+    </nav>
   </article>
 </Site>
