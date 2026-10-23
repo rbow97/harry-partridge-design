@@ -54,7 +54,7 @@ Astro 7 (static output, Vercel adapter) + React islands + Tailwind v4 + Sanity (
   The frame is always 4:3 (`width: min(100cqw, calc(100cqh * 4 / 3))`, the well is a size container), and the
   reel clip is `circle(min(50cqh, 37.5cqw))`, both derived from the well so they hold at any tray size. Verified
   with five projects (Harry has a "Test" one with no image as of 2026-10-23). There is no theme filter (removed 2026-10-23: dimming didn't shorten a long list, and the
-  animated alternatives either warp the photos or need empty trays; Rose chose none). `themes` stays in the schema.
+  animated alternatives either warp the photos or need empty trays; Rose chose none). `themes` was dropped from the schema on 2026-10-23.
 - Transitions between modes: `.hp-img` filters are one canonical list in every mode (CSS only interpolates
   matching filter lists); the reel is a `clip-path: inset(... round 50%)` so it morphs from the rectangle; the
   reel angle is written per frame by Tape.tsx and eased back upright on exit, never a keyframe that snaps.
@@ -128,9 +128,30 @@ Hovering **materials / sound / living systems** in the statement changes the who
   Sticky by `bottom` was tried and doesn't hold while scrolling down; sticky by `top` with a min-height does. Phones: words first, then
   the stack. No "to add" placeholders. As of 2026-10-23 no record
   in Sanity has a recording or any metadata, so the spool and the rows are hidden everywhere until Harry fills them.
-- Sanity schema (`sanity/schemas/project-schema.tsx`): disciplines (multi-select), summary, themes, partOf
-  (reference → groups dev records under a main project, see `lib/group-projects.ts`), year/materials/press/audio.
+- Sanity schema (`sanity/schemas/`, step 1 of the cleanup done 2026-10-23): `defineType`/`defineField`, no `any`.
+  Projects: name, slug and main image required, main image alt required, disciplines (multi-select), summary,
+  partOf (reference: groups dev records under a main project, see `lib/group-projects.ts`), recordLabel,
+  year/materials/process/location/collaborators/press/audio. `content` holds blocks, images (alt warns if empty)
+  and `video` blocks (`video-schema.ts`, a YouTube or Vimeo link plus caption) that play in place on the record
+  page: `[project].astro` splits the content at them so each is a `VideoEmbed` island. Pages: title and slug
+  required, content images carry alt. `themes` is gone (Studio flags old data with a remove button).
+- Ordering: Projects in Studio is a drag-and-drop list (`@sanity/orderable-document-list`, pinned 2.0.25,
+  `orderRank`). The homepage sorts by `orderRank`, falling back to the hidden old `priority` until Harry picks
+  "Reset Order" once in the list's menu. As of 2026-10-23 no project has a rank.
+- Types: `npm run typegen` extracts the schema (`schema.json`, git-ignored) and generates `src/sanity.types.ts`
+  from the `defineQuery` queries in `src/lib/sanity.ts`, so fetches are typed by their query. Run it after changing
+  a query or the schema, and commit `src/sanity.types.ts` (the build needs it). Names and slugs come back nullable,
+  so the list queries skip entries missing them and the pages check before use.
   `scripts/seed-homepage-fields.mjs` is a one-off seeder (needs SANITY_API_WRITE_TOKEN; values are guesses).
+- One-off documents (step 2, 2026-10-23), pinned at the top of the Studio sidebar at fixed ids, never in the "new
+  document" menu, and only publishable (no delete, duplicate or unpublish): Site settings (`siteSettings`: the
+  homepage statement as one paragraph whose hover words carry a Mode annotation, the ambient recording, site name,
+  description, share image), About (`about`: lede, portrait, fact sections whose items link to a project or a
+  URL) and Contact (`contact`: headline, intro, the words before the email, email, links). None of them existed
+  in Sanity as of 2026-10-23. `src/lib/site.ts` falls back field by field to what the site shipped with, so the
+  site looks the same until Harry publishes them: the statement and ambient file in `FALLBACK`, Bio read from
+  its Page's free text (`lib/info.ts`) until About has a lede, Contact's lines in `CONTACT_FALLBACK` and its email
+  and links from the Page. About fills whichever page has the slug `bio` or `about`.
 - Favicon: `public/favicon.svg` (the record stamp: HP in verdigris between the tray's crop marks, drawn as paths, chosen from nine
   variants; a cross-stitch leaned on one subject) and `public/apple-touch-icon.png` rendered from it at
   180px; `Site.astro` writes the link tags.
