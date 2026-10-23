@@ -16,3 +16,6 @@ npm-debug.log*
 # local env files
 .env*.local
 
+
+# extracted by `npm run typegen` each time, only an input to it
+/schema.json

@@ -1,47 +1,52 @@
-const project = {
+import { defineArrayMember, defineField, defineType } from "sanity";
+import { orderRankField, orderRankOrdering } from "@sanity/orderable-document-list";
+import { altField } from "./image-alt";
+
+/** A project, or a development record that belongs to one (set "Part of") */
+export default defineType({
   name: "project",
   title: "Projects",
   type: "document",
+  // drag-and-drop order from the Projects list (sanity.config.ts), the order of the homepage drawer
+  orderings: [orderRankOrdering],
   preview: {
     select: { title: "name", parent: "partOf.name", media: "image" },
-    prepare: ({ title, parent, media }: any) => ({
+    prepare: ({ title, parent, media }) => ({
       title,
       subtitle: parent ? `Part of: ${parent}` : undefined,
       media,
     }),
   },
   fields: [
-    {
+    orderRankField({ type: "project", newItemPosition: "after" }),
+    defineField({
       name: "name",
       title: "Name",
       type: "string",
-    },
-    {
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
       name: "slug",
       title: "Slug",
       type: "slug",
       options: { source: "name" },
-    },
-    {
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
       name: "description",
       title: "Description",
       type: "array",
-      of: [{ type: "block" }],
-    },
-    {
+      of: [defineArrayMember({ type: "block" })],
+    }),
+    defineField({
       name: "image",
       title: "Image",
       type: "image",
       options: { hotspot: true },
-      fields: [
-        {
-          name: "alt",
-          title: "Alt",
-          type: "string",
-        },
-      ],
-    },
-    {
+      fields: [altField(true)],
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
       name: "partOf",
       title: "Part of",
       description:
@@ -50,30 +55,27 @@ const project = {
       to: [{ type: "project" }],
       options: {
         // only main projects can be parents (no nesting, no self-reference)
-        filter: ({ document }: any) => ({
-          filter: "!defined(partOf) && !(_id in [$id, $draftId])",
-          params: {
-            id: String(document._id).replace(/^drafts\./, ""),
-            draftId: `drafts.${String(document._id).replace(/^drafts\./, "")}`,
-          },
-        }),
+        filter: ({ document }) => {
+          const id = String(document._id).replace(/^drafts\./, "");
+          return { filter: "!defined(partOf) && !(_id in [$id, $draftId])", params: { id, draftId: `drafts.${id}` } };
+        },
       },
-    },
-    {
+    }),
+    defineField({
       name: "recordLabel",
       title: "Link label",
       description:
         "What the link to this record says on the main project, like 'Wire recorder tests'. Leave it blank to show 'Development'.",
       type: "string",
-      hidden: ({ document }: any) => !document?.partOf,
-    },
-    {
+      hidden: ({ document }) => !document?.partOf,
+    }),
+    defineField({
       name: "disciplines",
       title: "Disciplines",
       description: "Pick one or two — shown on the homepage as e.g. 'Sound / Textile'",
-      hidden: ({ document }: any) => !!document?.partOf, // set on the main project instead
+      hidden: ({ document }) => !!document?.partOf, // set on the main project instead
       type: "array",
-      of: [{ type: "string" }],
+      of: [defineArrayMember({ type: "string" })],
       options: {
         layout: "grid",
         list: [
@@ -87,73 +89,57 @@ const project = {
           { title: "Process", value: "Process" },
         ],
       },
-      validation: (Rule: any) => Rule.max(2).warning("Two disciplines reads best on the homepage"),
-    },
-    {
+      validation: (rule) => rule.max(2).warning("Two disciplines reads best on the homepage"),
+    }),
+    defineField({
       name: "summary",
       title: "Summary",
       description: "One line for the homepage",
-      hidden: ({ document }: any) => !!document?.partOf, // set on the main project instead
+      hidden: ({ document }) => !!document?.partOf, // set on the main project instead
       type: "string",
-    },
-    {
-      name: "themes",
-      title: "Themes",
-      description: "Lights the project up when someone hovers that word on the homepage",
-      hidden: ({ document }: any) => !!document?.partOf, // set on the main project instead
-      type: "array",
-      of: [{ type: "string" }],
-      options: {
-        list: [
-          { title: "Materials", value: "materials" },
-          { title: "Sound", value: "sound" },
-          { title: "Living systems", value: "living systems" },
-        ],
-      },
-    },
+    }),
     // Record metadata (redesign)
-    { name: "year", title: "Year", type: "number" },
-    { name: "materials", title: "Materials", type: "string" },
-    { name: "process", title: "Process", type: "string" },
-    { name: "location", title: "Location", type: "string" },
-    { name: "collaborators", title: "Collaborators", type: "string" },
-    {
+    defineField({ name: "year", title: "Year", type: "number" }),
+    defineField({ name: "materials", title: "Materials", type: "string" }),
+    defineField({ name: "process", title: "Process", type: "string" }),
+    defineField({ name: "location", title: "Location", type: "string" }),
+    defineField({ name: "collaborators", title: "Collaborators", type: "string" }),
+    defineField({
       name: "press",
       title: "Press",
       type: "array",
       of: [
-        {
+        defineArrayMember({
           type: "object",
           fields: [
-            { name: "title", title: "Title", type: "string" },
-            { name: "url", title: "URL", type: "url" },
+            defineField({ name: "title", title: "Title", type: "string" }),
+            defineField({ name: "url", title: "URL", type: "url" }),
           ],
-        },
+        }),
       ],
-    },
-    {
+    }),
+    defineField({
       name: "audio",
       title: "Audio clip (Play a spool)",
       type: "file",
       options: { accept: "audio/*" },
-    },
-    {
+    }),
+    defineField({
       name: "priority",
       title: "Priority",
+      description: "Replaced by dragging projects into order in the Projects list. Kept so older entries still sort until then.",
       type: "number",
-    },
-    {
+      hidden: true,
+    }),
+    defineField({
       name: "content",
       title: "Content",
       type: "array",
       of: [
-        {
-          type: "block",
-        },
-        { type: "image" },
+        defineArrayMember({ type: "block" }),
+        defineArrayMember({ type: "image", options: { hotspot: true }, fields: [altField(false)] }),
+        defineArrayMember({ type: "video" }),
       ],
-    },
+    }),
   ],
-};
-
-export default project;
+});

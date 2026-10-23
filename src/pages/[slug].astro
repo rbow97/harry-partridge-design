@@ -37,7 +37,7 @@ const spans = { list: "md:col-span-7 lg:col-span-5", short: "md:col-span-3 lg:co
 const external = (href?: string) => !!href && /^https?:/.test(href);
 ---
 
-<Site title={page.title}>
+<Site title={page.title ?? undefined}>
   {isContact ? (
     <article class="min-h-[100svh] bg-paper text-ink flex flex-col pt-bar">
       <div class="px-edge pt-14 pb-10 md:pb-14 flex-1 flex flex-col justify-end gap-5">

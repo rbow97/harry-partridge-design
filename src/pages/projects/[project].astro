@@ -6,7 +6,7 @@ import { RecordWords, RecordWork } from "@/components/RichText";
 import VoiceType from "@/components/VoiceType";
 import SpoolPlayer from "@/components/SpoolPlayer";
 import VideoEmbed from "@/components/VideoEmbed";
-import { embeddable, videosIn, type Video } from "@/lib/video";
+import { embeddable, videoBlock, videosIn, type Video } from "@/lib/video";
 import { recordLabel } from "@/types/Project";
 import { groupProjects, placeOf } from "@/lib/group-projects";
 
@@ -36,6 +36,28 @@ const videos = (await Promise.all([...videosIn(project.description), ...videosIn
   (v): v is Video => !!v
 );
 const embedded = videos.map((v) => v.key);
+
+// The content in runs: text and images between video blocks go through RecordWork, and each video
+// block plays where it sits, as an island (it can't hydrate inside the static Portable Text). A block
+// whose video can't be embedded (Vimeo with embedding off) stays a plain link to it
+type Piece =
+  | { kind: "work"; blocks: NonNullable<typeof project.content> }
+  | { kind: "video"; video: Video }
+  | { kind: "link"; url: string; caption: string };
+const pieces: Piece[] = [];
+for (const block of project.content ?? []) {
+  const b = block as { _type?: string; _key?: string; url?: string; caption?: string };
+  if (b._type === "video") {
+    const v = videoBlock(b);
+    const video = v ? await embeddable(v) : null;
+    if (video) pieces.push({ kind: "video", video });
+    else if (b.url) pieces.push({ kind: "link", url: b.url, caption: b.caption?.trim() || "Video" });
+    continue;
+  }
+  const last = pieces.at(-1);
+  if (last?.kind === "work") last.blocks.push(block);
+  else pieces.push({ kind: "work", blocks: [block] });
+}
 const hasMeta = !!(project.year || project.materials || project.process || project.location || project.collaborators || project.press?.length);
 const meta = [
   ["Materials", project.materials],
@@ -45,7 +67,7 @@ const meta = [
 ].filter(([, v]) => v) as [string, string][];
 ---
 
-<Site title={project.name}>
+<Site title={project.name ?? undefined}>
   <article class="min-h-screen bg-paper text-ink">
     <div class="px-edge pt-24 md:pt-bar pb-12 md:pb-24 grid grid-cols-1 md:grid-cols-12 gap-x-8 lg:gap-x-12 gap-y-10">
       {/* the words: a screen-tall column stuck under the bar with its content at the bottom.
@@ -68,13 +90,13 @@ const meta = [
             <p class="hp-label text-muted">
               Part of{" "}
               <a href={`/projects/${project.parent.slug}`} class="hp-link text-accent">
-                {project.parent.name.trim()}
+                {project.parent.name?.trim()}
               </a>
             </p>
           )}
           <h1 class="text-2xl md:text-3xl leading-tight tracking-tight">
             {/* the title speaks: its letters follow the loudness of whatever is playing */}
-            <VoiceType client:visible text={project.name} />
+            <VoiceType client:visible text={project.name ?? ""} />
           </h1>
           {project.description && (
             <div class="flex flex-col gap-3 max-w-[48ch]">
@@ -122,7 +144,17 @@ const meta = [
           </figure>
         )}
         {videos.map((video) => <VideoEmbed client:visible video={video} />)}
-        {project.content && <RecordWork value={project.content} embedded={embedded} />}
+        {pieces.map((piece) =>
+          piece.kind === "work" ? (
+            <RecordWork value={piece.blocks} embedded={embedded} />
+          ) : piece.kind === "video" ? (
+            <VideoEmbed client:visible video={piece.video} />
+          ) : (
+            <p class="text-sm">
+              <a href={piece.url} target="_blank" rel="noopener" class="hp-link text-accent">{piece.caption}</a>
+            </p>
+          )
+        )}
 
         {/* how it was made: the development records, once the work itself has been seen */}
         {development.length > 0 && (

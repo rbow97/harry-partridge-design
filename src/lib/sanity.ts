@@ -1,7 +1,6 @@
 import { sanityClient } from "sanity:client";
 import { createImageUrlBuilder } from "@sanity/image-url";
-import type { Project } from "@/types/Project";
-import type { Page } from "@/types/Page";
+import { defineQuery } from "groq";
 
 /**
  * Every read from Sanity. The site is static, so these run at build time; a Sanity
@@ -16,21 +15,23 @@ const projectCore = /* groq */ `
   "slug": slug.current,
   "image": image.asset->url,
   "imageAlt": image.alt,
+  orderRank,
   priority,
   "audio": audio.asset->url,
   "partOf": partOf._ref,
   recordLabel,
-  themes,
   disciplines,
   // fall back to Harry's existing description until a summary is written
   "summary": coalesce(summary, pt::text(description))
 `;
 
-export const getProjects = () => sanityClient.fetch<Project[]>(`*[_type == "project"]{ ${projectCore} }`);
+// defineQuery lets TypeGen read each query and generate its result type (src/sanity.types.ts), and the
+// client then types each fetch from it. Run `npm run typegen` after changing a query or the schema
+// a project with no name or slug yet (a half-made entry) can't be linked to, so it's left out
+export const projectsQuery = defineQuery(`*[_type == "project" && defined(name) && defined(slug.current)]{ ${projectCore} }`);
+export const getProjects = () => sanityClient.fetch(projectsQuery);
 
-export const getProject = (slug: string) =>
-  sanityClient.fetch<Project | null>(
-    `*[_type == "project" && slug.current == $slug][0]{
+export const projectQuery = defineQuery(`*[_type == "project" && slug.current == $slug][0]{
       ${projectCore},
       description,
       content,
@@ -43,7 +44,7 @@ export const getProject = (slug: string) =>
       // a development record links back to its main project
       "parent": partOf->{ name, "slug": slug.current },
       // a main project shows its development records at the end of the page
-      "development": *[_type == "project" && partOf._ref == ^._id] | order(coalesce(priority, 999) asc){
+      "development": *[_type == "project" && partOf._ref == ^._id] | order(orderRank asc, coalesce(priority, 999) asc){
         _id,
         name,
         "slug": slug.current,
@@ -51,17 +52,14 @@ export const getProject = (slug: string) =>
         recordLabel,
         "summary": coalesce(summary, pt::text(description))
       }
-    }`,
-    { slug }
-  );
+    }`);
+export const getProject = (slug: string) => sanityClient.fetch(projectQuery, { slug });
 
-export const getPages = () =>
-  sanityClient.fetch<Page[]>(`*[_type == "page"]{ _id, _createdAt, title, "slug": slug.current }`);
+export const pagesQuery = defineQuery(`*[_type == "page" && defined(title) && defined(slug.current)]{ _id, _createdAt, title, "slug": slug.current }`);
+export const getPages = () => sanityClient.fetch(pagesQuery);
 
-export const getPage = (slug: string) =>
-  sanityClient.fetch<Page | null>(`*[_type == "page" && slug.current == $slug][0]{ _id, _createdAt, title, "slug": slug.current, content }`, {
-    slug,
-  });
+export const pageQuery = defineQuery(`*[_type == "page" && slug.current == $slug][0]{ _id, _createdAt, title, "slug": slug.current, content }`);
+export const getPage = (slug: string) => sanityClient.fetch(pageQuery, { slug });
 
 const builder = createImageUrlBuilder(sanityClient);
 /** a Sanity image at a given width, in the browser's best format */

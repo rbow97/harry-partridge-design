@@ -1,11 +1,9 @@
-import type { PortableTextBlock } from "@portabletext/types";
+import type { PageQueryResult, PagesQueryResult } from "@/sanity.types";
 
-/** A Sanity page (Bio, Contact) */
-export type Page = {
-  _id: string;
-  _createdAt: string;
-  title: string;
-  slug: string;
-  // only on a single page (getPage)
-  content?: PortableTextBlock[];
-};
+// generated from the schema and the queries in lib/sanity.ts (`npm run typegen`)
+
+/** A Sanity page (Bio, Contact) as the nav lists it (pagesQuery) */
+export type Page = PagesQueryResult[number];
+
+/** One page with its content (pageQuery) */
+export type PageWithContent = NonNullable<PageQueryResult>;

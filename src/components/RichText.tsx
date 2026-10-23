@@ -1,6 +1,6 @@
 import React from "react";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
-import type { PortableTextBlock } from "@portabletext/types";
+import type { TypedObject } from "@portabletext/types";
 import { getImageDimensions } from "@sanity/asset-utils";
 import { imageUrl } from "@/lib/sanity";
 import { videoAnchor } from "@/lib/video";
@@ -111,6 +111,8 @@ const work = (embedded: string[]): PortableTextComponents => ({
         </figure>
       );
     },
+    // video blocks play as islands between the runs of content (the record page splits at them)
+    video: () => null,
   },
 });
 
@@ -132,12 +134,15 @@ const notes: PortableTextComponents = {
   types: { image: () => null },
 };
 
-export const InfoLede = ({ value }: { value: PortableTextBlock[] }) => <PortableText value={value} components={lede} />;
-export const InfoNotes = ({ value }: { value: PortableTextBlock[] }) => <PortableText value={value} components={notes} />;
+// The renderers take any Portable Text array, as PortableText itself does: Sanity's generated types
+// (src/sanity.types.ts) describe blocks a little more loosely than PortableTextBlock does
+type Content = TypedObject[];
+export const InfoLede = ({ value }: { value: Content }) => <PortableText value={value} components={lede} />;
+export const InfoNotes = ({ value }: { value: Content }) => <PortableText value={value} components={notes} />;
 
-export const SheetText = ({ value }: { value: PortableTextBlock[] }) => <PortableText value={value} components={sheet} />;
+export const SheetText = ({ value }: { value: Content }) => <PortableText value={value} components={sheet} />;
 // embedded: the keys of the video links that play on this page
-type RecordProps = { value: PortableTextBlock[]; embedded?: string[] };
+type RecordProps = { value: Content; embedded?: string[] };
 export const RecordWords = ({ value, embedded = [] }: RecordProps) => <PortableText value={value} components={words(embedded)} />;
 export const RecordWork = ({ value, embedded = [] }: RecordProps) => <PortableText value={value} components={work(embedded)} />;
 
