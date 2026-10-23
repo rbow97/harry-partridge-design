@@ -382,34 +382,62 @@ html[data-flock="settling"] .hp-flock {
    stops for anyone who asks for reduced motion.
    ------------------------------------------------------------------ */
 
-/* a link's underline is a thread, 1px unless --hp-thread-weight says otherwise. On hover it's pulled through, out to the right and back in
-   from the left, the way the tray thread winds on. --hp-thread changes its colour, rust by default */
+:root {
+  /* the cross-stitch, one tile per thread colour: an SVG can't read a CSS colour */
+  --hp-stitch: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%225%22%20height%3D%225%22%20viewBox%3D%220%200%205%205%22%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22rgb%2890%2C60%2C35%29%22%20fill-opacity%3D%220.16%22/%3E%3Cpath%20d%3D%22M0.8999999999999999%200.8999999999999999L4.1%204.1M4.1%200.8999999999999999L0.8999999999999999%204.1%22%20stroke%3D%22%23a4471f%22%20stroke-width%3D%221.30%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3C/svg%3E");
+}
+html[data-mode="sound"] {
+  --hp-stitch: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%225%22%20height%3D%225%22%20viewBox%3D%220%200%205%205%22%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22rgb%2890%2C60%2C35%29%22%20fill-opacity%3D%220.16%22/%3E%3Cpath%20d%3D%22M0.8999999999999999%200.8999999999999999L4.1%204.1M4.1%200.8999999999999999L0.8999999999999999%204.1%22%20stroke%3D%22%23e8875e%22%20stroke-width%3D%221.30%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3C/svg%3E");
+}
+
+/* Links: rust, with an arrow after them, so they read as links without leaning on colour alone
+   (rust against the body ink is under 3:1): ↗ leaves the site, → stays on it. No underline at rest.
+   On hover the arrow leans out the way it points and the materials mode's cross-stitch
+   (CrossStitch.tsx) is sewn in underneath from the left: a strip of page colour hiding the
+   stitches draws back to the right. Its leading edge is feathered over 10px, so each cross
+   fades in as the edge passes rather than being cut in half */
 @utility hp-link {
   text-decoration: none;
-  background-image: linear-gradient(var(--hp-thread, var(--accent)), var(--hp-thread, var(--accent)));
-  background-repeat: no-repeat;
-  background-size: 100% var(--hp-thread-weight, 1px);
-  background-position: 0 100%;
-  padding-bottom: 0.1em;
-  transition: color 0.3s ease;
+  background-image: linear-gradient(to right, transparent, var(--surface) 10px), var(--hp-stitch);
+  background-repeat: no-repeat, round no-repeat; /* round: only whole crosses */
+  background-position: 100% 100%, 0 100%;
+  background-size: calc(100% + 10px) 5px, 5px 5px;
+  padding-bottom: 6px;
+  transition: color 0.3s ease, background-size 0.5s cubic-bezier(0.25, 0.6, 0.3, 1);
 }
-@keyframes hp-thread {
-  0% {
-    background-size: 100% var(--hp-thread-weight, 1px);
-    background-position: 100% 100%;
-  }
-  45% {
-    background-size: 0 var(--hp-thread-weight, 1px);
-    background-position: 100% 100%;
-  }
-  55% {
-    background-size: 0 var(--hp-thread-weight, 1px);
-    background-position: 0 100%;
-  }
-  100% {
-    background-size: 100% var(--hp-thread-weight, 1px);
-    background-position: 0 100%;
-  }
+.hp-link::after {
+  content: "\2192";
+  display: inline-block;
+  margin-left: 0.25em;
+  font-family: var(--font-mono);
+  font-size: 0.7em;
+  transition: transform 0.3s ease-out;
+}
+.hp-link[target="_blank"]::after {
+  content: "\2197";
+}
+/* set again here, outside the utility layer: the mode-colour rule for .text-accent (above) would
+   otherwise replace this transition, and the stitches would jump in rather than sew */
+.hp-link {
+  transition:
+    color var(--dur-mode),
+    background-size 0.5s cubic-bezier(0.25, 0.6, 0.3, 1);
+}
+.hp-link:hover,
+.hp-link:focus-visible {
+  background-size: 0 5px, 5px 5px;
+}
+.hp-link:hover::after,
+.hp-link:focus-visible::after {
+  transform: translateX(0.15em);
+}
+.hp-link[target="_blank"]:hover::after,
+.hp-link[target="_blank"]:focus-visible::after {
+  transform: translate(0.15em, -0.15em);
+}
+/* the big address on Contact is plainly a link, and has its own copy button */
+.hp-email::after {
+  content: none;
 }
 
 /* a button fills with ink from the left, and its label turns paper as the fill passes */
@@ -428,14 +456,10 @@ html[data-flock="settling"] .hp-flock {
   color: var(--surface);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .hp-link:hover,
-  .hp-link:focus-visible {
-    animation: hp-thread 0.7s cubic-bezier(0.65, 0, 0.35, 1);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  .hp-fill {
+  .hp-fill,
+  .hp-link,
+  .hp-link::after {
     transition: none;
   }
 }
