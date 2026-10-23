@@ -6,19 +6,9 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  darkMode: "class",
   theme: {
     extend: {
-      width: {
-        "600": "600px",
-      },
-      maxHeight: {
-        "500": "500px",
-      },
       colors: {
-        yellow: "#E2FA00",
-        black: "#121212",
-        white: "#FEFCFB",
         // Redesign tokens — "precise, tactile, curious, but not cold"
         paper: "#F4F1EA",
         ink: "#1A1A17",
@@ -27,7 +17,6 @@ const config: Config = {
         rule: "#1A1A1726",
       },
       fontFamily: {
-        inconsolata: ["Inconsolata", "monospace"],
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },

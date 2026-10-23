@@ -4,6 +4,7 @@ import { getImageDimensions } from "@sanity/asset-utils";
 import urlBuilder from "@sanity/image-url";
 import { createClient } from "next-sanity";
 import clientConfig from "@/sanity/config/client-config";
+import { notFound } from "next/navigation";
 import React from "react";
 
 type Props = {
@@ -101,19 +102,26 @@ function Tray({ image, index }: { image: ImageBlock; index: number }) {
   );
 }
 
+export async function generateMetadata({ params }: Props) {
+  const page = await getPage(params.slug);
+  return { title: page?.title };
+}
+
 async function Page({ params }: Props) {
   const page = await getPage(params.slug);
-  const content = page?.content ?? [];
+  if (!page) notFound();
+  const content = page.content ?? [];
   const images = content.filter((b): b is ImageBlock => (b as { _type?: string })._type === "image");
 
   return (
     <article className="min-h-screen bg-paper text-ink">
       <div className="px-6 md:px-7 pt-28 md:pt-32 pb-24">
-        <p className="font-mono text-[11px] uppercase tracking-wider text-muted flex flex-wrap gap-x-3">
+        {/* the record line is the page's heading: small mono, but a real h1 */}
+        <h1 className="font-mono font-normal text-[11px] uppercase tracking-wider text-muted flex flex-wrap gap-x-3 m-0">
           <span className="text-ink">Harry Partridge</span>
           <span aria-hidden="true">·</span>
-          <span>{page?.title}</span>
-        </p>
+          <span>{page.title}</span>
+        </h1>
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-12">
           <div className={`${images.length ? "lg:col-span-7" : "lg:col-span-9"} flex flex-col gap-6`}>

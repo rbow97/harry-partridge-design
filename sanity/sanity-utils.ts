@@ -11,7 +11,6 @@ export async function getProjects(): Promise<Project[]> {
       name,
       "slug": slug.current,
       "image": image.asset->url,
-      url,
       priority,
       content,
       "audio": audio.asset->url,
@@ -21,11 +20,12 @@ export async function getProjects(): Promise<Project[]> {
       // fall back to Harry's existing description until a summary is written
       "summary": coalesce(summary, pt::text(description)),
     }`,
+    {},
     { cache: "no-store" }
   );
 }
 
-export async function getProject(slug: string): Promise<Project> {
+export async function getProject(slug: string): Promise<Project | null> {
   return createClient(clientConfig).fetch(
     groq`*[_type == "project" && slug.current == $slug][0]{
       _id,
@@ -34,7 +34,6 @@ export async function getProject(slug: string): Promise<Project> {
       description,
       "slug": slug.current,
       "image": image.asset->url,
-      url,
       priority,
       content,
       year,
@@ -64,11 +63,12 @@ export async function getPages(): Promise<Page[]> {
       title,
       "slug": slug.current,
     }`,
+    {},
     { cache: "no-store" }
   );
 }
 
-export async function getPage(slug: string): Promise<Page> {
+export async function getPage(slug: string): Promise<Page | null> {
   return createClient(clientConfig).fetch(
     groq`*[_type == "page" && slug.current == $slug][0]{
       _id,

@@ -58,9 +58,14 @@ Hovering **materials / sound / living systems** in the statement changes the who
   recording's signal passing a head (canvas), and a timecode replaces the project count. The statement letters stay
   still (Rose's call, 2026-10-23). The signal comes from decoding the file into a 100Hz envelope, so the tape runs
   silently for quiet visitors; with sound on it plays the spool and pauses the ambient voice. The recording is the
-  first project with `audio`, else the ambient clip. The only sound control is `components/SoundSwitch.tsx`, at the right
-  end of the bar in muted type (a control, not a page), meter-only beside the menu button on phones. A fixed corner
-  was tried on 2026-10-23 and sat on content on every page.
+  first project with `audio`, else the ambient clip. The recording is only audible once "sound" is pinned by a
+  click or tap: hovering and Tabbing run the tape silently, so focus never starts audio. The only sound control is
+  `components/SoundSwitch.tsx`, at the right end of the bar in muted type (a control, not a page), meter-only beside
+  the menu button on phones. A fixed corner was tried on 2026-10-23 and sat on content on every page.
+- Sound model (`SoundProvider`): `soundOn` is the visitor's one setting and the switch always reflects it. The
+  ambient voice loops while sound is on and nothing else has the floor; a spool or the tape calls `take(el)`
+  (ambient pauses) and `release(el)` (ambient resumes). Turning the switch off silences whatever is playing. The
+  earlier `pauseAmbient()` flipped `soundOn`, so the switch showed off while a recording played.
 - living systems: **flock** (`components/Flock.tsx`, chosen 2026-10-22). The tray images dissolve into ~5k boids
   on a fixed canvas that wheel around the cursor and fly home to re-form the images on leave. Images are sampled
   from a 600px Sanity copy (`crossOrigin`), one particle per 10px, drawn as colour-bucketed rects. `<html data-flock>`
@@ -73,6 +78,12 @@ Hovering **materials / sound / living systems** in the statement changes the who
 - Client components still render on the server: nothing may touch `window`, `innerWidth` or `document` outside an
   effect. A ref initialised from `innerWidth` in Flock threw on the server and silently turned the whole homepage
   client-only until 2026-10-23. Check with `curl localhost:3000 | grep hp-statement` after touching mode code.
+- Accessibility baseline (2026-10-23): the statement is the homepage `h1`; Bio, Contact and record pages each have
+  one `h1` and their own `<title>` via `generateMetadata`; the word buttons carry `aria-label`s and a rust
+  focus-visible ring (visible in materials, where the letters go transparent); letter spans are `aria-hidden` with
+  the text repeated once in `.sr-only` (Letters, VoiceType); a focused tray link rings the whole cell. Still open
+  from the review: contrast of muted/rust on the felt and petri surfaces (4.2 to 4.4:1), hover rust in sound mode
+  (2.9:1), no live region for mode changes, process image hover-only, no skip link, no transcripts.
 - Rules: letter effects must never change letter widths (reflow moves words under the cursor and flips the mode);
   keep ≥50fps; respect prefers-reduced-motion. Only `.hp-surface` transitions `color` - a child with its own colour
   transition chases the inherited value and lags the page (this was the nav lag).
@@ -111,6 +122,8 @@ Hovering **materials / sound / living systems** in the statement changes the who
   `normal` is body; blank blocks are skipped. The legacy nav, dark-mode provider and theme switch are deleted,
   every page uses the slim ruled bar. `html` and `body` carry the paper colour (and the mode's colour), so
   overscroll never shows white.
+- Sanity client: `fetch(query, params, options)`, so `{ cache: "no-store" }` goes third with `{}` params. Both list
+  queries had it second, where it was a harmless `$cache` param and the nav could have cached at build.
 - `/projects` redirects to `/` (next.config.js) and the old grid page is deleted (2026-10-23): the homepage is the
   index. The nav drops any Sanity page with slug `projects` (`Nav.tsx`), so Harry's Studio document can stay.
   Record pages at `/projects/[project]` are unchanged.

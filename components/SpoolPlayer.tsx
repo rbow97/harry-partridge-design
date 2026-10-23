@@ -5,40 +5,45 @@ import { useSound } from "./sound/SoundProvider";
 
 /**
  * "Play a spool" — the site's signature interaction.
- * A yarn spool that turns while a voice recording plays,
- * with a single thread that winds out as progress.
+ * A yarn spool that turns while a voice recording plays, with a single thread that
+ * winds out as progress. Playing takes the floor from the ambient voice; if the site's
+ * sound is off, pressing play turns it on, since the press is an explicit ask for audio.
  */
 export default function SpoolPlayer({ src, label }: { src: string; label?: string }) {
   const audio = useRef<HTMLAudioElement>(null);
-  const { connectElement, pauseAmbient } = useSound();
+  const { soundOn, toggle, take, release } = useSound();
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const el = audio.current;
     if (!el) return;
+    // the element is the truth: it may be paused by the switch or ended on its own
     const onTime = () => setProgress(el.duration ? el.currentTime / el.duration : 0);
-    const onEnd = () => setPlaying(false);
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    const onEnd = () => release(el);
     el.addEventListener("timeupdate", onTime);
+    el.addEventListener("play", onPlay);
+    el.addEventListener("pause", onPause);
     el.addEventListener("ended", onEnd);
     return () => {
       el.removeEventListener("timeupdate", onTime);
+      el.removeEventListener("play", onPlay);
+      el.removeEventListener("pause", onPause);
       el.removeEventListener("ended", onEnd);
+      release(el);
     };
-  }, []);
+  }, [release]);
 
-  const toggle = () => {
+  const press = () => {
     const el = audio.current;
     if (!el) return;
     if (el.paused) {
-      // route through the shared analyser so the title speaks too
-      connectElement(el);
-      pauseAmbient();
-      el.play();
-      setPlaying(true);
+      if (!soundOn) toggle();
+      take(el);
     } else {
-      el.pause();
-      setPlaying(false);
+      release(el);
     }
   };
 
@@ -47,8 +52,8 @@ export default function SpoolPlayer({ src, label }: { src: string; label?: strin
       <audio ref={audio} src={src} preload="metadata" crossOrigin="anonymous" />
       <button
         type="button"
-        onClick={toggle}
-        aria-pressed={playing}
+        onClick={press}
+        aria-label={playing ? "Pause the spool" : label ?? "Play a spool"}
         className="group flex items-center gap-3 shrink-0 font-mono text-xs uppercase tracking-wider text-ink hover:text-rust focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rust"
       >
         <svg
@@ -65,7 +70,7 @@ export default function SpoolPlayer({ src, label }: { src: string; label?: strin
           <circle cx="20" cy="20" r="3" fill="currentColor" />
           <line x1="20" y1="1" x2="20" y2="8" stroke="currentColor" strokeWidth="1.5" />
         </svg>
-        <span>{playing ? "Pause" : label ?? "Play a spool"}</span>
+        <span aria-hidden="true">{playing ? "Pause" : label ?? "Play a spool"}</span>
       </button>
       {/* the thread */}
       <div className="relative flex-1 h-px bg-rule" aria-hidden="true">

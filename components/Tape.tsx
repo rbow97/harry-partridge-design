@@ -65,17 +65,16 @@ function standIn(t: number) {
 const trays = () => Array.from(document.querySelectorAll<HTMLElement>("ol > li"));
 const turn = (angles: number[]) => trays().forEach((li, i) => li.style.setProperty("--reel", `${(angles[i] ?? 0).toFixed(2)}deg`));
 
-export default function Tape({ active, src }: { active: boolean; src: string }) {
+export default function Tape({ active, audible, src }: { active: boolean; audible: boolean; src: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const audio = useRef<HTMLAudioElement>(null);
   const sound = useSound();
-  // read through a ref: pausing the ambient voice flips soundOn, and that must not restart the effect
+  // read through a ref so the switch flipping never restarts this effect mid-tape
   const soundRef = useRef(sound);
   soundRef.current = sound;
   const tape = useRef<{ env: Float32Array; duration: number } | null | undefined>(undefined);
   const raf = useRef(0);
   const clock = useRef({ start: 0, offset: 0 }); // the silent clock: where the tape is when no audio plays
-  const heard = useRef(false); // whether this hover is audible, decided when it starts
   // the reels' angles, kept between hovers so a reel never jumps; written to --reel on each tray
   const reels = useRef<number[]>([]);
 
@@ -89,11 +88,9 @@ export default function Tape({ active, src }: { active: boolean; src: string }) 
     if (!active) {
       cancelAnimationFrame(raf.current);
       raf.current = 0;
-      audio.current?.pause();
-      // the tape stops where it is, so the next hover carries on from there, and
-      // the ambient voice comes back if the spool had taken its place
-      if (heard.current && !soundRef.current.soundOn) soundRef.current.toggle();
-      heard.current = false;
+      // the tape stops where it is, so the next hover carries on from there, and gives
+      // the floor back to the ambient voice
+      if (spool) soundRef.current.release(spool);
       // the reels slow to upright over the mode's exit, the short way round
       const from = reels.current.slice();
       const to = from.map((a) => Math.round(a / 360) * 360);
@@ -126,18 +123,13 @@ export default function Tape({ active, src }: { active: boolean; src: string }) 
     const remeasure = () => (rulers = Array.from(document.querySelectorAll<HTMLElement>(".hp-ruler")).map((r) => r.getBoundingClientRect()));
     addEventListener("scroll", remeasure, { passive: true });
 
+    // the recording is only heard once the word is pinned by a click or tap: hovering, and
+    // Tabbing onto the word, run the tape silently. The provider decides whether sound is on
     const play = () => {
       const a = audio.current;
-      // audible only while the site's sound is on (the nav toggle, or Enter with sound)
-      heard.current = !!a && soundRef.current.soundOn;
-      if (!a || !heard.current) return;
-      // route through the shared analyser; the ambient voice gives way to the spool
-      soundRef.current.connectElement(a);
-      soundRef.current.pauseAmbient();
+      if (!a || !audible) return;
       a.currentTime = clock.current.offset % (a.duration || 1e9);
-      a.play().catch(() => {
-        heard.current = false;
-      });
+      soundRef.current.take(a);
     };
 
     let lastFrame = performance.now();
@@ -207,7 +199,7 @@ export default function Tape({ active, src }: { active: boolean; src: string }) 
       const playing = !!spool && !spool.paused;
       clk.offset = playing ? spool.currentTime : clk.offset + (performance.now() - clk.start) / 1000;
     };
-  }, [active, src]);
+  }, [active, audible, src]);
 
   return (
     <>

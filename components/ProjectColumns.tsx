@@ -14,32 +14,25 @@ const AMBIENT = "/assets/harry-grad-movie.mp4";
 
 type Mode = "materials" | "sound" | "living";
 
-/** Split text into letters so the page modes can animate them (the sentence is read via aria-label) */
+/** Split text into letters so the page modes can animate them. The letter spans are hidden
+ *  from assistive tech and the text is repeated once, visually hidden, so it reads as words */
 function Letters({ text, start, wordClass = "" }: { text: string; start: number; wordClass?: string }) {
   return (
     <>
+      <span className="sr-only">{text}</span>
       {text.split(/(\s+)/).map((w, wi) =>
         /^\s+$/.test(w) ? (
           w
         ) : (
-          <span key={wi} className={`inline-block whitespace-nowrap ${wordClass}`}>
+          <span key={wi} aria-hidden="true" className={`inline-block whitespace-nowrap ${wordClass}`}>
             {Array.from(w).map((ch, ci) => {
               const i = start + text.split(/(\s+)/).slice(0, wi).join("").length + ci;
               return (
                 <span
                   key={ci}
                   className="hp-letter relative inline-block"
-                  data-ch={ch}
-                  // --r / --y: a fixed, uneven tilt and offset per letter (used by the materials mode)
-                  style={
-                    {
-                      "--i": i,
-                      "--r": `${(((i * 37) % 7) - 3) * 2}deg`,
-                      "--y": `${(((i * 53) % 5) - 2) * 0.04}em`,
-                      "--s": `${0.025 + ((i * 37) % 5) * 0.01}em`,
-                      "--sd": i % 2 ? 1 : -1,
-                    } as React.CSSProperties
-                  }
+                  // --i: the letter's index in the sentence, for staggered transitions
+                  style={{ "--i": i } as React.CSSProperties}
                 >
                   {ch}
                 </span>
@@ -88,7 +81,7 @@ function Ruler() {
 
 export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
   const [mode, setMode] = useState<Mode | null>(null);
-  const statement = useRef<HTMLParagraphElement>(null);
+  const statement = useRef<HTMLHeadingElement>(null);
   // whether the last pointer on a statement word was a finger (see the word buttons)
   const touch = useRef(false);
   // a click pins a mode, so the cursor can leave the word and roam the page in it (the
@@ -99,7 +92,8 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
   useEffect(() => {
     if (!mode) return;
     const off = (e: PointerEvent) => {
-      if ((e.target as Element | null)?.closest?.(".hp-statement button")) return;
+      // the words themselves handle their own clicks, and the bar's controls shouldn't release a pin
+      if ((e.target as Element | null)?.closest?.(".hp-statement button, header")) return;
       if (pinned || e.pointerType === "touch") {
         setPinned(null);
         setMode(null);
@@ -213,7 +207,11 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
       {/* materials: the header is cloth; once the word is clicked (pinned), the cursor sews it and the rules */}
       <Stitch cloth={mode === "materials"} sewing={mode === "materials" && pinned === "materials"} />
       {/* sound: the page runs a recording like a tape machine */}
-      <Tape active={mode === "sound"} src={groups.flatMap((g) => g.records).find((r) => r.audio)?.audio ?? AMBIENT} />
+      <Tape
+        active={mode === "sound"}
+        audible={pinned === "sound"}
+        src={groups.flatMap((g) => g.records).find((r) => r.audio)?.audio ?? AMBIENT}
+      />
       {/* SVG filters for the materials mode (felt / fuzz) */}
       <svg aria-hidden="true" width="0" height="0" className="absolute">
         <filter id="hp-fuzz" x="-8%" y="-8%" width="116%" height="116%">
@@ -225,11 +223,10 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
       {/* Statement */}
       {/* inset to the photo edge in the trays below (their wells are inset-x-6 / md:inset-x-7) */}
       <section className="relative px-6 md:px-7 py-7 md:py-8">
-        <p
+        {/* the statement is the page's heading; phones centre it, from md it sits on the shared left edge */}
+        <h1
           ref={statement}
-          aria-label="I am a designer trained in art and engineering, building working objects from materials, sound and living systems."
-          // phones: centred, like the reference; from md it sits on the shared left edge
-          className="hp-statement relative font-sans text-[8vw] md:text-[3vw] leading-[1.05] tracking-tight max-w-[34ch] text-center md:text-left mx-auto md:mx-0">
+          className="hp-statement relative font-sans font-normal text-[8vw] md:text-[3vw] leading-[1.05] tracking-tight max-w-[34ch] text-center md:text-left mx-auto md:mx-0 m-0">
           {sentence.map((part, k) => {
             if (typeof part === "string") {
               const el = <Letters key={k} text={part} start={count} />;
@@ -256,7 +253,14 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                   setMode(release ? null : m);
                 }}
                 // hp-living: where the flock takes its bearings from (components/Flock.tsx)
-                className={`focus-visible:outline-none ${m === "living" ? "hp-living inline-block whitespace-nowrap" : ""}`}
+                // a clean name for the button: its letters are spans, and the sentence's own
+                // letters are hidden from readers in favour of plain text (see Letters)
+                aria-label={label}
+                // the focus ring is rust and offset, so it shows in every mode, including
+                // materials where the letters themselves go transparent
+                className={`focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rust ${
+                  m === "living" ? "hp-living inline-block whitespace-nowrap" : ""
+                }`}
               >
                 {/* underline drawn per word: inline-block letters don't inherit text-decoration */}
                 <Letters text={label} start={count} wordClass="hp-kw border-b border-current" />
@@ -266,7 +270,7 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
             return el;
           })}
           <CrossStitch targetRef={statement} active={mode === "materials"} />
-        </p>
+        </h1>
         {/* sound: the tape's timecode, a readout in the corner of the statement (written per frame in Tape.tsx) */}
         <span
           aria-hidden="true"
@@ -290,7 +294,7 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
             <li
               key={g.title}
               style={{ "--span": span, "--tray": trayHeight(span) } as React.CSSProperties}
-              className={`hp-tray hp-rule group relative flex flex-col border-b md:border-r border-ink ${
+              className={`hp-tray hp-rule group relative flex flex-col border-b md:border-r border-ink [&:has(a:focus-visible)]:outline [&:has(a:focus-visible)]:outline-2 [&:has(a:focus-visible)]:-outline-offset-2 [&:has(a:focus-visible)]:outline-rust ${
                 rowEnd ? "md:border-r-0" : ""
               } ${sheet ? "md:flex-row" : ""}`}
             >
@@ -348,6 +352,7 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                   {/* stretched link: the whole cell opens the lead record */}
                   <Link
                     href={`/projects/${lead.slug}`}
+                    // the link is the whole cell, so the cell shows the focus ring (see the li)
                     className="after:absolute after:inset-0 focus-visible:outline-none focus-visible:underline"
                   >
                     {g.title}

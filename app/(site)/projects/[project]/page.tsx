@@ -4,6 +4,7 @@ import { getImageDimensions } from "@sanity/asset-utils";
 import urlBuilder from "@sanity/image-url";
 import { createClient } from "next-sanity";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import React from "react";
 import clientConfig from "@/sanity/config/client-config";
 import SpoolPlayer from "@/components/SpoolPlayer";
@@ -88,8 +89,14 @@ function MetaRow({ label, children }: { label: string; children?: React.ReactNod
   );
 }
 
+export async function generateMetadata({ params }: Props) {
+  const project = await getProject(params.project);
+  return { title: project?.name };
+}
+
 async function ProjectDetail({ params }: Props) {
   const project = await getProject(params.project);
+  if (!project) notFound();
   const recordNo = `HP–${String(project.priority ?? 0).padStart(3, "0")}`;
   // the spool only appears when this record has a recording of its own
   const audio = project.audio;

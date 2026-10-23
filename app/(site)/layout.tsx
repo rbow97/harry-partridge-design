@@ -2,10 +2,7 @@ import Nav from "@/components/Nav";
 import "../globals.css";
 import { getPages } from "@/sanity/sanity-utils";
 import SoundProvider from "@/components/sound/SoundProvider";
-import { Caveat, Instrument_Sans, Martian_Mono } from "next/font/google";
-
-// handwriting for the herbarium specimen labels
-const hand = Caveat({ subsets: ["latin"], weight: "500", variable: "--font-hand", display: "swap" });
+import { Instrument_Sans, Martian_Mono } from "next/font/google";
 
 const sans = Instrument_Sans({
   subsets: ["latin"],
@@ -22,7 +19,8 @@ const mono = Martian_Mono({
 });
 
 export const metadata = {
-  title: "Harry Partridge Design",
+  // pages set their own title (a project's name, "Bio"), this is the home title and the suffix
+  title: { default: "Harry Partridge Design", template: "%s · Harry Partridge" },
   description: "Portfolio site for Harry Partridge",
 };
 
@@ -35,7 +33,7 @@ export default async function RootLayout({
   const pages = await getPages();
 
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable} ${hand.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <body className="relative bg-paper text-ink">
         <SoundProvider>
           <Nav pages={pages} />

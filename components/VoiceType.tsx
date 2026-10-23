@@ -7,6 +7,8 @@ import { useSound } from "./sound/SoundProvider";
  * Type that speaks: Instrument Sans' variable axes (weight, width)
  * follow the loudness of whatever is playing, letter by letter.
  * Static when quiet or when the visitor prefers reduced motion.
+ * The text is repeated once, visually hidden, so readers get words; the letter
+ * spans are hidden from them.
  */
 type Props = {
   text: string;
@@ -40,10 +42,11 @@ export default function VoiceType({ text, as = "span", className, baseWeight = 4
     return () => cancelAnimationFrame(raf);
   }, [getLevel, baseWeight, range, text]);
 
-  const Tag = as as any;
+  const Tag = as as React.ElementType;
   const words = text.split(" ");
   return (
-    <Tag ref={root} className={className} aria-label={text}>
+    <Tag ref={root} className={className}>
+      <span className="sr-only">{text}</span>
       {words.map((w, wi) => (
         <span key={wi} aria-hidden="true" className="inline-block whitespace-nowrap">
           {Array.from(w).map((ch, ci) => (
