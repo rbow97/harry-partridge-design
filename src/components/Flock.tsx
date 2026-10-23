@@ -7,6 +7,8 @@ import React, { useEffect, useRef } from "react";
  * plain sense: simple agents, emergent behaviour, nothing in charge.
  * Canvas 2D; shown while <html data-flock> is set, which is whenever the
  * particles are off their pixels.
+ * Leaving for the sound mode, they land as records instead: each tray's flock
+ * settles on the ring of its reel, the shape the photo is about to be cut to.
  */
 
 const STEP = 10; // px between sampled particles
@@ -29,6 +31,14 @@ type Sim = {
   vy: Float32Array;
   hx: Float32Array;
   hy: Float32Array;
+  // the reel each particle's tray becomes in the sound mode: centre, outer radius, hub radius
+  rx: Float32Array;
+  ry: Float32Array;
+  rr: Float32Array;
+  rh: Float32Array;
+  // which tray each particle came from, and the trays, whose --reel angle (Tape.tsx) the landing turns with
+  ti: Uint8Array;
+  trays: HTMLElement[];
   // particles sorted by colour so each colour is one fill call
   order: Int32Array;
   colours: string[];
@@ -64,10 +74,24 @@ function frameRect(f: HTMLElement): DOMRect {
   return tray.getBoundingClientRect();
 }
 
+// The sound mode's reel, as the CSS cuts it (global.css): a circle at the photo's centre whose
+// radius is min(50cqh, 37.5cqw) of the well, with a hub of 30% of that. On phones the well is only
+// an inline-size container, so cqh falls back to the viewport, as it does in the CSS
+function reelOf(f: HTMLElement, rect: DOMRect) {
+  const well = f.parentElement;
+  const w = well?.getBoundingClientRect() ?? rect;
+  const tall = well && getComputedStyle(well).containerType === "size" ? w.height : innerHeight;
+  const r = Math.min(0.5 * tall, 0.375 * w.width);
+  return [rect.left + rect.width / 2, rect.top + rect.height / 2, r, 0.3 * r];
+}
+
 // sample every visible tray image, cover-fitted like the real one, into particles
 async function sample(): Promise<Sim | null> {
   const frames = Array.from(document.querySelectorAll<HTMLElement>(".hp-frame"));
   const pts: number[] = []; // x, y, bucket
+  const reels: number[] = []; // per particle: reel centre x, y, radius, hub radius
+  const owner: number[] = []; // per particle: its tray's index in trays
+  const trays: HTMLElement[] = [];
   const buckets = new Map<number, string>();
   for (const f of frames) {
     const img = f.querySelector<HTMLImageElement>('img[data-img="lead"]');
@@ -76,6 +100,10 @@ async function sample(): Promise<Sim | null> {
     const pic = await load(img.src);
     const w = Math.round(rect.width);
     const h = Math.round(rect.height);
+    const reel = reelOf(f, rect);
+    const li = f.closest("li") as HTMLElement | null;
+    if (li && !trays.includes(li)) trays.push(li);
+    const t = li ? trays.indexOf(li) : 0;
     let data: Uint8ClampedArray | null = null;
     if (pic) {
       const off = document.createElement("canvas");
@@ -100,6 +128,8 @@ async function sample(): Promise<Sim | null> {
         const key = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
         if (!buckets.has(key)) buckets.set(key, `rgb(${(r >> 4) * 17},${(g >> 4) * 17},${(b >> 4) * 17})`);
         pts.push(rect.left + x, rect.top + y, key);
+        reels.push(...reel);
+        owner.push(t);
       }
     }
   }
@@ -126,6 +156,12 @@ async function sample(): Promise<Sim | null> {
     vy: new Float32Array(n),
     hx: new Float32Array(n),
     hy: new Float32Array(n),
+    rx: new Float32Array(n),
+    ry: new Float32Array(n),
+    rr: new Float32Array(n),
+    rh: new Float32Array(n),
+    ti: Uint8Array.from(owner),
+    trays,
     order: Int32Array.from(idx),
     colours,
     starts: Int32Array.from(starts),
@@ -135,21 +171,61 @@ async function sample(): Promise<Sim | null> {
     sim.hy[i] = sim.py[i] = pts[i * 3 + 1];
     sim.vx[i] = (Math.random() - 0.5) * 60;
     sim.vy[i] = (Math.random() - 0.5) * 60;
+    sim.rx[i] = reels[i * 4];
+    sim.ry[i] = reels[i * 4 + 1];
+    sim.rr[i] = reels[i * 4 + 2];
+    sim.rh[i] = reels[i * 4 + 3];
   }
   return sim;
 }
 
-export default function Flock({ active }: { active: boolean }) {
+export type Landing = "photo" | "reel";
+
+// Where each particle lands. On a photo, its own pixel. On a reel, its own pixel if that's on the
+// ring the reel keeps, and otherwise a spot on the ring in the direction it came from, spread so the
+// ring fills evenly. So every tray's flock becomes a whole record, none of it lost to the cut
+function targets(s: Sim, land: Landing) {
+  const tx = Float32Array.from(s.hx);
+  const ty = Float32Array.from(s.hy);
+  if (land === "reel") {
+    for (let i = 0; i < s.n; i++) {
+      const dx = s.hx[i] - s.rx[i], dy = s.hy[i] - s.ry[i];
+      const d = Math.hypot(dx, dy);
+      const inner = s.rh[i] + 2, outer = s.rr[i] - 1.5;
+      if (d > inner && d < outer) continue;
+      const a = d ? Math.atan2(dy, dx) : Math.random() * Math.PI * 2;
+      const r = Math.sqrt(inner * inner + Math.random() * (outer * outer - inner * inner));
+      tx[i] = s.rx[i] + Math.cos(a) * r;
+      ty[i] = s.ry[i] + Math.sin(a) * r;
+    }
+  }
+  return { tx, ty };
+}
+
+export default function Flock({ active, land = "photo" }: { active: boolean; land?: Landing }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const sim = useRef<Sim | null>(null);
-  const phase = useRef<"idle" | "flock" | "home">("idle");
+  const phase = useRef<"idle" | "flock" | "home" | "settle">("idle");
   // no window on the server: start at the origin and take the word's position when the mode opens
   const cursor = useRef<[number, number]>([0, 0]);
   const raf = useRef(0);
   const run = useRef(0); // bumps on every change, so a stale sample is thrown away
   // each particle's way home. A ref, because the loop that reads it may be one started by an
   // earlier run of the effect below, still going when the mode closes
-  const homing = useRef({ t: 0, delay: new Float32Array(0), stiff: new Float32Array(0), damp: new Float32Array(0) });
+  const homing = useRef({
+    t: 0,
+    delay: new Float32Array(0),
+    stiff: new Float32Array(0),
+    damp: new Float32Array(0),
+    tx: new Float32Array(0),
+    ty: new Float32Array(0),
+  });
+  // the landing asked for most recently. Switching mode mid-flight turns them toward the new one
+  const landing = useRef<Landing>(land);
+  useEffect(() => {
+    landing.current = land;
+    if ((phase.current === "home" || phase.current === "settle") && sim.current) Object.assign(homing.current, targets(sim.current, land));
+  }, [land]);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -260,48 +336,95 @@ export default function Flock({ active }: { active: boolean }) {
     const HOME_MAX = 3;
     const setOff = () => {
       const n = sim.current!.n;
-      const way = { t: 0, delay: new Float32Array(n), stiff: new Float32Array(n), damp: new Float32Array(n) };
+      const way = { t: 0, delay: new Float32Array(n), stiff: new Float32Array(n), damp: new Float32Array(n), ...targets(sim.current!, landing.current) };
       for (let i = 0; i < n; i++) {
         way.delay[i] = Math.random() ** 2 * 0.7; // most leave at once, a few hang back
-        way.stiff[i] = 14 + Math.random() * 34;
+        way.stiff[i] = 22 + Math.random() * 40;
         // a little under critical damping for some, so they overshoot and settle
         way.damp[i] = 2 * Math.sqrt(way.stiff[i]) * (0.65 + Math.random() * 0.4);
       }
       homing.current = way;
     };
+    // each tray's reel angle as Tape.tsx turns it, so a landing spot turns with its record. Off the
+    // sound mode the angles ease back to 0 (upright), and the goals are just the photos' pixels
+    // Each tray's turning speed comes along too, from the change since the last frame, so a
+    // particle's damping works against its speed relative to the spot rather than to the page.
+    // Otherwise a spring chasing a turning spot always trails it, and the flock never lands
+    let lastAngles: number[] = [];
+    const spins = (s: Sim, dt: number) => {
+      const angles = s.trays.map((li) => ((parseFloat(li.style.getPropertyValue("--reel")) || 0) * Math.PI) / 180);
+      const out = angles.map((a, t) => [Math.cos(a), Math.sin(a), lastAngles.length && dt ? (a - lastAngles[t]) / dt : 0]);
+      lastAngles = angles;
+      return out;
+    };
+    // the spot's own speed: its offset from the reel centre, turned a quarter, times the spin rate
+    const pace = (s: Sim, i: number, cs: number[][], gx: number, gy: number): [number, number] => {
+      const w = cs[s.ti[i]]?.[2] ?? 0;
+      return [-(gy - s.ry[i]) * w, (gx - s.rx[i]) * w];
+    };
+    const goal = (s: Sim, i: number, cs: number[][], tx: Float32Array, ty: Float32Array): [number, number] => {
+      const [c, sn] = cs[s.ti[i]] ?? [1, 0];
+      const bx = tx[i] - s.rx[i], by = ty[i] - s.ry[i];
+      return [s.rx[i] + bx * c - by * sn, s.ry[i] + bx * sn + by * c];
+    };
     const home = (dt: number) => {
       const s = sim.current!;
       const way = homing.current;
       way.t += dt;
+      const cs = spins(s, dt);
       if (way.t > HOME_MAX) {
-        s.px.set(s.hx);
-        s.py.set(s.hy);
+        for (let i = 0; i < s.n; i++) [s.px[i], s.py[i]] = goal(s, i, cs, way.tx, way.ty);
         return true;
       }
-      let far = 0;
+      let landed = 0;
       const drift = Math.exp(-2 * dt);
       const tail = Math.min(1, Math.max(0, (way.t - (HOME_MAX - 0.5)) / 0.5)) ** 2;
       for (let i = 0; i < s.n; i++) {
+        const [gx, gy] = goal(s, i, cs, way.tx, way.ty);
         if (way.t < way.delay[i]) {
           // still wheeling: coast on, slowing
           s.vx[i] *= drift;
           s.vy[i] *= drift;
         } else {
-          s.vx[i] += ((s.hx[i] - s.px[i]) * way.stiff[i] - s.vx[i] * way.damp[i]) * dt;
-          s.vy[i] += ((s.hy[i] - s.py[i]) * way.stiff[i] - s.vy[i] * way.damp[i]) * dt;
+          const [ux, uy] = pace(s, i, cs, gx, gy);
+          s.vx[i] += ((gx - s.px[i]) * way.stiff[i] - (s.vx[i] - ux) * way.damp[i]) * dt;
+          s.vy[i] += ((gy - s.py[i]) * way.stiff[i] - (s.vy[i] - uy) * way.damp[i]) * dt;
         }
         s.px[i] += s.vx[i] * dt;
         s.py[i] += s.vy[i] * dt;
         // the last stragglers are eased in over the final half second, so the cut-off never shows
         if (tail > 0) {
-          s.px[i] += (s.hx[i] - s.px[i]) * tail;
-          s.py[i] += (s.hy[i] - s.py[i]) * tail;
-          s.vx[i] *= 1 - tail;
-          s.vy[i] *= 1 - tail;
+          s.px[i] += (gx - s.px[i]) * tail;
+          s.py[i] += (gy - s.py[i]) * tail;
         }
-        far = Math.max(far, Math.abs(s.hx[i] - s.px[i]), Math.abs(s.hy[i] - s.py[i]), Math.abs(s.vx[i]) * 0.05, Math.abs(s.vy[i]) * 0.05);
+        // landed means in place, not still: on a turning reel a landed particle keeps moving
+        if (Math.abs(gx - s.px[i]) < 3 && Math.abs(gy - s.py[i]) < 3) landed++;
       }
-      return far < 0.6;
+      // settle once nearly all are in. The last few finish on the settle's own pull, under the
+      // photo fading in, rather than holding the whole flock out for them
+      return landed >= s.n * 0.95;
+    };
+
+    // Settling: the flock has landed. The photo fades in beneath it (data-flock="settling" in
+    // global.css) while the particles ride round with their reel and loosen, each drifting a
+    // little off its spot, and the canvas fades out over them. Then they're gone
+    const SETTLE = 1.1;
+    const settle = (dt: number) => {
+      const s = sim.current!;
+      const way = homing.current;
+      way.t += dt;
+      const cs = spins(s, dt);
+      const loose = Math.min(1, way.t / SETTLE);
+      for (let i = 0; i < s.n; i++) {
+        const [gx, gy] = goal(s, i, cs, way.tx, way.ty);
+        const [ux, uy] = pace(s, i, cs, gx, gy);
+        // a softening pull to the spot, riding round with it, and a wander that grows as they let go
+        s.vx[i] += ((gx - s.px[i]) * 30 * (1 - loose) - (s.vx[i] - ux) * 4 + (Math.random() - 0.5) * 260 * loose) * dt;
+        s.vy[i] += ((gy - s.py[i]) * 30 * (1 - loose) - (s.vy[i] - uy) * 4 + (Math.random() - 0.5) * 260 * loose) * dt;
+        s.px[i] += s.vx[i] * dt;
+        s.py[i] += s.vy[i] * dt;
+      }
+      return way.t > SETTLE;
     };
 
     let last = performance.now();
@@ -310,9 +433,13 @@ export default function Flock({ active }: { active: boolean }) {
       last = now;
       if (phase.current === "flock") flock(dt);
       else if (phase.current === "home" && home(dt)) {
+        phase.current = "settle";
+        homing.current.t = 0;
+        document.documentElement.dataset.flock = "settling"; // the photos fade in beneath the landed flock
+      } else if (phase.current === "settle" && settle(dt)) {
         phase.current = "idle";
-        draw();
-        delete document.documentElement.dataset.flock; // the images fade back in over the landed flock
+        ctx.clearRect(0, 0, innerWidth, innerHeight);
+        delete document.documentElement.dataset.flock;
         raf.current = 0;
         return;
       }

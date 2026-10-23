@@ -65,14 +65,20 @@ function Ruler() {
 
 export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
   const [mode, setMode] = useState<Mode | null>(null);
-  // moving from one word to the next crosses the gap between them. Leaving waits a moment, so
-  // the next word takes over directly instead of the page easing back to paper in between
+  // Hover intent, both ways. A word takes over only once the pointer rests on it, so brushing past
+  // one on the way somewhere else doesn't flash the whole page into its mode. Leaving waits a
+  // moment too, so moving word to word goes straight across instead of easing back to paper
+  // in the gap. Keyboard focus is a clear intent, so it switches at once
   const leaving = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const enter = (m: Mode) => {
+  const entering = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const enter = (m: Mode, now = false) => {
     clearTimeout(leaving.current);
-    setMode(m);
+    clearTimeout(entering.current);
+    if (now) setMode(m);
+    else entering.current = setTimeout(() => setMode(m), 110);
   };
   const leave = () => {
+    clearTimeout(entering.current);
     clearTimeout(leaving.current);
     leaving.current = setTimeout(() => setMode(null), 160);
   };
@@ -198,7 +204,8 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
   return (
     <div className="hp-surface relative bg-paper text-ink pt-14 md:min-h-[100svh] flex flex-col">
       {/* living systems: the tray images take off as a flock */}
-      <Flock active={mode === "living"} />
+      {/* leaving the flock for sound, it lands on the reels rather than the photos */}
+      <Flock active={mode === "living"} land={mode === "sound" ? "reel" : "photo"} />
       {/* materials: the header is cloth; once the word is clicked (pinned), the cursor sews it and the rules */}
       <Stitch cloth={mode === "materials"} sewing={mode === "materials" && pinned === "materials"} />
       {/* sound: the page runs a recording like a tape machine */}
@@ -240,10 +247,11 @@ export default function ProjectColumns({ groups }: { groups: ProjectGroup[] }) {
                 // hover is the word alone; to keep a mode on while the cursor roams, click (pin)
                 onMouseEnter={() => !touch.current && !pinned && enter(m)}
                 onMouseLeave={() => !touch.current && !pinned && leave()}
-                onFocus={() => !touch.current && !pinned && enter(m)}
+                onFocus={() => !touch.current && !pinned && enter(m, true)}
                 onBlur={() => !touch.current && !pinned && leave()}
                 onClick={() => {
                   clearTimeout(leaving.current);
+                  clearTimeout(entering.current);
                   const release = pinned === m;
                   setPinned(release ? null : m);
                   setMode(release ? null : m);

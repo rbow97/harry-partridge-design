@@ -62,6 +62,11 @@ function standIn(t: number) {
 // the trays, and turning their reels: --reel is read by the .hp-img transform
 const trays = () => Array.from(document.querySelectorAll<HTMLElement>("ol > li"));
 const turn = (angles: number[]) => trays().forEach((li, i) => li.style.setProperty("--reel", `${(angles[i] ?? 0).toFixed(2)}deg`));
+// how open each reel is (--open in global.css), set here only on the way out of the mode
+const open = (v: number | null) =>
+  trays().forEach((li) => (v === null ? li.style.removeProperty("--open") : li.style.setProperty("--open", v.toFixed(3))));
+// each reel's speed in deg/s: slow, a turn every 18 to 27 seconds, neighbours the other way
+const speed = (i: number) => ((i % 2 ? -1 : 1) * 360) / (18 + i * 3);
 
 export default function Tape({ active, audible, src }: { active: boolean; audible: boolean; src: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -85,23 +90,51 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
       // the tape stops where it is, so the next hover carries on from there, and gives
       // the floor back to the ambient voice
       if (spool) release(spool);
-      // the reels slow to upright over the mode's exit, the short way round
+      // Out of the mode in three moves, each starting from rest so none jolts. Each record coasts to
+      // a stop wherever it gets to, slowing evenly from its playing speed. Still a record, it turns
+      // back upright, the short way. Only then does it open out into its photo. --open is held at 0
+      // from here, before the mode leaves <html>, so the photo doesn't pop open on the frame between
       const from = reels.current.slice();
-      const to = from.map((a) => Math.round(a / 360) * 360);
-      const t0 = performance.now();
-      const settle = (now: number) => {
-        const u = Math.min(1, (now - t0) / 800);
-        const e = 1 - Math.pow(1 - u, 3);
-        reels.current = from.map((a, i) => a + (to[i] - a) * e);
+      if (!from.some((a) => a !== 0) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        reels.current = reels.current.map(() => 0);
         turn(reels.current);
-        if (u < 1) raf.current = requestAnimationFrame(settle);
+        open(null);
+        return;
+      }
+      open(0);
+      const STOP = 700; // ms coasting to rest
+      const TURN = 1000; // ms turning back upright
+      const OPEN = 1000; // ms opening into the photo
+      const v0 = from.map((_, i) => speed(i));
+      const rest = from.map((a, i) => a + (v0[i] * STOP) / 2000); // an even slowdown covers half the distance
+      const up = rest.map((a) => Math.round(a / 360) * 360);
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const t = now - t0;
+        if (t < STOP) {
+          const u = t / STOP;
+          reels.current = from.map((a, i) => a + v0[i] * (STOP / 1000) * (u - (u * u) / 2));
+          open(0);
+        } else if (t < STOP + TURN) {
+          const u = (t - STOP) / TURN;
+          const level = u < 0.5 ? 4 * u * u * u : 1 - (-2 * u + 2) ** 3 / 2;
+          reels.current = rest.map((a, i) => a + (up[i] - a) * level);
+          open(0);
+        } else {
+          const u = Math.min(1, (t - STOP - TURN) / OPEN);
+          reels.current = up.slice();
+          open(1 - (1 - u) ** 3);
+        }
+        turn(reels.current);
+        if (t < STOP + TURN + OPEN) raf.current = requestAnimationFrame(step);
         else {
           reels.current = reels.current.map(() => 0);
           turn(reels.current);
+          open(null);
           raf.current = 0;
         }
       };
-      if (from.some((a) => a !== 0)) raf.current = requestAnimationFrame(settle);
+      raf.current = requestAnimationFrame(step);
       return;
     }
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -126,6 +159,10 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
       take(a);
     };
 
+    // back in the mode mid-way out: hand --open back to the CSS, which eases it shut. On the next
+    // frame, once <html> carries the mode again, so it closes rather than flicking open first
+    requestAnimationFrame(() => open(null));
+
     let lastFrame = performance.now();
     const draw = (now: number) => {
       const a = audio.current;
@@ -136,7 +173,7 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
       lastFrame = now;
       const n = trays().length;
       if (reels.current.length !== n) reels.current = Array.from({ length: n }, (_, i) => reels.current[i] ?? 0);
-      reels.current = reels.current.map((ang, i) => ang + ((i % 2 ? -1 : 1) * 360 * dt) / (6.5 + i * 1.4));
+      reels.current = reels.current.map((ang, i) => ang + speed(i) * dt);
       turn(reels.current);
       if (tc) tc.textContent = format(t);
 

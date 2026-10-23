@@ -204,11 +204,21 @@ html {
     container-type: size;
   }
 }
-/* as wide as the well allows, or as wide as the well's height allows, whichever is less */
+/* How open each reel is: 0 is the sound mode's record, 1 the whole photo. A registered number, so
+   the sound mode can ease it in with a transition and Tape.tsx can set it frame by frame on the
+   way out, opening each photo as its record comes to rest. The reel's clip, hub and scanlines
+   all read it, so they move as one */
+@property --open {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+/* as wide as the well allows, or as wide as the well's height allows, whichever is less.
+   The clip runs from the reel, a circle of min(50cqh, 37.5cqw), out to 72% (past the corners) */
 .hp-frame {
   width: min(100cqw, calc(100cqh * var(--ratio-frame)));
-  clip-path: circle(72% at 50% 50%); /* 72% clears the corners (the half-diagonal) */
-  transition: clip-path var(--dur-slow) ease, filter var(--dur-filter);
+  clip-path: circle(calc(var(--open) * 72% + (1 - var(--open)) * min(50cqh, 37.5cqw)) at 50% 50%);
+  transition: filter var(--dur-filter);
 }
 /* scanline layer for the sound mode */
 .hp-frame::after {
@@ -216,8 +226,7 @@ html {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity var(--dur-mode);
+  opacity: calc(1 - var(--open));
   background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0 1px, transparent 1px 3px);
 }
 /* the reel hub */
@@ -233,8 +242,7 @@ html {
   border-radius: 50%;
   background: var(--ink);
   border: 2px solid color-mix(in srgb, var(--paper) 55%, transparent);
-  opacity: 0;
-  transition: opacity var(--dur-mode);
+  opacity: calc(1 - var(--open));
 }
 
 /* a pinned word: its mode stays on while the cursor roams, so say so */
@@ -295,15 +303,11 @@ html[data-mode="materials"] .hp-stitch {
 html[data-mode="sound"] .hp-img {
   filter: grayscale(1) sepia(0) saturate(1) contrast(1.4) brightness(0.9);
 }
-html[data-mode="sound"] .hp-frame::after,
-html[data-mode="sound"] .hp-frame::before {
-  opacity: 1;
-}
-/* the trays' images become reels: a circle of half the frame's shorter side (the frame
-   is the well's width, and its height the lesser of the well's height and 3/4 of that),
-   which stays inside the photo however far it has turned */
-html[data-mode="sound"] .hp-frame {
-  clip-path: circle(min(50cqh, 37.5cqw) at 50% 50%);
+/* the trays' images become reels: --open eases to 0, which closes the clip to the reel circle
+   (it stays inside the photo however far it has turned) and brings up the hub and scanlines */
+html[data-mode="sound"] .hp-tray {
+  --open: 0;
+  transition: --open var(--dur-slow) ease;
 }
 /* the ruler gives way to the tape drawn over it */
 html[data-mode="sound"] .hp-ruler {
@@ -330,16 +334,36 @@ html[data-mode="sound"] .hp-tc {
    fly home when you leave. data-flock is set on <html> while the
    particles are off their pixels.
    ------------------------------------------------------------------ */
-.hp-flock {
-  transition: opacity 0.4s ease;
-}
 html[data-flock] .hp-flock {
   opacity: 1;
+}
+/* flying in to the sound mode's reels, the flock greys like the photos it is becoming */
+.hp-flock {
+  filter: grayscale(0) contrast(1) brightness(1);
+  transition:
+    opacity 0.4s ease,
+    filter var(--dur-filter);
+}
+html[data-mode="sound"] .hp-flock {
+  filter: grayscale(1) contrast(1.4) brightness(0.9);
 }
 /* the real pixels hide while their particles are away, whatever the tray hover says */
 html[data-flock] .hp-frame .hp-img {
   opacity: 0 !important;
   transition: opacity 0.25s ease;
+}
+/* landed: the photos fade in slowly beneath the flock, which fades out over them as it drifts off */
+html[data-flock="settling"] .hp-frame .hp-img {
+  opacity: 1 !important;
+  transition:
+    opacity 1s ease,
+    filter var(--dur-filter);
+}
+html[data-flock="settling"] .hp-flock {
+  opacity: 0;
+  transition:
+    opacity 1.1s ease,
+    filter var(--dur-filter);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -463,7 +487,6 @@ html {
     inset: -2.75rem -1.75rem -3rem -1.75rem;
     transition:
       inset 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
-      clip-path var(--dur-slow) ease,
       filter var(--dur-filter);
   }
   /* hover: 1.75rem in from every tray edge, the same edge the page keeps. Not during a mode,
@@ -481,4 +504,12 @@ html {
   .hp-tray .hp-ruler {
     opacity: 0;
   }
+}
+
+/* Leaving the sound mode, gently: Tape.tsx lets each record coast to rest, then straightens it and
+   opens it into its photo (through --open), and the colour comes back at the same unhurried pace */
+html[data-anim~="sound"]:not([data-mode="sound"]) .hp-img {
+  transition:
+    filter 1.4s ease,
+    opacity var(--dur-mode);
 }
