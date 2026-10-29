@@ -42,12 +42,17 @@ const pages = await getPages();
       Skip to content
     </a>
     <Nav client:load pages={pages} pathname={Astro.url.pathname} />
+    {/* the thread: a line along the foot of the nav that grows while the next page loads (lib/loader.ts) */}
+    <div class="hp-loader" aria-hidden="true"></div>
     <main id="content" tabindex="-1" class="focus:outline-none">
       <slot />
     </main>
     <script>
       import Lenis from "lenis";
       import "lenis/dist/lenis.css";
+      import { startLoader } from "@/lib/loader";
+
+      startLoader();
 
       // eased, weighted scrolling, as samthies.com and brandonyasin.com have. Lenis only smooths the
       // wheel and trackpad, so phones keep their own scrolling, and it's off for anyone who asks for

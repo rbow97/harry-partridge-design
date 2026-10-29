@@ -601,3 +601,59 @@ html {
   scroll-padding-top: calc(var(--size-bar) + 1rem);
   scroll-padding-bottom: calc(var(--size-bar) + 1rem);
 }
+
+/* The thread loader (lib/loader.ts): along the foot of the nav, over its rule. --p is how far it has
+   got. Hidden until a navigation starts, then it fades once it reaches the end */
+.hp-loader {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: calc(var(--size-bar) - 1px);
+  z-index: 51;
+  height: 2px;
+  background: var(--accent);
+  transform-origin: 0 50%;
+  transform: scaleX(var(--p, 0));
+  opacity: 0;
+  pointer-events: none;
+  view-transition-name: hp-loader;
+  transition:
+    transform 0.25s ease-out,
+    opacity 0.3s ease 0.15s;
+}
+.hp-loader[data-state="going"] {
+  opacity: 1;
+  transition: transform 0.25s ease-out;
+}
+.hp-loader[data-state="done"] {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-loader {
+    transition: none;
+  }
+}
+
+/* The nav's thread under the current page slides from one cell to the next as you change page,
+   rather than jumping. From a page with none (the homepage, a record) it draws out from the left,
+   and leaving for one it winds back in */
+::view-transition-group(hp-nav-thread) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+::view-transition-new(hp-nav-thread):only-child {
+  animation: hp-thread-draw 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  transform-origin: 0 50%;
+}
+::view-transition-old(hp-nav-thread):only-child {
+  animation: hp-thread-draw 0.3s ease-in reverse both;
+  transform-origin: 0 50%;
+}
+@keyframes hp-thread-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}

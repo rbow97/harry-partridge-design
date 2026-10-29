@@ -65,6 +65,8 @@ const Nav = ({ pages, pathname }: { pages: Page[]; pathname: string }) => {
               {/* the thread winds along the foot of the cell, as it does under a tray, and stays wound on the page you're on */}
               <span
                 aria-hidden="true"
+                // the current page's thread is named, so the browser slides it to the next page's cell
+                style={active ? { viewTransitionName: "hp-nav-thread" } : undefined}
                 className={`absolute inset-x-0 -bottom-px h-0.5 bg-accent origin-left transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none ${
                   active ? "scale-x-100" : "scale-x-0"
                 }`}
