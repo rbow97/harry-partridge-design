@@ -35,6 +35,7 @@ export const projectQuery = defineQuery(`*[_type == "project" && slug.current ==
       ${projectCore},
       description,
       content,
+      audioTranscript,
       year,
       materials,
       process,

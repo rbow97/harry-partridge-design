@@ -36,6 +36,16 @@ type ModeDef = { _key: string; _type: string; mode?: string | null };
 const MODES: Mode[] = ["materials", "sound", "living"];
 
 /**
+ * What each mode does to the page, in words, for people who can't see it happen: read out when a
+ * mode is switched on (the homepage's live region). A new mode needs its line here too
+ */
+export const MODE_DESCRIPTIONS: Record<Mode, string> = {
+  materials: "Materials mode on. The headline is sewn in cross-stitch and the photos turn to felt.",
+  sound: "Sound mode on. The photos become records turning on a tape machine.",
+  living: "Living systems mode on. The photos break up into a flock that follows the pointer.",
+};
+
+/**
  * The statement's first paragraph as the homepage renders it: runs of plain text, and each word
  * Harry marked with a Mode as a word of its own. Null when there's no text, so the fallback shows
  */

@@ -594,3 +594,10 @@ html[data-anim~="sound"]:not([data-mode="sound"]) .hp-img {
     animation: none !important;
   }
 }
+
+/* Focus never lands under the sticky bars (WCAG 2.4.11): when the browser scrolls a focused link or
+   an anchor into view, it keeps it clear of the nav at the top and the project bar at the foot */
+html {
+  scroll-padding-top: calc(var(--size-bar) + 1rem);
+  scroll-padding-bottom: calc(var(--size-bar) + 1rem);
+}

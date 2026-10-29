@@ -24,6 +24,14 @@ export default defineType({
       description: "Shown under the video, and read out as its name. Something like 'Exhibition film'.",
       type: "string",
     }),
+    defineField({
+      name: "transcript",
+      title: "Transcript",
+      description:
+        "What's said in the video, and anything important that's only shown. Readers who can't hear it open this under the video. Leave a blank line between paragraphs.",
+      type: "text",
+      rows: 6,
+    }),
   ],
   preview: {
     select: { title: "caption", subtitle: "url" },

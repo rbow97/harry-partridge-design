@@ -8,7 +8,7 @@ import Flock from "./Flock";
 import Stitch from "./Stitch";
 import Tape from "./Tape";
 
-import { FALLBACK, type Mode, type SentencePart } from "@/lib/site";
+import { FALLBACK, MODE_DESCRIPTIONS, type Mode, type SentencePart } from "@/lib/site";
 import { SIZES, sized, srcset } from "@/lib/images";
 
 /** Split text into letters so the page modes can animate them. The letter spans are hidden
@@ -97,6 +97,13 @@ export default function ProjectColumns({
   // Clicking the word again, clicking anywhere that isn't one of the three words, or
   // Escape releases it
   const [pinned, setPinned] = useState<Mode | null>(null);
+  // what a pinned mode does, read out by screen readers: the change is all visual, and a pressed
+  // button alone doesn't say what happened to the page. Announced on pin and release only, so
+  // passing over the words with a pointer stays quiet
+  const [announcement, setAnnouncement] = useState("");
+  useEffect(() => {
+    setAnnouncement(pinned ? MODE_DESCRIPTIONS[pinned] : announcement ? "Mode off." : "");
+  }, [pinned]);
   useEffect(() => {
     if (!mode) return;
     const off = (e: PointerEvent) => {
@@ -240,6 +247,7 @@ export default function ProjectColumns({
                 key={k}
                 type="button"
                 aria-pressed={pinned === m}
+                aria-describedby="hp-mode-hint"
                 // touch: a tap fires emulated hover and focus before the click, which
                 // would toggle the mode straight back off, so touch only listens to taps
                 onPointerDown={(e) => (touch.current = e.pointerType === "touch")}
@@ -281,6 +289,13 @@ export default function ProjectColumns({
         >
           00:00.0
         </span>
+        {/* the words are buttons: this says what they do, and the live region says what just happened */}
+        <p id="hp-mode-hint" className="sr-only">
+          Shows the site in this mode. Press to keep it on, press again to turn it off.
+        </p>
+        <p className="sr-only" role="status" aria-live="polite">
+          {announcement}
+        </p>
       </section>
 
       {/* Specimen drawer: four trays across on a 12-column grid, and every row is full

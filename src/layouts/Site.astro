@@ -34,8 +34,15 @@ const pages = await getPages();
   <body class="relative bg-paper text-ink font-sans">
     {/* the ambient "voice from the yarn": loops while the Sound switch is on and nothing else has the floor (stores/sound.ts) */}
     <audio id="hp-ambient" src={settings.ambient} preload="none" loop></audio>
+    {/* the first thing a keyboard reaches: straight past the nav to the page itself */}
+    <a
+      href="#content"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-edge focus:top-3 focus:z-[60] focus:bg-paper focus:text-ink focus:border focus:border-ink focus:px-4 focus:py-2 hp-label"
+    >
+      Skip to content
+    </a>
     <Nav client:load pages={pages} pathname={Astro.url.pathname} />
-    <main>
+    <main id="content" tabindex="-1" class="focus:outline-none">
       <slot />
     </main>
     <script>

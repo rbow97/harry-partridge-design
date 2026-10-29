@@ -1,3 +1,4 @@
+import Transcript from "./Transcript";
 import { useEffect, useRef, useState } from "react";
 import { hush } from "@/stores/sound";
 import { embedSrc, videoAnchor, type Video } from "@/lib/video";
@@ -55,6 +56,7 @@ export default function VideoEmbed({ video }: { video: Video }) {
         <span aria-hidden="true">·</span>
         <span>{source}</span>
       </figcaption>
+      <Transcript text={video.transcript} label={video.title} />
     </figure>
   );
 }

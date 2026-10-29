@@ -113,9 +113,18 @@ Hovering **materials / sound / living systems** in the statement changes the who
 - Accessibility baseline (2026-10-23): the statement is the homepage `h1`; Bio, Contact and record pages each have
   one `h1` and their own `<title>` via the layout's `title` prop; the word buttons carry `aria-label`s and a rust
   focus-visible ring (visible in materials, where the letters go transparent); letter spans are `aria-hidden` with
-  the text repeated once in `.sr-only` (Letters, VoiceType); a focused tray link rings the whole cell. Still open
-  from the review: contrast of muted/rust on the felt and petri surfaces (4.2 to 4.4:1), hover rust in sound mode
-  (2.9:1), no live region for mode changes, process image hover-only, no skip link, no transcripts.
+  the text repeated once in `.sr-only` (Letters, VoiceType); a focused tray link rings the whole cell.
+  Re-audited 2026-10-26: axe WCAG 2.2 AA is clean on every page, every pinned mode and the phone menu (one
+  target-size note on a phone record page is a link passing under the sticky bar at that scroll position).
+  Every text colour clears 4.5:1 on every mode surface, rules clear 3:1. A skip link is the first Tab stop;
+  `html` scroll-padding keeps focused items clear of both sticky bars; the mode words carry a hint
+  (`#hp-mode-hint`) and pinning one is announced in a polite live region (`MODE_DESCRIPTIONS`, lib/site.ts);
+  work-column labels are `h2`s; video blocks and the project audio have transcript fields, shown as a native
+  disclosure (components/Transcript.tsx). Still open: no transcripts written yet (content, not code).
+- Everything is accessible, extensible and generic: WCAG 2.2 AA on every page and in every mode (contrast,
+  keyboard, screen readers, reduced motion), built as reusable parts driven from Sanity rather than written
+  into the code, and no one-off fixes for a single piece of content. A fallback for old content is temporary:
+  note what retires it.
 - Rules: letter effects must never change letter widths (reflow moves words under the cursor and flips the mode);
   keep ≥50fps; respect prefers-reduced-motion. Only `.hp-surface` transitions `color` - a child with its own colour
   transition chases the inherited value and lags the page (this was the nav lag).

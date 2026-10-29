@@ -5,6 +5,7 @@ import { getProject, getProjects } from "@/lib/sanity";
 import { RecordWords, RecordWork } from "@/components/RichText";
 import VoiceType from "@/components/VoiceType";
 import SpoolPlayer from "@/components/SpoolPlayer";
+import Transcript from "@/components/Transcript";
 import VideoEmbed from "@/components/VideoEmbed";
 import { embeddable, videoBlock, videosIn, type Video } from "@/lib/video";
 import { recordLabel } from "@/types/Project";
@@ -44,15 +45,15 @@ const embedded = videos.map((v) => v.key);
 type Piece =
   | { kind: "work"; blocks: NonNullable<typeof project.content> }
   | { kind: "video"; video: Video }
-  | { kind: "link"; url: string; caption: string };
+  | { kind: "link"; url: string; caption: string; transcript?: string };
 const pieces: Piece[] = [];
 for (const block of project.content ?? []) {
-  const b = block as { _type?: string; _key?: string; url?: string; caption?: string };
+  const b = block as { _type?: string; _key?: string; url?: string; caption?: string; transcript?: string };
   if (b._type === "video") {
     const v = videoBlock(b);
     const video = v ? await embeddable(v) : null;
     if (video) pieces.push({ kind: "video", video });
-    else if (b.url) pieces.push({ kind: "link", url: b.url, caption: b.caption?.trim() || "Video" });
+    else if (b.url) pieces.push({ kind: "link", url: b.url, caption: b.caption?.trim() || "Video", transcript: b.transcript });
     continue;
   }
   const last = pieces.at(-1);
@@ -114,6 +115,7 @@ const meta = [
           )}
           {/* the spool only appears when this record has a recording of its own */}
           {project.audio && <SpoolPlayer client:visible src={project.audio} />}
+          {project.audio && <Transcript text={project.audioTranscript} label={`${project.name?.trim()} recording`} />}
           {hasMeta && (
             <dl class="border-b border-rule">
               {meta.map(([label, value]) => (
@@ -161,9 +163,12 @@ const meta = [
           ) : piece.kind === "video" ? (
             <VideoEmbed client:visible video={piece.video} />
           ) : (
-            <p class="text-small">
-              <a href={piece.url} target="_blank" rel="noopener" class="hp-link text-accent">{piece.caption}</a>
-            </p>
+            <div>
+              <p class="text-small">
+                <a href={piece.url} target="_blank" rel="noopener" class="hp-link text-accent">{piece.caption}</a>
+              </p>
+              <Transcript text={piece.transcript} label={piece.caption} />
+            </div>
           )
         )}
 

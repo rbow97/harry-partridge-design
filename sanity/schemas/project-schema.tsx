@@ -125,6 +125,14 @@ export default defineType({
       options: { accept: "audio/*" },
     }),
     defineField({
+      name: "audioTranscript",
+      title: "Audio transcript",
+      description: "What's said in the clip, for readers who can't hear it. Shown under the spool. Leave a blank line between paragraphs.",
+      type: "text",
+      rows: 6,
+      hidden: ({ document }) => !document?.audio,
+    }),
+    defineField({
       name: "priority",
       title: "Priority",
       description: "Replaced by dragging projects into order in the Projects list. Kept so older entries still sort until then.",

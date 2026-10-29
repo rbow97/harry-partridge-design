@@ -195,6 +195,7 @@ export type Video = {
   _type: "video";
   url?: string;
   caption?: string;
+  transcript?: string;
 };
 
 export type Page = {
@@ -297,6 +298,7 @@ export type Project = {
     media?: unknown;
     _type: "file";
   };
+  audioTranscript?: string;
   priority?: number;
   content?: Array<
     | {
@@ -558,6 +560,7 @@ export type ProjectQueryResult = {
         _key: string;
       }
   > | null;
+  audioTranscript: string | null;
   year: number | null;
   materials: string | null;
   process: string | null;

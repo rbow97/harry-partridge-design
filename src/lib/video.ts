@@ -7,7 +7,7 @@ import type { PortableTextBlock, TypedObject } from "@portabletext/types";
  */
 
 export type Provider = "youtube" | "vimeo";
-export type Video = { key: string; provider: Provider; id: string; vertical: boolean; title: string; poster?: string };
+export type Video = { key: string; provider: Provider; id: string; vertical: boolean; title: string; poster?: string; transcript?: string };
 
 export function parseVideo(href: string | undefined): Pick<Video, "provider" | "id" | "vertical"> | null {
   if (!href) return null;
@@ -77,8 +77,8 @@ export async function embeddable(v: Omit<Video, "poster">): Promise<Video | null
 }
 
 /** A video block from a project's content (sanity/schemas/video-schema.ts), as the same video the link form makes */
-export function videoBlock(block: { _key?: string; url?: string | null; caption?: string | null }): Omit<Video, "poster"> | null {
+export function videoBlock(block: { _key?: string; url?: string | null; caption?: string | null; transcript?: string | null }): Omit<Video, "poster"> | null {
   const v = parseVideo(block.url ?? undefined);
   if (!v || !block._key) return null;
-  return { ...v, key: block._key, title: block.caption?.trim() || "Video" };
+  return { ...v, key: block._key, title: block.caption?.trim() || "Video", ...(block.transcript?.trim() && { transcript: block.transcript.trim() }) };
 }
