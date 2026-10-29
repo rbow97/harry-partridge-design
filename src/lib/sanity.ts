@@ -15,6 +15,8 @@ const projectCore = /* groq */ `
   "slug": slug.current,
   "image": image.asset->url,
   "imageAlt": image.alt,
+  // the photo's main colour, which Sanity works out on upload: shown in its place while it loads
+  "imageColor": image.asset->metadata.palette.dominant.background,
   orderRank,
   priority,
   "audio": audio.asset->url,
@@ -50,6 +52,7 @@ export const projectQuery = defineQuery(`*[_type == "project" && slug.current ==
         name,
         "slug": slug.current,
         "image": image.asset->url,
+        "imageColor": image.asset->metadata.palette.dominant.background,
         recordLabel,
         "summary": coalesce(summary, pt::text(description))
       }

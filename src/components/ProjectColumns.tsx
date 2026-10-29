@@ -332,7 +332,11 @@ export default function ProjectColumns({
                     sheet ? "justify-start" : "justify-center"
                   }`}
                 >
-                  <div className="hp-frame relative w-full max-h-full aspect-[4/3] overflow-hidden">
+                  {/* the photo's own colour sits in its place until it has loaded */}
+                  <div
+                    className="hp-frame relative w-full max-h-full aspect-[4/3] overflow-hidden"
+                    style={lead.imageColor ? { backgroundColor: lead.imageColor } : undefined}
+                  >
                   {lead.image && (
                     <img
                       src={sized(lead.image, 960)}

@@ -467,7 +467,7 @@ export type AllSanitySchemaTypes =
 
 // Source: src/lib/sanity.ts
 // Variable: projectsQuery
-// Query: *[_type == "project" && defined(name) && defined(slug.current)]{   _id,  _createdAt,  name,  "slug": slug.current,  "image": image.asset->url,  "imageAlt": image.alt,  orderRank,  priority,  "audio": audio.asset->url,  "partOf": partOf._ref,  recordLabel,  disciplines,  // fall back to Harry's existing description until a summary is written  "summary": coalesce(summary, pt::text(description)) }
+// Query: *[_type == "project" && defined(name) && defined(slug.current)]{   _id,  _createdAt,  name,  "slug": slug.current,  "image": image.asset->url,  "imageAlt": image.alt,  // the photo's main colour, which Sanity works out on upload: shown in its place while it loads  "imageColor": image.asset->metadata.palette.dominant.background,  orderRank,  priority,  "audio": audio.asset->url,  "partOf": partOf._ref,  recordLabel,  disciplines,  // fall back to Harry's existing description until a summary is written  "summary": coalesce(summary, pt::text(description)) }
 export type ProjectsQueryResult = Array<{
   _id: string;
   _createdAt: string;
@@ -475,6 +475,7 @@ export type ProjectsQueryResult = Array<{
   slug: string | null;
   image: string | null;
   imageAlt: string | null;
+  imageColor: string | null;
   orderRank: string | null;
   priority: number | null;
   audio: string | null;
@@ -486,7 +487,7 @@ export type ProjectsQueryResult = Array<{
 
 // Source: src/lib/sanity.ts
 // Variable: projectQuery
-// Query: *[_type == "project" && slug.current == $slug][0]{        _id,  _createdAt,  name,  "slug": slug.current,  "image": image.asset->url,  "imageAlt": image.alt,  orderRank,  priority,  "audio": audio.asset->url,  "partOf": partOf._ref,  recordLabel,  disciplines,  // fall back to Harry's existing description until a summary is written  "summary": coalesce(summary, pt::text(description)),      description,      content,      year,      materials,      process,      location,      collaborators,      press,      // a development record links back to its main project      "parent": partOf->{ name, "slug": slug.current },      // a main project shows its development records at the end of the page      "development": *[_type == "project" && partOf._ref == ^._id] | order(orderRank asc, coalesce(priority, 999) asc){        _id,        name,        "slug": slug.current,        "image": image.asset->url,        recordLabel,        "summary": coalesce(summary, pt::text(description))      }    }
+// Query: *[_type == "project" && slug.current == $slug][0]{        _id,  _createdAt,  name,  "slug": slug.current,  "image": image.asset->url,  "imageAlt": image.alt,  // the photo's main colour, which Sanity works out on upload: shown in its place while it loads  "imageColor": image.asset->metadata.palette.dominant.background,  orderRank,  priority,  "audio": audio.asset->url,  "partOf": partOf._ref,  recordLabel,  disciplines,  // fall back to Harry's existing description until a summary is written  "summary": coalesce(summary, pt::text(description)),      description,      content,      audioTranscript,      year,      materials,      process,      location,      collaborators,      press,      // a development record links back to its main project      "parent": partOf->{ name, "slug": slug.current },      // a main project shows its development records at the end of the page      "development": *[_type == "project" && partOf._ref == ^._id] | order(orderRank asc, coalesce(priority, 999) asc){        _id,        name,        "slug": slug.current,        "image": image.asset->url,        "imageColor": image.asset->metadata.palette.dominant.background,        recordLabel,        "summary": coalesce(summary, pt::text(description))      }    }
 export type ProjectQueryResult = {
   _id: string;
   _createdAt: string;
@@ -494,6 +495,7 @@ export type ProjectQueryResult = {
   slug: string | null;
   image: string | null;
   imageAlt: string | null;
+  imageColor: string | null;
   orderRank: string | null;
   priority: number | null;
   audio: string | null;
@@ -580,6 +582,7 @@ export type ProjectQueryResult = {
     name: string | null;
     slug: string | null;
     image: string | null;
+    imageColor: string | null;
     recordLabel: string | null;
     summary: string;
   }>;
@@ -724,8 +727,8 @@ export type ContactQueryResult = {
 // Query TypeMap
 declare global {
   interface SanityQueries {
-    '*[_type == "project" && defined(name) && defined(slug.current)]{ \n  _id,\n  _createdAt,\n  name,\n  "slug": slug.current,\n  "image": image.asset->url,\n  "imageAlt": image.alt,\n  orderRank,\n  priority,\n  "audio": audio.asset->url,\n  "partOf": partOf._ref,\n  recordLabel,\n  disciplines,\n  // fall back to Harry\'s existing description until a summary is written\n  "summary": coalesce(summary, pt::text(description))\n }': ProjectsQueryResult;
-    '*[_type == "project" && slug.current == $slug][0]{\n      \n  _id,\n  _createdAt,\n  name,\n  "slug": slug.current,\n  "image": image.asset->url,\n  "imageAlt": image.alt,\n  orderRank,\n  priority,\n  "audio": audio.asset->url,\n  "partOf": partOf._ref,\n  recordLabel,\n  disciplines,\n  // fall back to Harry\'s existing description until a summary is written\n  "summary": coalesce(summary, pt::text(description))\n,\n      description,\n      content,\n      year,\n      materials,\n      process,\n      location,\n      collaborators,\n      press,\n      // a development record links back to its main project\n      "parent": partOf->{ name, "slug": slug.current },\n      // a main project shows its development records at the end of the page\n      "development": *[_type == "project" && partOf._ref == ^._id] | order(orderRank asc, coalesce(priority, 999) asc){\n        _id,\n        name,\n        "slug": slug.current,\n        "image": image.asset->url,\n        recordLabel,\n        "summary": coalesce(summary, pt::text(description))\n      }\n    }': ProjectQueryResult;
+    '*[_type == "project" && defined(name) && defined(slug.current)]{ \n  _id,\n  _createdAt,\n  name,\n  "slug": slug.current,\n  "image": image.asset->url,\n  "imageAlt": image.alt,\n  // the photo\'s main colour, which Sanity works out on upload: shown in its place while it loads\n  "imageColor": image.asset->metadata.palette.dominant.background,\n  orderRank,\n  priority,\n  "audio": audio.asset->url,\n  "partOf": partOf._ref,\n  recordLabel,\n  disciplines,\n  // fall back to Harry\'s existing description until a summary is written\n  "summary": coalesce(summary, pt::text(description))\n }': ProjectsQueryResult;
+    '*[_type == "project" && slug.current == $slug][0]{\n      \n  _id,\n  _createdAt,\n  name,\n  "slug": slug.current,\n  "image": image.asset->url,\n  "imageAlt": image.alt,\n  // the photo\'s main colour, which Sanity works out on upload: shown in its place while it loads\n  "imageColor": image.asset->metadata.palette.dominant.background,\n  orderRank,\n  priority,\n  "audio": audio.asset->url,\n  "partOf": partOf._ref,\n  recordLabel,\n  disciplines,\n  // fall back to Harry\'s existing description until a summary is written\n  "summary": coalesce(summary, pt::text(description))\n,\n      description,\n      content,\n      audioTranscript,\n      year,\n      materials,\n      process,\n      location,\n      collaborators,\n      press,\n      // a development record links back to its main project\n      "parent": partOf->{ name, "slug": slug.current },\n      // a main project shows its development records at the end of the page\n      "development": *[_type == "project" && partOf._ref == ^._id] | order(orderRank asc, coalesce(priority, 999) asc){\n        _id,\n        name,\n        "slug": slug.current,\n        "image": image.asset->url,\n        "imageColor": image.asset->metadata.palette.dominant.background,\n        recordLabel,\n        "summary": coalesce(summary, pt::text(description))\n      }\n    }': ProjectQueryResult;
     '*[_type == "page" && defined(title) && defined(slug.current)]{ _id, _createdAt, title, "slug": slug.current }': PagesQueryResult;
     '*[_type == "page" && slug.current == $slug][0]{ _id, _createdAt, title, "slug": slug.current, content }': PageQueryResult;
     '*[_type == "siteSettings" && _id == "siteSettings"][0]{\n  title,\n  description,\n  "shareImage": shareImage.asset->url,\n  "shareImageAlt": shareImage.alt,\n  statement,\n  "ambient": ambient.asset->url\n}': SettingsQueryResult;

@@ -144,7 +144,7 @@ const meta = [
       {/* the work: the lead image, then everything in the record, one stack that grows with the screen */}
       <div class="md:col-span-7 xl:col-span-8 md:pt-bar flex flex-col gap-6 md:gap-8 w-full md:max-w-[min(100%,60vw)]">
         {project.image && (
-          <figure>
+          <figure style={project.imageColor ? `background-color: ${project.imageColor}` : undefined}>
             <img
               src={sized(project.image, 1280)}
               srcset={srcset(project.image)}
@@ -180,7 +180,7 @@ const meta = [
               {development.map((r) => (
                 <li class="group relative [&:has(a:focus-visible)]:outline [&:has(a:focus-visible)]:outline-2 [&:has(a:focus-visible)]:outline-offset-4 [&:has(a:focus-visible)]:outline-accent grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8 items-end">
                   {r.image && (
-                    <div class="aspect-[4/3] overflow-hidden">
+                    <div class="aspect-[4/3] overflow-hidden" style={r.imageColor ? `background-color: ${r.imageColor}` : undefined}>
                       <img
                         src={sized(r.image, 720)}
                         srcset={srcset(r.image)}
