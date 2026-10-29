@@ -550,10 +550,6 @@ html[data-mode="sound"] {
   html:not([data-mode]):not([data-flock]) .hp-tray:focus-within .hp-frame {
     inset: -1rem 0 -1.25rem 0;
   }
-  /* the development chip sits in the mount, level with the crop marks */
-  .hp-tray .hp-tag {
-    top: 10px;
-  }
   /* the ruler belonged to the framed tray. The photo now covers its place, and the sound mode
      draws its tape there instead, so it stays hidden (Tape.tsx still measures where it sits) */
   .hp-tray .hp-ruler {

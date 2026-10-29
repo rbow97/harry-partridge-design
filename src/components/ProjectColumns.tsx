@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { ProjectGroup } from "@/lib/group-projects";
-import { recordLabel } from "@/types/Project";
 import CropMarks from "./CropMarks";
 import { COLUMNS, trayHeight, trayLayout } from "@/lib/tray-layout";
 import CrossStitch from "./CrossStitch";
@@ -319,12 +318,6 @@ export default function ProjectColumns({
               {/* the tray */}
               <div className={`relative pt-12 pb-12 md:p-0 md:min-h-[var(--tray)] ${sheet ? "md:w-2/3" : "md:flex-1"}`}>
                 <CropMarks />
-                {/* the development records live at the end of the project's page, so the tray only says they're there */}
-                {g.records.length > 1 && (
-                  <span className="hp-tag absolute top-5 right-7 font-mono text-label uppercase tracking-wider text-muted">
-                    + {g.records.length === 2 ? recordLabel(g.records[1]) : `${g.records.length - 1} records`}
-                  </span>
-                )}
                 {/* hp-well: a size container, so the reel clip can be sized from the frame's real dimensions */}
                 <div
                   // on phones the well is in flow and full width, so the 4:3 frame fills the tray wall to wall

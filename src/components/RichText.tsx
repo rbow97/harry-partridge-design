@@ -121,8 +121,9 @@ type Figure = { image: ImageBlock; caption?: string | null; size?: string | null
 type Pair = { images?: ImageBlock[] | null; caption?: string | null };
 type Quote = { text?: string | null; cite?: string | null };
 
-// a photo's width in the column: inset and half keep portrait photos from running very tall
-const FIGURE_WIDTH: Record<string, string> = { full: "w-full", inset: "md:w-2/3", half: "md:w-1/2" };
+// a photo's width in the column: inset and half keep portrait photos from running very tall, and sit
+// in the middle of the column, as a vertical video does, with their caption under them
+const FIGURE_WIDTH: Record<string, string> = { full: "w-full", inset: "md:w-2/3 md:mx-auto", half: "md:w-1/2 md:mx-auto" };
 
 /**
  * The work column. `legacy` is content from before the blocks, plain paragraphs between photos:
@@ -138,9 +139,23 @@ const work = (embedded: string[], legacy: boolean): PortableTextComponents => ({
         // to it, so the words column stays the one place to read and the two don't compete
         <p className="-mt-3 md:-mt-5 text-small leading-snug text-muted max-w-[52ch]">{children}</p>
       ) : (
-        // paragraphs that follow one another close up to read as one passage: the column's gap is for blocks
-        <p className="text-small leading-relaxed max-w-[60ch] [p+&]:-mt-3 md:[p+&]:-mt-5">{children}</p>
+        // text in the work column belongs to the photos around it, drawn up close to the photo it leads
+        // into. Paragraphs that follow one another close up to read as one passage. It runs the full
+        // width of the column, the same width as the photos it sits between
+        <p
+          className={[
+            "text-small leading-relaxed",
+            "[p+&]:-mt-3 md:[p+&]:-mt-5",
+            "[&:has(+figure)]:-mb-3 md:[&:has(+figure)]:-mb-5",
+          ].join(" ")}
+        >
+          {children}
+        </p>
       ),
+    // a label heads the section after it, in the site's mono label voice: a real heading, so screen
+    // readers can jump between sections, with room above to start the section and a little below
+    label: ({ children }) =>
+      hasText(children) ? <h2 className="hp-label font-normal text-muted mt-6 md:mt-10 -mb-2 md:-mb-4">{children}</h2> : null,
   },
   marks: recordLink(embedded),
   types: {

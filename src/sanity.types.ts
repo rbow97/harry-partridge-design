@@ -308,7 +308,7 @@ export type Project = {
           _type: "span";
           _key: string;
         }>;
-        style?: "normal";
+        style?: "normal" | "label";
         listItem?: never;
         markDefs?: Array<{
           href?: string;
@@ -541,7 +541,7 @@ export type ProjectQueryResult = {
           _type: "span";
           _key: string;
         }>;
-        style?: "normal";
+        style?: "label" | "normal";
         listItem?: never;
         markDefs?: Array<{
           href?: string;

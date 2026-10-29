@@ -145,8 +145,16 @@ export default defineType({
       description: "The work, top to bottom: photos, photos side by side, text, quotes and videos. No need for empty lines, the layout spaces them.",
       type: "array",
       of: [
-        // text is plain paragraphs with links: headings and lists belong to the words column, not the work
-        defineArrayMember({ type: "block", styles: [{ title: "Normal", value: "normal" }], lists: [] }),
+        // text is plain paragraphs with links, and a small label to head a section (like "Photos from Milan
+        // Design Week"): headings and lists belong to the words column, not the work
+        defineArrayMember({
+          type: "block",
+          styles: [
+            { title: "Normal", value: "normal" },
+            { title: "Label", value: "label" },
+          ],
+          lists: [],
+        }),
         defineArrayMember({ type: "figure" }),
         defineArrayMember({ type: "pair" }),
         defineArrayMember({ type: "quote" }),
