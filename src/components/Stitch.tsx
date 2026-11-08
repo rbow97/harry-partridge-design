@@ -18,24 +18,40 @@ const STITCH = 5.5; // px, a running stitch's length
 const BLOCK = 3; // a stitch of yours is a cross made of the text's stitches: the diagonals of a 3x3 block
 const HOLES = "rgba(90, 60, 35, 0.16)"; // the Aida cloth's holes, as in CrossStitch.tsx
 
-type Seg = { x1: number; y1: number; x2: number; y2: number; flat: boolean };
+// a rule on a fixed bar (the nav) stays put while the page scrolls, so it's kept in viewport
+// coordinates and marked pinned; every other rule is in page coordinates
+type Seg = { x1: number; y1: number; x2: number; y2: number; flat: boolean; pinned: boolean };
 type Hold = { seg: Seg; t: number }; // where the needle last was, along which rule
 type Box = { left: number; top: number; right: number; bottom: number };
 // the block, the text's own stitch grid (cell size and origin) to line up with, and the text's boxes to sew around
 type Cloth = Box & { cell: number; ox: number; oy: number; textBox: Box; text: Box[] };
 // what has been sewn, so it can be drawn again whenever the canvas is redrawn
-type Sewn = { kind: "cross"; x: number; y: number; cell: number } | { kind: "run"; x: number; y: number; w: number; h: number };
+type Sewn = { kind: "cross"; x: number; y: number; cell: number } | { kind: "run"; x: number; y: number; w: number; h: number; pinned: boolean };
+
+// Everything is measured and sewn in page coordinates (the viewport's plus the scroll), so a
+// scroll only has to move the drawing, not measure the page again
+function pageRect(el: Element) {
+  const r = el.getBoundingClientRect();
+  return { left: r.left + scrollX, top: r.top + scrollY, right: r.right + scrollX, bottom: r.bottom + scrollY, width: r.width, height: r.height };
+}
+
+// whether an element rides on something fixed to the viewport
+function fixed(el: Element) {
+  for (let n: Element | null = el; n; n = n.parentElement) if (getComputedStyle(n).position === "fixed") return true;
+  return false;
+}
 
 function rules(): Seg[] {
   const out: Seg[] = [];
   document.querySelectorAll<HTMLElement>(".hp-rule").forEach((el) => {
-    const r = el.getBoundingClientRect();
+    const pinned = fixed(el);
+    const r = pinned ? el.getBoundingClientRect() : pageRect(el);
     if (!r.width && !r.height) return;
     const cs = getComputedStyle(el);
-    if (parseFloat(cs.borderTopWidth)) out.push({ x1: r.left, y1: r.top, x2: r.right, y2: r.top, flat: true });
-    if (parseFloat(cs.borderBottomWidth)) out.push({ x1: r.left, y1: r.bottom, x2: r.right, y2: r.bottom, flat: true });
-    if (parseFloat(cs.borderLeftWidth)) out.push({ x1: r.left, y1: r.top, x2: r.left, y2: r.bottom, flat: false });
-    if (parseFloat(cs.borderRightWidth)) out.push({ x1: r.right, y1: r.top, x2: r.right, y2: r.bottom, flat: false });
+    if (parseFloat(cs.borderTopWidth)) out.push({ x1: r.left, y1: r.top, x2: r.right, y2: r.top, flat: true, pinned });
+    if (parseFloat(cs.borderBottomWidth)) out.push({ x1: r.left, y1: r.bottom, x2: r.right, y2: r.bottom, flat: true, pinned });
+    if (parseFloat(cs.borderLeftWidth)) out.push({ x1: r.left, y1: r.top, x2: r.left, y2: r.bottom, flat: false, pinned });
+    if (parseFloat(cs.borderRightWidth)) out.push({ x1: r.right, y1: r.top, x2: r.right, y2: r.bottom, flat: false, pinned });
   });
   return out;
 }
@@ -47,12 +63,12 @@ function cloth(): Cloth | null {
   const block = p?.closest("section");
   const letter = p?.querySelector<HTMLElement>(".hp-letter");
   if (!p || !block || !letter) return null;
-  const r = block.getBoundingClientRect();
-  const t = p.getBoundingClientRect();
+  const r = pageRect(block);
+  const t = pageRect(p);
   const cell = Math.max(3, Math.round(parseFloat(getComputedStyle(letter).fontSize) / 12));
   const pad = 2;
   const text = Array.from(p.querySelectorAll<HTMLElement>(".hp-letter, .hp-kw")).map((el) => {
-    const b = el.getBoundingClientRect();
+    const b = pageRect(el);
     return { left: b.left - pad, top: b.top - pad, right: b.right + pad, bottom: b.bottom + pad };
   });
   return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, cell, ox: t.left, oy: t.top, textBox: t, text };
@@ -60,11 +76,14 @@ function cloth(): Cloth | null {
 
 const overlaps = (a: Box, b: Box) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 
-// the rule under the needle, if any, and how far along it the needle is
-function catchRule(segs: Seg[], x: number, y: number): Hold | null {
+// the rule under the needle, if any, and how far along it the needle is. The needle is in page
+// coordinates, taken back to the viewport's for a pinned rule
+function catchRule(segs: Seg[], px: number, py: number): Hold | null {
   let best: Hold | null = null;
   let bestD = REACH;
   for (const seg of segs) {
+    const x = seg.pinned ? px - scrollX : px;
+    const y = seg.pinned ? py - scrollY : py;
     const d = seg.flat ? Math.abs(y - seg.y1) : Math.abs(x - seg.x1);
     const t = seg.flat ? x - seg.x1 : y - seg.y1;
     const len = seg.flat ? seg.x2 - seg.x1 : seg.y2 - seg.y1;
@@ -91,6 +110,7 @@ export default function Stitch({ cloth: on, sewing }: { cloth: boolean; sewing: 
     if (!on) {
       // the cloth and its stitches fade with the mode (CSS), then it's clean for next time
       const t = setTimeout(() => {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, el.width, el.height);
         crossed.current.clear();
         work.current = [];
@@ -120,7 +140,13 @@ export default function Stitch({ cloth: on, sewing }: { cloth: boolean; sewing: 
       ctx.fillStyle = thread;
       ctx.strokeStyle = thread;
       ctx.lineCap = "round";
-      if (s.kind === "run") ctx.fillRect(s.x, s.y, s.w, s.h);
+      if (s.kind === "run" && s.pinned) {
+        // on a fixed bar: drawn where the viewport has it, whatever the scroll
+        ctx.save();
+        ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+        ctx.fillRect(s.x, s.y, s.w, s.h);
+        ctx.restore();
+      } else if (s.kind === "run") ctx.fillRect(s.x, s.y, s.w, s.h);
       else {
         ctx.lineWidth = Math.max(1.1, s.cell * 0.26);
         for (let i = 0; i < BLOCK; i++) {
@@ -131,17 +157,33 @@ export default function Stitch({ cloth: on, sewing }: { cloth: boolean; sewing: 
     };
     // the whole canvas: the cloth's holes over the block (CrossStitch draws them under the
     // text), then everything sewn so far
+    // page coordinates onto the fixed canvas: scaled for the screen, shifted by the scroll
+    const place = () => {
+      const dpr = devicePixelRatio;
+      ctx.setTransform(dpr, 0, 0, dpr, -scrollX * dpr, -scrollY * dpr);
+    };
     const redraw = () => {
       const dpr = devicePixelRatio;
-      el.width = innerWidth * dpr;
-      el.height = innerHeight * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // resizing a canvas throws its bitmap away, so only when the window has really changed size
+      const w = Math.floor(innerWidth * dpr);
+      const h = Math.floor(innerHeight * dpr);
+      if (el.width !== w || el.height !== h) {
+        el.width = w;
+        el.height = h;
+      } else {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+      }
+      place();
       const c = aida;
       if (c) {
         ctx.fillStyle = HOLES;
         const x0 = c.ox - Math.ceil((c.ox - c.left) / c.cell) * c.cell;
         const y0 = c.oy - Math.ceil((c.oy - c.top) / c.cell) * c.cell;
-        for (let y = y0; y < c.bottom; y += c.cell) {
+        // only the rows in view, on the same grid
+        const first = y0 + Math.max(0, Math.floor((scrollY - y0) / c.cell)) * c.cell;
+        const end = Math.min(c.bottom, scrollY + innerHeight + c.cell);
+        for (let y = first; y < end; y += c.cell) {
           for (let x = x0; x < c.right; x += c.cell) {
             if (x >= c.textBox.left && x < c.textBox.right && y >= c.textBox.top && y < c.textBox.bottom) continue;
             ctx.fillRect(x - 0.5, y - 0.5, 1, 1);
@@ -158,24 +200,37 @@ export default function Stitch({ cloth: on, sewing }: { cloth: boolean; sewing: 
       last.current = null;
       redraw();
     };
-    addEventListener("scroll", remeasure, { passive: true });
+    // a scroll moves the drawing, at most once a frame, and lets go of the rule the needle held
+    let queued = 0;
+    const scrolled = () => {
+      hold.current = null;
+      last.current = null;
+      if (!queued)
+        queued = requestAnimationFrame(() => {
+          queued = 0;
+          redraw();
+        });
+    };
+    addEventListener("scroll", scrolled, { passive: true });
     addEventListener("resize", remeasure);
-    if (!sewing) {
-      return () => {
-        removeEventListener("scroll", remeasure);
-        removeEventListener("resize", remeasure);
-      };
-    }
+    const stop = () => {
+      cancelAnimationFrame(queued);
+      removeEventListener("scroll", scrolled);
+      removeEventListener("resize", remeasure);
+    };
+    if (!sewing) return stop;
 
     const add = (s: Sewn) => {
       work.current.push(s);
+      place();
       paint(s);
     };
     const running = (seg: Seg, t: number) => {
       // a little unevenness, as if by hand
       const wobble = (Math.random() - 0.5) * 1.2;
       const len = STITCH + (Math.random() - 0.5) * 1.5;
-      add(seg.flat ? { kind: "run", x: seg.x1 + t - len / 2, y: seg.y1 - 1 + wobble, w: len, h: 2 } : { kind: "run", x: seg.x1 - 1 + wobble, y: seg.y1 + t - len / 2, w: 2, h: len });
+      const { pinned } = seg;
+      add(seg.flat ? { kind: "run", x: seg.x1 + t - len / 2, y: seg.y1 - 1 + wobble, w: len, h: 2, pinned } : { kind: "run", x: seg.x1 - 1 + wobble, y: seg.y1 + t - len / 2, w: 2, h: len, pinned });
     };
     // a cross of yours on the block under the point, once per block, never over the text
     const cross = (x: number, y: number) => {
@@ -194,7 +249,7 @@ export default function Stitch({ cloth: on, sewing }: { cloth: boolean; sewing: 
 
     const move = (e: PointerEvent) => {
       if (e.pointerType === "touch") return;
-      const x = e.clientX, y = e.clientY;
+      const x = e.clientX + scrollX, y = e.clientY + scrollY;
       if (onCloth(x, y)) {
         // stitch every block along the way, so a quick sweep doesn't leave gaps
         const from = last.current && onCloth(last.current.x, last.current.y) ? last.current : { x, y };
@@ -226,8 +281,7 @@ export default function Stitch({ cloth: on, sewing }: { cloth: boolean; sewing: 
     addEventListener("pointermove", move);
     return () => {
       removeEventListener("pointermove", move);
-      removeEventListener("scroll", remeasure);
-      removeEventListener("resize", remeasure);
+      stop();
     };
   }, [on, sewing]);
 
