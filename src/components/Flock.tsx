@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { reelAngle } from "@/lib/reels";
 
 /**
  * Flock (living systems mode): the specimen images dissolve into particles that
@@ -352,7 +353,7 @@ export default function Flock({ active, land = "photo" }: { active: boolean; lan
     // Otherwise a spring chasing a turning spot always trails it, and the flock never lands
     let lastAngles: number[] = [];
     const spins = (s: Sim, dt: number) => {
-      const angles = s.trays.map((li) => ((parseFloat(li.style.getPropertyValue("--reel")) || 0) * Math.PI) / 180);
+      const angles = s.trays.map((li) => (reelAngle(li) * Math.PI) / 180);
       const out = angles.map((a, t) => [Math.cos(a), Math.sin(a), lastAngles.length && dt ? (a - lastAngles[t]) / dt : 0]);
       lastAngles = angles;
       return out;

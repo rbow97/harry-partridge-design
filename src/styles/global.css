@@ -163,6 +163,13 @@ html {
 /* every mode writes the same filter list, in the same order, with neutral values for the
    functions it doesn't use: CSS only interpolates filters whose lists match, otherwise the
    change snaps. The reel angle (--reel) is written per frame by Tape.tsx, so no transform transition */
+/* set on the photo itself (lib/reels.ts) and never inherited, so turning a reel restyles one
+   image rather than its whole tray */
+@property --reel {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
 .hp-img {
   filter: grayscale(0) sepia(0) saturate(1) contrast(1) brightness(1);
   transform: rotate(var(--reel, 0deg));

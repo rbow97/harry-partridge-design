@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { release, take } from "@/stores/sound";
 import { alpha } from "@/lib/tokens";
+import { setReel } from "@/lib/reels";
 
 /**
  * Tape (sound mode): the page becomes a tape machine. A recording runs while you
@@ -61,11 +62,20 @@ function standIn(t: number) {
 }
 
 // the trays, and turning their reels: --reel is read by the .hp-img transform
+// (found once each time the mode starts or leaves, not every frame)
 const trays = () => Array.from(document.querySelectorAll<HTMLElement>("ol > li"));
-const turn = (angles: number[]) => trays().forEach((li, i) => li.style.setProperty("--reel", `${(angles[i] ?? 0).toFixed(2)}deg`));
-// how open each reel is (--open in global.css), set here only on the way out of the mode
-const open = (v: number | null) =>
-  trays().forEach((li) => (v === null ? li.style.removeProperty("--open") : li.style.setProperty("--open", v.toFixed(3))));
+const turn = (lis: HTMLElement[], angles: number[]) => lis.forEach((li, i) => setReel(li, angles[i] ?? 0));
+// how open each reel is (--open in global.css), set here only on the way out of the mode. Written
+// only when it changes: an inline write restyles the whole tray even when the value is the same
+const opener = (lis: HTMLElement[]) => {
+  let last: string | null | undefined;
+  return (v: number | null) => {
+    const next = v === null ? null : v.toFixed(3);
+    if (next === last) return;
+    last = next;
+    lis.forEach((li) => (next === null ? li.style.removeProperty("--open") : li.style.setProperty("--open", next)));
+  };
+};
 // each reel's speed in deg/s: slow, a turn every 18 to 27 seconds, neighbours the other way
 const speed = (i: number) => ((i % 2 ? -1 : 1) * 360) / (18 + i * 3);
 
@@ -96,9 +106,11 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
       // back upright, the short way. Only then does it open out into its photo. --open is held at 0
       // from here, before the mode leaves <html>, so the photo doesn't pop open on the frame between
       const from = reels.current.slice();
+      const lis = trays();
+      const open = opener(lis);
       if (!from.some((a) => a !== 0) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         reels.current = reels.current.map(() => 0);
-        turn(reels.current);
+        turn(lis, reels.current);
         open(null);
         return;
       }
@@ -126,11 +138,11 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
           reels.current = up.slice();
           open(1 - (1 - u) ** 3);
         }
-        turn(reels.current);
+        turn(lis, reels.current);
         if (t < STOP + TURN + OPEN) raf.current = requestAnimationFrame(step);
         else {
           reels.current = reels.current.map(() => 0);
-          turn(reels.current);
+          turn(lis, reels.current);
           open(null);
           raf.current = 0;
         }
@@ -147,6 +159,7 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
       return s.env[Math.floor(((t % s.duration) + s.duration) % s.duration / BLOCK)] ?? 0;
     };
     const tc = document.querySelector<HTMLElement>(".hp-tc");
+    const lis = trays();
     let rulers = Array.from(document.querySelectorAll<HTMLElement>(".hp-ruler")).map((r) => r.getBoundingClientRect());
     const remeasure = () => (rulers = Array.from(document.querySelectorAll<HTMLElement>(".hp-ruler")).map((r) => r.getBoundingClientRect()));
     addEventListener("scroll", remeasure, { passive: true });
@@ -162,9 +175,13 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
 
     // back in the mode mid-way out: hand --open back to the CSS, which eases it shut. On the next
     // frame, once <html> carries the mode again, so it closes rather than flicking open first
-    requestAnimationFrame(() => open(null));
+    requestAnimationFrame(() => opener(lis)(null));
 
     let lastFrame = performance.now();
+    // read once, on the first frame, once <html> carries the mode and its palette. Reading a style
+    // every frame, straight after writing the reels, made the browser restyle twice a frame
+    let signal = "";
+    let shown = "";
     const draw = (now: number) => {
       const a = audio.current;
       const playing = !!a && !a.paused && !a.ended;
@@ -172,11 +189,13 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
       // each reel at its own speed, neighbours the other way
       const dt = Math.min(0.05, (now - lastFrame) / 1000);
       lastFrame = now;
-      const n = trays().length;
+      const n = lis.length;
       if (reels.current.length !== n) reels.current = Array.from({ length: n }, (_, i) => reels.current[i] ?? 0);
       reels.current = reels.current.map((ang, i) => ang + speed(i) * dt);
-      turn(reels.current);
-      if (tc) tc.textContent = format(t);
+      turn(lis, reels.current);
+      // the counter shows tenths, so it only changes ten times a second
+      const stamp = format(t);
+      if (tc && stamp !== shown) tc.textContent = shown = stamp;
 
       const dpr = devicePixelRatio;
       if (el.width !== innerWidth * dpr || el.height !== innerHeight * dpr) {
@@ -185,8 +204,8 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, innerWidth, innerHeight);
-      // the signal is printed in the accent, read each frame so it follows the palette (tokens.css)
-      const signal = alpha("--accent", 0.9);
+      // the signal is printed in the accent (tokens.css)
+      signal ||= alpha("--accent", 0.9);
       for (const r of rulers) {
         if (r.bottom < 0 || r.top > innerHeight) continue;
         const x0 = r.left, w = r.width, y0 = r.bottom - BAND;
@@ -196,12 +215,15 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
         ctx.fillRect(x0, y0, w, 1);
         ctx.fillRect(x0, y0 + BAND - 1, w, 1);
         // the signal printed on the tape: left of the head has played, right is still to come
+        // one column per pixel, filled together as one path
         ctx.fillStyle = signal;
         const mid = y0 + BAND / 2;
+        ctx.beginPath();
         for (let x = 0; x < w; x += 1) {
           const h = level(t + (x - w / 2) / SPEED) * (BAND - 5);
-          if (h > 0.3) ctx.fillRect(x0 + x, mid - h / 2, 1, h);
+          if (h > 0.3) ctx.rect(x0 + x, mid - h / 2, 1, h);
         }
+        ctx.fill();
         // the head
         ctx.fillStyle = "#f4f1ea";
         ctx.fillRect(x0 + w / 2 - 1, y0 - 2, 2, BAND + 4);
