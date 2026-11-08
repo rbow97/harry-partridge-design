@@ -15,6 +15,9 @@ export default function CrossStitch({
   active: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  // what the canvas holds: the layout, font and thread it was sewn for. The stitches stay on the
+  // canvas between hovers, so entering again only redraws when one of these has changed
+  const sewn = useRef("");
 
   useEffect(() => {
     const el = targetRef.current;
@@ -25,11 +28,6 @@ export default function CrossStitch({
 
     let raf = 0;
     const clear = () => ctx.clearRect(0, 0, cv.width, cv.height);
-    if (!active) {
-      // fade out (CSS opacity), then wipe once it's invisible
-      const t = setTimeout(clear, 450);
-      return () => clearTimeout(t);
-    }
 
     const draw = () => {
       cancelAnimationFrame(raf);
@@ -38,6 +36,12 @@ export default function CrossStitch({
       const letters = Array.from(el.querySelectorAll<HTMLElement>(".hp-letter"));
       if (!letters.length) return;
       const cs = getComputedStyle(letters[0]);
+      const thread = token("--accent");
+      // the last letter's place catches a reflow that keeps the box the same size, a late webfont say
+      const end = letters[letters.length - 1].getBoundingClientRect();
+      const key = [box.width, box.height, dpr, cs.font, thread, end.left, end.top, document.fonts.status].join("|");
+      if (key === sewn.current) return;
+      sewn.current = key;
       const fontSize = parseFloat(cs.fontSize);
       const cell = Math.max(3, Math.round(fontSize / 12));
 
@@ -114,42 +118,58 @@ export default function CrossStitch({
         return { x: r.left - box.left, y: r.bottom - box.top + 2, w: r.width };
       });
 
-      const thread = token("--accent");
+      // each stitch is added to one path, stroked once below: a stroke per stitch was most of the cost
       const sew = (x: number, y: number) => {
         const p = cell * 0.18;
-        ctx.beginPath();
         ctx.moveTo(x + p, y + p);
         ctx.lineTo(x + cell - p, y + cell - p);
         ctx.moveTo(x + cell - p, y + p);
         ctx.lineTo(x + p, y + cell - p);
-        ctx.stroke();
       };
       ctx.strokeStyle = thread;
       ctx.lineWidth = Math.max(1.1, cell * 0.26);
       ctx.lineCap = "round";
 
       // draw every stitch in one go: the letters switch to cross-stitch instantly
-      let i = 0;
-      const perFrame = stitches.length;
-      const step = () => {
-        const end = Math.min(stitches.length, i + perFrame);
-        for (; i < end; i++) sew(stitches[i][0], stitches[i][1]);
-        if (i < stitches.length) {
-          raf = requestAnimationFrame(step);
-        } else {
-          ctx.setLineDash([cell * 0.9, cell * 0.6]);
-          ctx.lineWidth = Math.max(1, cell * 0.22);
-          for (const u of underlines) {
-            ctx.beginPath();
-            ctx.moveTo(u.x, u.y);
-            ctx.lineTo(u.x + u.w, u.y);
-            ctx.stroke();
-          }
-          ctx.setLineDash([]);
-        }
-      };
-      step();
+      ctx.beginPath();
+      for (const [x, y] of stitches) sew(x, y);
+      ctx.stroke();
+      ctx.setLineDash([cell * 0.9, cell * 0.6]);
+      ctx.lineWidth = Math.max(1, cell * 0.22);
+      for (const u of underlines) {
+        ctx.beginPath();
+        ctx.moveTo(u.x, u.y);
+        ctx.lineTo(u.x + u.w, u.y);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
     };
+
+    if (!active) {
+      // fade out (CSS opacity). The stitches stay on the canvas, so the next hover has nothing to redo.
+      // Out of every mode, sew ahead once the fonts are in and the browser is idle, so the first hover
+      // doesn't either. Not while another mode is on: its palette isn't the cloth's thread
+      let cancel = () => {};
+      let gone = false;
+      const ahead = () => {
+        if (!gone && !document.documentElement.dataset.mode) draw();
+      };
+      document.fonts.ready.then(() => {
+        if (gone) return;
+        // Safari has no idle callback, so a short wait stands in
+        if ("requestIdleCallback" in window) {
+          const id = requestIdleCallback(ahead, { timeout: 2000 });
+          cancel = () => cancelIdleCallback(id);
+        } else {
+          const id = setTimeout(ahead, 300);
+          cancel = () => clearTimeout(id);
+        }
+      });
+      return () => {
+        gone = true;
+        cancel();
+      };
+    }
 
     // wait a frame so the letters have settled before measuring
     raf = requestAnimationFrame(draw);
