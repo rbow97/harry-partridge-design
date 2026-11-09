@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { token } from "@/lib/tokens";
+import { whenIdle } from "@/lib/idle";
 
 /**
  * Re-sews the statement as cross-stitch (materials mode).
@@ -155,15 +156,7 @@ export default function CrossStitch({
         if (!gone && !document.documentElement.dataset.mode) draw();
       };
       document.fonts.ready.then(() => {
-        if (gone) return;
-        // Safari has no idle callback, so a short wait stands in
-        if ("requestIdleCallback" in window) {
-          const id = requestIdleCallback(ahead, { timeout: 2000 });
-          cancel = () => cancelIdleCallback(id);
-        } else {
-          const id = setTimeout(ahead, 300);
-          cancel = () => clearTimeout(id);
-        }
+        if (!gone) cancel = whenIdle(ahead);
       });
       return () => {
         gone = true;

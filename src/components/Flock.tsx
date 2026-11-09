@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { reelAngle } from "@/lib/reels";
+import { whenIdle } from "@/lib/idle";
 
 /**
  * Flock (living systems mode): the specimen images dissolve into particles that
@@ -46,13 +47,20 @@ type Sim = {
   starts: Int32Array;
 };
 
-// a small copy of the image is plenty at one particle per 10px, and the originals are print size
+// a small copy of the image is plenty at one particle per 10px, and the originals are print size.
+// Each copy is fetched once and kept, so only the first hover (or the warm-up below) waits for it
+const pictures = new Map<string, Promise<HTMLImageElement | null>>();
 function load(src: string) {
-  return new Promise<HTMLImageElement | null>((res) => {
+  const known = pictures.get(src);
+  if (known) return known;
+  const loading = new Promise<HTMLImageElement | null>((res) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => res(img);
-    img.onerror = () => res(null);
+    img.onerror = () => {
+      pictures.delete(src); // a later hover tries again
+      res(null);
+    };
     try {
       const u = new URL(src);
       if (u.hostname === "cdn.sanity.io") {
@@ -64,6 +72,52 @@ function load(src: string) {
       img.src = src;
     }
   });
+  pictures.set(src, loading);
+  return loading;
+}
+
+// a photo's pixels, cover-fitted to its frame the way the real one is, kept per size so going
+// back into the mode doesn't read them out of a canvas again. null when the canvas is tainted
+const covers = new Map<string, Uint8ClampedArray | null>();
+function cover(src: string, pic: HTMLImageElement, w: number, h: number) {
+  const key = `${src} ${w}x${h}`;
+  const known = covers.get(key);
+  if (known !== undefined) return known;
+  const off = document.createElement("canvas");
+  off.width = w;
+  off.height = h;
+  const c = off.getContext("2d", { willReadFrequently: true });
+  const s = Math.max(w / pic.naturalWidth, h / pic.naturalHeight);
+  c?.drawImage(pic, (w - pic.naturalWidth * s) / 2, (h - pic.naturalHeight * s) / 2, pic.naturalWidth * s, pic.naturalHeight * s);
+  let data: Uint8ClampedArray | null = null;
+  try {
+    data = c?.getImageData(0, 0, w, h).data ?? null;
+  } catch {
+    data = null; // tainted canvas: fall back to ink
+  }
+  covers.set(key, data);
+  return data;
+}
+
+// the trays' photos on screen now: where each sits, and its picture
+function onScreen() {
+  return Array.from(document.querySelectorAll<HTMLElement>(".hp-frame")).flatMap((f) => {
+    const img = f.querySelector<HTMLImageElement>('img[data-img="lead"]');
+    const rect = frameRect(f);
+    if (!img || rect.bottom < 0 || rect.top > innerHeight) return [];
+    return [{ f, src: img.src, rect, w: Math.round(rect.width), h: Math.round(rect.height) }];
+  });
+}
+
+// Fetch the copies and read their pixels while the page is idle, so the first hover can start the
+// flock at once. Skipped when the reader has asked to save data
+function warm() {
+  const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
+  if (saveData) return;
+  for (const { src, w, h } of onScreen())
+    load(src).then((pic) => {
+      if (pic) whenIdle(() => cover(src, pic, w, h));
+    });
 }
 
 // Where a tray's photo sits while the flock is out. On a pointer device it's the whole tray (the
@@ -88,37 +142,21 @@ function reelOf(f: HTMLElement, rect: DOMRect) {
 
 // sample every visible tray image, cover-fitted like the real one, into particles
 async function sample(): Promise<Sim | null> {
-  const frames = Array.from(document.querySelectorAll<HTMLElement>(".hp-frame"));
+  const shown = onScreen();
+  // fetched side by side, not one after another
+  const pics = await Promise.all(shown.map(({ src }) => load(src)));
   const pts: number[] = []; // x, y, bucket
   const reels: number[] = []; // per particle: reel centre x, y, radius, hub radius
   const owner: number[] = []; // per particle: its tray's index in trays
   const trays: HTMLElement[] = [];
   const buckets = new Map<number, string>();
-  for (const f of frames) {
-    const img = f.querySelector<HTMLImageElement>('img[data-img="lead"]');
-    const rect = frameRect(f);
-    if (!img || rect.bottom < 0 || rect.top > innerHeight) continue;
-    const pic = await load(img.src);
-    const w = Math.round(rect.width);
-    const h = Math.round(rect.height);
+  for (const [k, { f, src, rect, w, h }] of shown.entries()) {
+    const pic = pics[k];
     const reel = reelOf(f, rect);
     const li = f.closest("li") as HTMLElement | null;
     if (li && !trays.includes(li)) trays.push(li);
     const t = li ? trays.indexOf(li) : 0;
-    let data: Uint8ClampedArray | null = null;
-    if (pic) {
-      const off = document.createElement("canvas");
-      off.width = w;
-      off.height = h;
-      const c = off.getContext("2d");
-      const s = Math.max(w / pic.naturalWidth, h / pic.naturalHeight);
-      c?.drawImage(pic, (w - pic.naturalWidth * s) / 2, (h - pic.naturalHeight * s) / 2, pic.naturalWidth * s, pic.naturalHeight * s);
-      try {
-        data = c?.getImageData(0, 0, w, h).data ?? null;
-      } catch {
-        data = null; // tainted canvas: fall back to ink
-      }
-    }
+    const data = pic ? cover(src, pic, w, h) : null;
     for (let y = STEP / 2; y < h; y += STEP) {
       for (let x = STEP / 2; x < w; x += STEP) {
         const i = (Math.floor(y) * w + Math.floor(x)) * 4;
@@ -261,29 +299,42 @@ export default function Flock({ active, land = "photo" }: { active: boolean; lan
     const rows = Math.ceil(innerHeight / PERCEPTION) + 2;
     let head = new Int32Array(cols * rows);
     let next = new Int32Array(0);
+    let cellX = new Int32Array(0);
+    let cellY = new Int32Array(0);
+    // Thousands of boids every frame, so this loop keeps to plain arithmetic on local arrays: the
+    // page's size read once a frame rather than per boid, and square roots rather than Math.hypot
     const flock = (dt: number) => {
       const s = sim.current!;
-      if (next.length !== s.n) next = new Int32Array(s.n);
+      const { n, px, py, vx, vy } = s;
+      if (next.length !== n) {
+        next = new Int32Array(n);
+        cellX = new Int32Array(n);
+        cellY = new Int32Array(n);
+      }
+      const W = innerWidth, H = innerHeight;
       head.fill(-1);
-      for (let i = 0; i < s.n; i++) {
-        const cx = Math.min(cols - 1, Math.max(0, Math.floor(s.px[i] / PERCEPTION) + 1));
-        const cy = Math.min(rows - 1, Math.max(0, Math.floor(s.py[i] / PERCEPTION) + 1));
+      for (let i = 0; i < n; i++) {
+        const cx = Math.min(cols - 1, Math.max(0, Math.floor(px[i] / PERCEPTION) + 1));
+        const cy = Math.min(rows - 1, Math.max(0, Math.floor(py[i] / PERCEPTION) + 1));
+        cellX[i] = cx;
+        cellY[i] = cy;
         const c = cy * cols + cx;
         next[i] = head[c];
         head[c] = i;
       }
       const [mx, my] = cursor.current;
-      for (let i = 0; i < s.n; i++) {
+      for (let i = 0; i < n; i++) {
         let sx = 0, sy = 0, ax = 0, ay = 0, cxs = 0, cys = 0, count = 0;
-        const cx = Math.min(cols - 1, Math.max(0, Math.floor(s.px[i] / PERCEPTION) + 1));
-        const cy = Math.min(rows - 1, Math.max(0, Math.floor(s.py[i] / PERCEPTION) + 1));
+        const cx = cellX[i];
+        const cy = cellY[i];
+        const pxi = px[i], pyi = py[i];
         for (let oy = -1; oy <= 1 && count < NEIGHBOURS; oy++) {
           for (let ox = -1; ox <= 1 && count < NEIGHBOURS; ox++) {
             const yy = cy + oy, xx = cx + ox;
             if (yy < 0 || yy >= rows || xx < 0 || xx >= cols) continue;
             for (let j = head[yy * cols + xx]; j !== -1 && count < NEIGHBOURS; j = next[j]) {
               if (j === i) continue;
-              const dx = s.px[j] - s.px[i], dy = s.py[j] - s.py[i];
+              const dx = px[j] - pxi, dy = py[j] - pyi;
               const d2 = dx * dx + dy * dy;
               if (d2 > PERCEPTION * PERCEPTION || d2 === 0) continue;
               const d = Math.sqrt(d2);
@@ -291,8 +342,8 @@ export default function Flock({ active, land = "photo" }: { active: boolean; lan
                 sx -= dx / d * (1 - d / SEPARATION);
                 sy -= dy / d * (1 - d / SEPARATION);
               }
-              ax += s.vx[j];
-              ay += s.vy[j];
+              ax += vx[j];
+              ay += vy[j];
               cxs += dx;
               cys += dy;
               count++;
@@ -301,12 +352,12 @@ export default function Flock({ active, land = "photo" }: { active: boolean; lan
         }
         let fx = sx * WEIGHT.sep * 100, fy = sy * WEIGHT.sep * 100;
         if (count) {
-          fx += (ax / count - s.vx[i]) * WEIGHT.ali + (cxs / count) * WEIGHT.coh * 2;
-          fy += (ay / count - s.vy[i]) * WEIGHT.ali + (cys / count) * WEIGHT.coh * 2;
+          fx += (ax / count - vx[i]) * WEIGHT.ali + (cxs / count) * WEIGHT.coh * 2;
+          fy += (ay / count - vy[i]) * WEIGHT.ali + (cys / count) * WEIGHT.coh * 2;
         }
         // the cursor: drawn toward it from a distance, nudged off it up close, so they wheel around it
-        const tx = mx - s.px[i], ty = my - s.py[i];
-        const td = Math.hypot(tx, ty) || 1;
+        const tx = mx - pxi, ty = my - pyi;
+        const td = Math.sqrt(tx * tx + ty * ty) || 1;
         const pull = td > ORBIT ? Math.min(1, (td - ORBIT) / 250) : td < ORBIT / 3 ? -0.8 : 0;
         fx += (tx / td) * pull * WEIGHT.cursor * 120;
         fy += (ty / td) * pull * WEIGHT.cursor * 120;
@@ -314,19 +365,21 @@ export default function Flock({ active, land = "photo" }: { active: boolean; lan
         fy += (Math.random() - 0.5) * WEIGHT.noise * 200;
         // stay on the page
         const m = 30;
-        if (s.px[i] < m) fx += (m - s.px[i]) * 8;
-        if (s.px[i] > innerWidth - m) fx -= (s.px[i] - innerWidth + m) * 8;
-        if (s.py[i] < m + 56) fy += (m + 56 - s.py[i]) * 8;
-        if (s.py[i] > innerHeight - m) fy -= (s.py[i] - innerHeight + m) * 8;
+        if (pxi < m) fx += (m - pxi) * 8;
+        if (pxi > W - m) fx -= (pxi - W + m) * 8;
+        if (pyi < m + 56) fy += (m + 56 - pyi) * 8;
+        if (pyi > H - m) fy -= (pyi - H + m) * 8;
 
-        s.vx[i] += fx * dt * 3;
-        s.vy[i] += fy * dt * 3;
-        const sp = Math.hypot(s.vx[i], s.vy[i]) || 1;
-        const clamped = Math.min(MAX_SPEED, Math.max(MIN_SPEED, sp));
-        s.vx[i] *= clamped / sp;
-        s.vy[i] *= clamped / sp;
-        s.px[i] += s.vx[i] * dt;
-        s.py[i] += s.vy[i] * dt;
+        let vxi = vx[i] + fx * dt * 3;
+        let vyi = vy[i] + fy * dt * 3;
+        const sp = Math.sqrt(vxi * vxi + vyi * vyi) || 1;
+        const k = Math.min(MAX_SPEED, Math.max(MIN_SPEED, sp)) / sp;
+        vxi *= k;
+        vyi *= k;
+        vx[i] = vxi;
+        vy[i] = vyi;
+        px[i] = pxi + vxi * dt;
+        py[i] = pyi + vyi * dt;
       }
     };
 
@@ -477,6 +530,19 @@ export default function Flock({ active, land = "photo" }: { active: boolean; lan
   }, [active]);
 
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
+
+  // fetch and read the photos ahead of the first hover, once the page has loaded and gone quiet
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let cancel = () => {};
+    const go = () => (cancel = whenIdle(warm));
+    if (document.readyState === "complete") go();
+    else addEventListener("load", go, { once: true });
+    return () => {
+      removeEventListener("load", go);
+      cancel();
+    };
+  }, []);
 
   return <canvas ref={canvas} aria-hidden="true" className="hp-flock" />;
 }
