@@ -12,8 +12,9 @@ const angles = new WeakMap<Element, number>();
 /** a tray's reel angle in degrees, 0 when upright or never turned */
 export const reelAngle = (tray: Element) => angles.get(tray) ?? 0;
 
-/** turn a tray's reel to an angle in degrees */
-export function setReel(tray: HTMLElement, deg: number) {
+/** turn a tray's reel to an angle in degrees. A tray off screen keeps its angle here but isn't
+ *  restyled, and catches up the frame it scrolls back into view */
+export function setReel(tray: HTMLElement, deg: number, shown = true) {
   angles.set(tray, deg);
-  tray.querySelector<HTMLElement>(".hp-img")?.style.setProperty("--reel", `${deg.toFixed(2)}deg`);
+  if (shown) tray.querySelector<HTMLElement>(".hp-img")?.style.setProperty("--reel", `${deg.toFixed(2)}deg`);
 }

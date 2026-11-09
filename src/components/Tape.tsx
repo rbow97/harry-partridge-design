@@ -65,7 +65,8 @@ function standIn(t: number) {
 // the trays, and turning their reels: --reel is read by the .hp-img transform
 // (found once each time the mode starts or leaves, not every frame)
 const trays = () => Array.from(document.querySelectorAll<HTMLElement>("ol > li"));
-const turn = (lis: HTMLElement[], angles: number[]) => lis.forEach((li, i) => setReel(li, angles[i] ?? 0));
+const turn = (lis: HTMLElement[], angles: number[], shown?: Set<Element>) =>
+  lis.forEach((li, i) => setReel(li, angles[i] ?? 0, !shown || shown.has(li)));
 // how open each reel is (--open in global.css), set here only on the way out of the mode. Written
 // only when it changes: an inline write restyles the whole tray even when the value is the same
 const opener = (lis: HTMLElement[]) => {
@@ -161,6 +162,14 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
     };
     const tc = document.querySelector<HTMLElement>(".hp-tc");
     const lis = trays();
+    // the trays in view: the others keep turning in memory but aren't restyled while scrolled away
+    const inView = new Set<Element>(lis); // all of them until the observer first reports
+    // with a margin, so a reel has caught up before it scrolls into sight
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => (e.isIntersecting ? inView.add(e.target) : inView.delete(e.target))),
+      { rootMargin: "50% 0px" },
+    );
+    lis.forEach((li) => io.observe(li));
     let rulers = Array.from(document.querySelectorAll<HTMLElement>(".hp-ruler")).map((r) => r.getBoundingClientRect());
     const remeasure = () => (rulers = Array.from(document.querySelectorAll<HTMLElement>(".hp-ruler")).map((r) => r.getBoundingClientRect()));
     addEventListener("scroll", remeasure, { passive: true });
@@ -193,7 +202,7 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
       const n = lis.length;
       if (reels.current.length !== n) reels.current = Array.from({ length: n }, (_, i) => reels.current[i] ?? 0);
       reels.current = reels.current.map((ang, i) => ang + speed(i) * dt);
-      turn(lis, reels.current);
+      turn(lis, reels.current, inView);
       // the counter shows tenths, so it only changes ten times a second
       const stamp = format(t);
       if (tc && stamp !== shown) tc.textContent = shown = stamp;
@@ -254,6 +263,7 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
       cancelAnimationFrame(raf.current);
       raf.current = 0;
       removeEventListener("scroll", remeasure);
+      io.disconnect();
       // remember where the tape got to
       const playing = !!spool && !spool.paused;
       clk.offset = playing ? spool.currentTime : clk.offset + (performance.now() - clk.start) / 1000;
