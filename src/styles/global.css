@@ -58,7 +58,7 @@ html {
 .bg-accent,
 .bg-paper,
 .bg-rule {
-  transition: color var(--dur-mode), background-color var(--dur-mode);
+  transition: color 0s linear var(--dur-text-switch), background-color var(--dur-mode);
 }
 
 .hp-rule {
@@ -180,7 +180,7 @@ html {
 .hp-surface {
   background-color: var(--surface);
   color: var(--text);
-  transition: background-color var(--dur-mode), color var(--dur-mode), border-color var(--dur-mode),
+  transition: background-color var(--dur-mode), color 0s linear var(--dur-text-switch), border-color var(--dur-mode),
     filter var(--dur-filter), transform var(--dur-slow);
   /* texture layer: fades in/out instead of the background-image snapping */
   isolation: isolate;
@@ -202,6 +202,12 @@ html {
 /* Letter effects use transform/colour only — changing letter widths would reflow the
    sentence, slide a different word under the cursor and flip the mode back and forth. */
 .hp-letter {
+  transition: transform var(--dur-mode) ease calc(var(--i) * 3ms);
+}
+/* the printed letters fade out under the cross-stitch and back in as it goes. Only around
+   materials: anywhere else they take the page's colour as it switches, with no fade of their own */
+html[data-mode="materials"] .hp-statement .hp-letter,
+html[data-anim~="materials"] .hp-statement .hp-letter {
   transition: transform var(--dur-mode) ease calc(var(--i) * 3ms), color var(--dur-fast);
 }
 

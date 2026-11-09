@@ -55,6 +55,11 @@
   /* motion */
   --dur-fast: 0.3s;
   --dur-mode: 0.5s; /* the page changing colour */
+  /* Text doesn't fade with the page, it changes colour once, when the surface is far enough
+     through its change that the new text colour reads better than the old (about 55% of the way,
+     which the ease curve reaches a third of the way in). A fade would pass text and surface through
+     the same grey, and easing an inherited colour restyles the whole page every frame */
+  --dur-text-switch: calc(var(--dur-mode) * 0.32);
   --dur-filter: 0.6s;
   --dur-slow: 0.8s;
   --ease-mode: ease;
