@@ -201,14 +201,11 @@ html {
 }
 /* Letter effects use transform/colour only — changing letter widths would reflow the
    sentence, slide a different word under the cursor and flip the mode back and forth. */
-.hp-letter {
-  transition: transform var(--dur-mode) ease calc(var(--i) * 3ms);
-}
 /* the printed letters fade out under the cross-stitch and back in as it goes. Only around
    materials: anywhere else they take the page's colour as it switches, with no fade of their own */
 html[data-mode="materials"] .hp-statement .hp-letter,
 html[data-anim~="materials"] .hp-statement .hp-letter {
-  transition: transform var(--dur-mode) ease calc(var(--i) * 3ms), color var(--dur-fast);
+  transition: color var(--dur-fast);
 }
 
 /* ------------------------------------------------------------------
