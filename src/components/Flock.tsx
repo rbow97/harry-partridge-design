@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { reelAngle } from "@/lib/reels";
 import { whenIdle } from "@/lib/idle";
+import { pixelRatio } from "@/lib/canvas";
 
 /**
  * Flock (living systems mode): the specimen images dissolve into particles that
@@ -276,10 +277,12 @@ export default function Flock({ active, land = "photo" }: { active: boolean; lan
     const draw = () => {
       const s = sim.current;
       if (!s) return;
-      const dpr = devicePixelRatio;
-      if (el.width !== innerWidth * dpr || el.height !== innerHeight * dpr) {
-        el.width = innerWidth * dpr;
-        el.height = innerHeight * dpr;
+      const dpr = pixelRatio();
+      // whole pixels, or a fractional size never matches the canvas and it's rebuilt every frame
+      const w = Math.floor(innerWidth * dpr), h = Math.floor(innerHeight * dpr);
+      if (el.width !== w || el.height !== h) {
+        el.width = w;
+        el.height = h;
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, innerWidth, innerHeight);

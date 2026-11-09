@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { release, take } from "@/stores/sound";
 import { alpha } from "@/lib/tokens";
 import { setReel } from "@/lib/reels";
+import { pixelRatio } from "@/lib/canvas";
 
 /**
  * Tape (sound mode): the page becomes a tape machine. A recording runs while you
@@ -197,10 +198,12 @@ export default function Tape({ active, audible, src }: { active: boolean; audibl
       const stamp = format(t);
       if (tc && stamp !== shown) tc.textContent = shown = stamp;
 
-      const dpr = devicePixelRatio;
-      if (el.width !== innerWidth * dpr || el.height !== innerHeight * dpr) {
-        el.width = innerWidth * dpr;
-        el.height = innerHeight * dpr;
+      const dpr = pixelRatio();
+      // whole pixels, or a fractional size never matches the canvas and it's rebuilt every frame
+      const w = Math.floor(innerWidth * dpr), h = Math.floor(innerHeight * dpr);
+      if (el.width !== w || el.height !== h) {
+        el.width = w;
+        el.height = h;
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, innerWidth, innerHeight);

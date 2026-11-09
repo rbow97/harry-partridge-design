@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { token } from "@/lib/tokens";
+import { pixelRatio } from "@/lib/canvas";
 
 /**
  * Stitch (materials mode). Two jobs on one canvas:
@@ -143,7 +144,7 @@ export default function Stitch({ cloth: on, sewing }: { cloth: boolean; sewing: 
       if (s.kind === "run" && s.pinned) {
         // on a fixed bar: drawn where the viewport has it, whatever the scroll
         ctx.save();
-        ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+        ctx.setTransform(pixelRatio(), 0, 0, pixelRatio(), 0, 0);
         ctx.fillRect(s.x, s.y, s.w, s.h);
         ctx.restore();
       } else if (s.kind === "run") ctx.fillRect(s.x, s.y, s.w, s.h);
@@ -159,11 +160,11 @@ export default function Stitch({ cloth: on, sewing }: { cloth: boolean; sewing: 
     // text), then everything sewn so far
     // page coordinates onto the fixed canvas: scaled for the screen, shifted by the scroll
     const place = () => {
-      const dpr = devicePixelRatio;
+      const dpr = pixelRatio();
       ctx.setTransform(dpr, 0, 0, dpr, -scrollX * dpr, -scrollY * dpr);
     };
     const redraw = () => {
-      const dpr = devicePixelRatio;
+      const dpr = pixelRatio();
       // resizing a canvas throws its bitmap away, so only when the window has really changed size
       const w = Math.floor(innerWidth * dpr);
       const h = Math.floor(innerHeight * dpr);

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { token } from "@/lib/tokens";
 import { whenIdle } from "@/lib/idle";
+import { pixelRatio } from "@/lib/canvas";
 
 /**
  * Re-sews the statement as cross-stitch (materials mode).
@@ -33,7 +34,7 @@ export default function CrossStitch({
     const draw = () => {
       cancelAnimationFrame(raf);
       const box = el.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = pixelRatio();
       const letters = Array.from(el.querySelectorAll<HTMLElement>(".hp-letter"));
       if (!letters.length) return;
       const cs = getComputedStyle(letters[0]);
